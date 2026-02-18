@@ -1,0 +1,71 @@
+import { supabase } from '@/lib/supabase';
+import { Metadata } from 'next';
+import { CartProvider } from '@/context/CartContext';
+import StorefrontContent from './StorefrontContent';
+
+export const dynamic = 'force-dynamic';
+
+interface Props {
+    params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { slug } = await params;
+
+    const { data: store } = await supabase
+        .from('stores')
+        .select('name')
+        .eq('slug', slug)
+        .single();
+
+    return {
+        title: store ? `${store.name} | Proudly Powered by Platform` : 'Store Not Found',
+        description: `Shop the latest products from ${store?.name || 'our stores'}.`,
+    };
+}
+
+export default async function ShopPage({ params }: Props) {
+    const { slug } = await params;
+
+    // 1. Fetch Store Details
+    const { data: store, error: storeError } = await supabase
+        .from('stores')
+        .select('id, name')
+        .eq('slug', slug)
+        .single();
+
+    if (storeError || !store) {
+        return (
+            <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center font-sans">
+                <div className="w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mb-6 animate-bounce">
+                    <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 9.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h1 className="text-4xl font-bold text-slate-900 mb-2">404 - Store Not Found</h1>
+                <p className="text-slate-500 max-w-sm mb-8 font-medium">Ops! We couldn't find any store matching this link. It might have been moved or renamed.</p>
+            </div>
+        );
+    }
+
+    // 2. Fetch Sections (New)
+    const { data: sections } = await supabase
+        .from('sections')
+        .select('*')
+        .eq('store_id', store.id)
+        .order('created_at', { ascending: true });
+
+    // 2. Fetch Products (With Limit for better performance)
+    const { data: products } = await supabase
+        .from('products')
+        .select('*')
+        .eq('store_id', store.id)
+        .order('created_at', { ascending: false })
+        .limit(20); // Initial load limit
+
+    return (
+        <CartProvider>
+            <StorefrontContent store={store} products={products || []} sections={sections || []} />
+        </CartProvider>
+    );
+}
