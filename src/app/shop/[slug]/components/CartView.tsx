@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 
 interface CartItem {
     id: string;
@@ -28,8 +29,8 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
             {/* Header */}
             <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl px-8 py-8 flex items-center justify-between shadow-[0_1px_0_rgb(0,0,0,0.05)]">
                 <div>
-                    <h3 className="text-2xl font-black text-slate-800 italic tracking-tighter leading-none">حقيبة التسوق</h3>
-                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-2 italic">لديك {items.length} قطع في السلة</p>
+                    <h3 className="text-2xl font-black text-slate-800 tracking-tighter leading-none">حقيبة التسوق</h3>
+                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.3em] mt-2">لديك {items.length} قطع في السلة</p>
                 </div>
                 <button
                     onClick={onBack}
@@ -50,12 +51,12 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                             </svg>
                         </div>
                         <div className="space-y-2">
-                            <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.5em] italic">سلة فارغة</p>
-                            <p className="text-2xl font-black text-slate-400 italic">حقيبتك ليست ممتلئة بعد.</p>
+                            <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.5em]">سلة فارغة</p>
+                            <p className="text-2xl font-black text-slate-400">حقيبتك ليست ممتلئة بعد.</p>
                         </div>
                         <button
                             onClick={onBack}
-                            className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black italic tracking-tight shadow-xl shadow-indigo-600/20 hover:bg-slate-900 transition-all active:scale-95"
+                            className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black tracking-tight shadow-xl shadow-indigo-600/20 hover:bg-slate-900 transition-all active:scale-95"
                         >
                             اكتشف المجموعات الجديدة
                         </button>
@@ -65,13 +66,19 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                         <div className="space-y-6">
                             {items.map((item) => (
                                 <div key={item.id} className="group flex gap-6 p-6 bg-white rounded-[3.5rem] border border-slate-100/50 shadow-[0_10px_40px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] transition-all duration-500 relative overflow-hidden">
-                                    <div className="w-32 h-32 bg-slate-50 rounded-[2.5rem] overflow-hidden flex-shrink-0 shadow-inner">
-                                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                                    <div className="w-32 h-32 bg-slate-50 rounded-[2.5rem] overflow-hidden flex-shrink-0 shadow-inner relative">
+                                        <Image
+                                            src={item.image_url || '/placeholder-product.png'}
+                                            alt={item.name}
+                                            fill
+                                            sizes="128px"
+                                            className="object-cover group-hover:scale-110 transition-transform duration-1000"
+                                        />
                                     </div>
                                     <div className="flex-1 flex flex-col justify-between py-2">
                                         <div className="space-y-1">
                                             <div className="flex items-start justify-between">
-                                                <h4 className="font-black text-slate-800 uppercase text-sm italic tracking-tight leading-tight group-hover:text-indigo-600 transition-colors">{item.name}</h4>
+                                                <h4 className="font-black text-slate-800 uppercase text-sm tracking-tight leading-tight group-hover:text-indigo-600 transition-colors">{item.name}</h4>
                                                 <button
                                                     onClick={() => onRemoveItem(item.id)}
                                                     className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all transform hover:rotate-12 active:scale-75"
@@ -81,8 +88,8 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                                                     </svg>
                                                 </button>
                                             </div>
-                                            <p className="text-[9px] font-black text-slate-400 tracking-[0.2em] italic uppercase">
-                                                المقاس: {item.size || 'M'} • السعر للقطعة: {item.price} ر.س
+                                            <p className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase">
+                                                المقاس: {item.size || 'M'} • السعر للقطعة: {item.price} د.ع
                                             </p>
                                         </div>
 
@@ -94,7 +101,7 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                                                 >
                                                     -
                                                 </button>
-                                                <span className="text-[11px] font-black text-slate-800 w-4 text-center italic">{item.quantity}</span>
+                                                <span className="text-[11px] font-black text-slate-800 w-4 text-center">{item.quantity}</span>
                                                 <button
                                                     onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
                                                     className="w-8 h-8 bg-white shadow-sm rounded-xl flex items-center justify-center text-slate-400 hover:bg-indigo-600 hover:text-white transition-all font-black"
@@ -103,8 +110,8 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                                                 </button>
                                             </div>
                                             <div className="flex items-center gap-1.5">
-                                                <span className="text-xl font-black text-indigo-600 italic tracking-tighter">{(item.price * item.quantity).toLocaleString()}</span>
-                                                <span className="text-[10px] font-black text-slate-400 italic">ر.س</span>
+                                                <span className="text-xl font-black text-indigo-600 tracking-tighter">{(item.price * item.quantity).toLocaleString()}</span>
+                                                <span className="text-[10px] font-black text-slate-400">د.ع</span>
                                             </div>
                                         </div>
                                     </div>
@@ -116,26 +123,26 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                         <div className="pt-16 space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000">
                             <div className="bg-white rounded-[3.5rem] p-10 shadow-[0_30px_70px_rgba(0,0,0,0.05)] border border-slate-100/50 space-y-6">
                                 <div className="flex items-center justify-between pb-6 border-b border-dashed border-slate-100">
-                                    <span className="text-slate-400 font-black text-[10px] uppercase tracking-[0.4em] italic">المجموع الفرعي</span>
-                                    <span className="text-lg font-black text-slate-600 italic tracking-tight">{totalPrice.toLocaleString()} ر.س</span>
+                                    <span className="text-slate-400 font-black text-[10px] uppercase tracking-[0.4em]">المجموع الفرعي</span>
+                                    <span className="text-lg font-black text-slate-600 tracking-tight">{totalPrice.toLocaleString()} د.ع</span>
                                 </div>
                                 <div className="flex items-center justify-between pt-2">
                                     <div className="space-y-1">
-                                        <h4 className="text-2xl font-black text-slate-800 italic tracking-tighter">إجمالي الطلب</h4>
-                                        <p className="text-[9px] text-slate-400 font-bold uppercase italic tracking-widest">جميع الضرائب والرسوم مشمولة</p>
+                                        <h4 className="text-2xl font-black text-slate-800 tracking-tighter">إجمالي الطلب</h4>
+                                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">جميع الضرائب والرسوم مشمولة</p>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-5xl font-black text-indigo-600 italic tracking-tighter leading-none">{totalPrice.toLocaleString()}</span>
-                                        <span className="text-xs font-black text-slate-400 italic uppercase">ر.س</span>
+                                        <span className="text-5xl font-black text-indigo-600 tracking-tighter leading-none">{totalPrice.toLocaleString()}</span>
+                                        <span className="text-xs font-black text-slate-400 uppercase">د.ع</span>
                                     </div>
                                 </div>
                             </div>
 
                             <button
                                 onClick={onContinue}
-                                className="w-full h-24 bg-indigo-600 text-white rounded-[2.5rem] font-black italic text-lg shadow-[0_20px_50px_rgba(79,70,229,0.3)] hover:bg-slate-950 hover:shadow-indigo-600/10 transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-6 group"
+                                className="w-full h-24 bg-indigo-600 text-white rounded-[2.5rem] font-black text-lg shadow-[0_20px_50px_rgba(79,70,229,0.3)] hover:bg-slate-950 hover:shadow-indigo-600/10 transition-all transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-6 group"
                             >
-                                <span className="tracking-tight italic">إتمام عملية الدفع والشحن</span>
+                                <span className="tracking-tight">إتمام عملية الدفع والشحن</span>
                                 <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center group-hover:translate-x-[-8px] transition-transform">
                                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
@@ -143,7 +150,7 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                                 </div>
                             </button>
 
-                            <p className="text-center text-[10px] text-slate-400 font-bold italic tracking-wide">
+                            <p className="text-center text-[10px] text-slate-400 font-bold tracking-wide">
                                 بالاستمرار في الدفع، أنت توافق على شروط وأحكام {totalPrice > 1000 ? 'الشراء المميز' : 'الاستخدام'}.
                             </p>
                         </div>

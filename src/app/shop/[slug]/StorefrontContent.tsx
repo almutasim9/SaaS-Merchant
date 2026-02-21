@@ -26,13 +26,25 @@ interface Product {
     stock_quantity?: number;
     attributes?: {
         isAvailable?: boolean;
-        outOfStockBehavior?: 'hide' | 'show_badge';
+        isHidden?: boolean;
     };
 }
 
 interface Store {
     id: string;
     name: string;
+
+    logo_url?: string;
+    social_links?: {
+        whatsapp?: string;
+        instagram?: string;
+        tiktok?: string;
+        facebook?: string;
+    };
+    delivery_fees?: {
+        baghdad: number;
+        provinces: number;
+    };
 }
 
 interface Section {
@@ -66,8 +78,8 @@ export default function StorefrontContent({ store, products, sections }: { store
         const query = searchQuery.toLowerCase().trim();
         if (query && !p.name.toLowerCase().includes(query) && !p.description.toLowerCase().includes(query)) return false;
 
-        // Filter by availability (hide IF specifically marked to hide when unavailable)
-        if (p.attributes?.isAvailable === false && p.attributes?.outOfStockBehavior === 'hide') return false;
+        // Hide products specifically marked with the eye icon (isHidden)
+        if (p.attributes?.isHidden) return false;
 
         return true;
     });
@@ -97,8 +109,8 @@ export default function StorefrontContent({ store, products, sections }: { store
             const orderItems = cart.map(item => ({
                 id: item.id,
                 quantity: item.quantity,
-                selectedWeight: (item as any).selectedWeight,
-                name: item.name // passing name for logging/fallback
+                name: item.name,
+                selections: (item as any).selections
             }));
 
             console.log('[CLIENT] Sending order items:', orderItems);
@@ -118,9 +130,10 @@ export default function StorefrontContent({ store, products, sections }: { store
                 return;
             }
 
-            console.log('[CLIENT] Order successful! Clearing cart and showing success screen.');
-            setOrderSuccess(true);
+            console.log('[CLIENT] Order successful! Clearing cart.');
             clearCart();
+
+            setOrderSuccess(true);
 
             // Show success for 5 seconds then back home
             setTimeout(() => {
@@ -161,6 +174,8 @@ export default function StorefrontContent({ store, products, sections }: { store
                         product={selectedProduct}
                         onBack={() => setView('home')}
                         onAddToCart={handleAddToCart}
+
+                        storeLogo={store.logo_url}
                     />
                 ) : null;
             case 'cart':
@@ -172,6 +187,7 @@ export default function StorefrontContent({ store, products, sections }: { store
                         onContinue={() => setView('checkout')}
                         onBack={() => setView('home')}
                         totalPrice={totalPrice}
+
                     />
                 );
             case 'checkout':
@@ -181,38 +197,25 @@ export default function StorefrontContent({ store, products, sections }: { store
                         onBack={() => setView('cart')}
                         onPlaceOrder={handlePlaceOrder}
                         isOrdering={isOrdering}
+                        deliveryFees={store.delivery_fees}
                     />
                 );
             default:
                 return (
-                    <div className="pb-10">
-                        {/* Header with Navigation */}
-                        <header className="sticky top-0 z-50 bg-[#F8F9FB]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between gap-4" dir="rtl">
-                            <h1 className="text-xl font-bold text-slate-800 tracking-tighter cursor-pointer" onClick={() => setView('home')}>{store.name}</h1>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setIsMenuOpen(true)}
-                                    className="w-10 h-10 bg-white shadow-sm rounded-xl flex items-center justify-center text-slate-400 hover:text-emerald-500 transition-colors"
-                                >
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </header>
-                        <HomeView
-                            products={visibleProducts}
-                            allProducts={products}
-                            sections={sections}
-                            onProductClick={handleProductClick}
-                            onAddToCart={handleAddToCart}
-                            searchQuery={searchQuery}
-                            setSearchQuery={setSearchQuery}
-                            selectedSection={selectedSection}
-                            setSelectedSection={setSelectedSection}
-                            storeName={store.name}
-                        />
-                    </div>
+                    <HomeView
+                        products={visibleProducts}
+                        sections={sections}
+                        onProductClick={handleProductClick}
+                        onAddToCart={handleAddToCart}
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                        selectedSection={selectedSection}
+                        setSelectedSection={setSelectedSection}
+                        storeName={store.name}
+
+                        storeLogo={store.logo_url}
+                        socialLinks={store.social_links}
+                    />
                 );
         }
     };

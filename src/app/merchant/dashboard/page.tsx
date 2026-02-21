@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 interface Product {
     id: string;
@@ -27,6 +28,7 @@ interface Store {
     id: string;
     name: string;
     slug: string;
+    currency?: 'USD' | 'IQD';
 }
 
 export default function MerchantDashboard() {
@@ -75,7 +77,7 @@ export default function MerchantDashboard() {
         try {
             const { data: storesData, error: storeError } = await supabase
                 .from('stores')
-                .select('id, name, slug')
+                .select('id, name, slug, currency')
                 .eq('merchant_id', userId);
 
             if (storeError) throw storeError;
@@ -94,9 +96,12 @@ export default function MerchantDashboard() {
             if (statsError) throw statsError;
 
             if (allOrders) {
-                const totalSales = allOrders.reduce((acc, order) => acc + (order.total_price || 0), 0);
+                // Only count sales for orders that are delivered/completed
+                const completedOrders = allOrders.filter(o => o.status === 'completed' || o.status === 'delivered');
+                const totalSales = completedOrders.reduce((acc, order) => acc + (order.total_price || 0), 0);
+
                 const newOrdersCount = allOrders.filter(o => o.status === 'pending').length;
-                const avg = allOrders.length > 0 ? totalSales / allOrders.length : 0;
+                const avg = completedOrders.length > 0 ? totalSales / completedOrders.length : 0;
 
                 // Group by Day for Chart (Last 7 Days)
                 const last7Days: any[] = [];
@@ -111,7 +116,7 @@ export default function MerchantDashboard() {
                     });
                 }
 
-                allOrders.forEach(order => {
+                completedOrders.forEach(order => {
                     const orderDate = new Date(order.created_at);
                     orderDate.setHours(0, 0, 0, 0);
                     const day = last7Days.find(d => d.date.getTime() === orderDate.getTime());
@@ -152,9 +157,11 @@ export default function MerchantDashboard() {
                     event: 'INSERT',
                     schema: 'public',
                     table: 'orders',
-                    filter: `store_id=eq.${activeStore.id}`
-                }, () => {
-                    fetchDashboardData(userId);
+                }, (payload) => {
+                    if (payload.new && payload.new.store_id === activeStore.id) {
+                        toast.success('طلب جديد!', { description: 'لقد استلمت طلباً جديداً للتو.' });
+                        fetchDashboardData(userId); // Refresh dashboard data
+                    }
                 })
                 .subscribe();
 
@@ -175,74 +182,78 @@ export default function MerchantDashboard() {
         );
     }
 
-    const StatCard = ({ title, value, change, color, icon }: any) => (
-        <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all group">
-            <div className="flex items-center justify-between mb-6">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-${color}-50 text-${color}-600 group-hover:bg-${color}-600 group-hover:text-white transition-all shadow-sm`}>
-                    {icon}
+    const StatCard = ({ title, value, change, color, icon }: any) => {
+        const isPositive = parseFloat(change) >= 0;
+        const currencySymbol = 'د.ع';
+
+        return (
+            <div className="bg-white p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-between group hover:border-[#4F46E5]/30 hover:shadow-xl hover:shadow-[#4F46E5]/5 transition-all">
+                <div className="flex justify-between items-start mb-6">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-${color}-50 text-${color}-600 group-hover:bg-${color}-600 group-hover:text-white transition-all shadow-sm`}>
+                        {icon}
+                    </div>
+                    <span className={`px-3 py-1.5 rounded-xl text-xs font-bold ${isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                        {change}
+                    </span>
                 </div>
-                <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black italic bg-emerald-50 text-emerald-600 flex items-center gap-1`}>
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
-                    </svg>
-                    {change}
+                <div>
+                    <h3 className="text-slate-400 text-xs lg:text-sm font-bold tracking-widest uppercase mb-2 pr-1">{title}</h3>
+                    <div className="text-3xl lg:text-4xl font-black text-slate-800 tracking-tighter">
+                        {typeof value === 'number' && (title.includes('المبيعات') || title.includes('متوسط')) ? `${value.toLocaleString()} ${currencySymbol}` : value}
+                    </div>
                 </div>
             </div>
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">{title}</h3>
-            <p className="text-3xl font-bold text-slate-800 mt-2 leading-none">
-                {typeof value === 'number' ? `$${value.toLocaleString()}` : value}
-            </p>
-        </div>
-    );
+        );
+    };
 
     return (
-        <div className="px-10 pb-10 space-y-10" dir="rtl">
-            <div className="flex items-center justify-between">
+        <div className="px-4 lg:px-10 pb-10 space-y-8 lg:space-y-10 pt-6 lg:pt-0" dir="rtl">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-0">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800">لوحة التحكم</h1>
-                    <p className="text-slate-400 font-medium mt-1">مرحباً بك مجدداً، إليك ملخص أداء متجرك اليوم.</p>
+                    <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">لوحة التحكم</h1>
+                    <p className="text-slate-400 font-medium mt-1 text-sm">مرحباً بك مجدداً، إليك ملخص أداء متجرك اليوم.</p>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3 lg:gap-4">
                     <a
                         href={`/shop/${store?.slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-600 rounded-2xl font-bold text-sm shadow-sm hover:shadow-md hover:bg-emerald-100 transition-all"
+                        className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-3 bg-emerald-50 text-emerald-600 rounded-2xl font-bold text-sm shadow-sm hover:shadow-md hover:bg-emerald-100 transition-all"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
                         زيارة المتجر
                     </a>
-                    <button className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-100 rounded-2xl text-slate-600 font-bold text-sm shadow-sm hover:shadow-md transition-all">
+                    <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-3 bg-white border border-slate-100 rounded-2xl text-slate-600 font-bold text-sm shadow-sm hover:shadow-md transition-all">
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         آخر 30 يوم
                     </button>
-                    <button className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-indigo-600/10 hover:bg-indigo-700 transition-all">
+                    <button className="hidden lg:flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-indigo-600/10 hover:bg-indigo-700 transition-all">
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
-                        تصدير التقرير
+                        تصدير
                     </button>
                 </div>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
                 <StatCard title="إجمالي المبيعات" value={stats.totalSales} change="12.5%" color="indigo" icon={<svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
                 <StatCard title="الطلبات الجديدة" value={stats.newOrders} change="2.4%" color="rose" icon={<svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>} />
                 <StatCard title="متوسط قيمة الطلب" value={stats.avgOrderValue} change="1.2%" color="emerald" icon={<svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>} />
             </div>
 
             {/* Analytics Row */}
-            <div className="grid grid-cols-3 gap-8">
-                <div className="col-span-2 bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm space-y-8">
-                    <div className="flex items-center justify-between">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                <div className="lg:col-span-2 bg-white rounded-[2rem] lg:rounded-[2.5rem] p-6 lg:p-10 border border-slate-100 shadow-sm space-y-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h3 className="text-xl font-bold text-slate-800 tracking-tight">نظرة عامة على المبيعات</h3>
-                            <p className="text-slate-400 text-xs font-medium">أداء المبيعات للأسبوع الحالي</p>
+                            <h3 className="text-lg lg:text-xl font-bold text-slate-800 tracking-tight">نظرة عامة على المبيعات</h3>
+                            <p className="text-slate-400 text-[10px] lg:text-xs font-medium">أداء المبيعات للأسبوع الحالي</p>
                         </div>
                         <div className="flex items-center gap-6">
                             <div className="flex items-center gap-2">
@@ -256,7 +267,7 @@ export default function MerchantDashboard() {
                         </div>
                     </div>
 
-                    <div className="h-[300px] w-full relative pt-10">
+                    <div className="h-[250px] lg:h-[300px] w-full relative pt-10">
                         {(() => {
                             const maxValue = Math.max(...stats.dailySales, 100);
                             const points = stats.dailySales.map((val, i) => ({
@@ -264,7 +275,6 @@ export default function MerchantDashboard() {
                                 y: 250 - (val / maxValue) * 200
                             }));
 
-                            // Generate a smooth quadratic bezier path
                             const generatePath = (pts: { x: number, y: number }[]) => {
                                 if (pts.length === 0) return "";
                                 let d = `M ${pts[0].x},${pts[0].y}`;
@@ -291,17 +301,8 @@ export default function MerchantDashboard() {
                                             <stop offset="100%" stopColor="#4F46E5" stopOpacity="0" />
                                         </linearGradient>
                                     </defs>
-                                    <path
-                                        d={fillPath}
-                                        fill="url(#chartGradient)"
-                                    />
-                                    <path
-                                        d={curvePath}
-                                        fill="none"
-                                        stroke="#4F46E5"
-                                        strokeWidth="4"
-                                        strokeLinecap="round"
-                                    />
+                                    <path d={fillPath} fill="url(#chartGradient)" />
+                                    <path d={curvePath} fill="none" stroke="#4F46E5" strokeWidth="4" strokeLinecap="round" />
                                 </svg>
                             );
                         })()}
@@ -314,21 +315,21 @@ export default function MerchantDashboard() {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm flex flex-col">
+                <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] p-6 lg:p-10 border border-slate-100 shadow-sm flex flex-col">
                     <h3 className="text-xl font-bold text-slate-800 tracking-tight mb-8">الأكثر مبيعاً</h3>
                     <div className="flex-1 space-y-6">
                         {products.map((p, idx) => (
                             <div key={p.id} className="flex items-center justify-between group cursor-pointer">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-2xl bg-slate-100 overflow-hidden shadow-sm group-hover:scale-105 transition-transform">
-                                        <img src={p.image_url} alt="" className="w-full h-full object-cover" />
+                                    <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-2xl bg-slate-100 overflow-hidden shadow-sm group-hover:scale-105 transition-transform">
+                                        <img src={p.image_url || '/placeholder-product.png'} alt="" className="w-full h-full object-cover" />
                                     </div>
                                     <div>
                                         <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{p.name}</h4>
                                         <p className="text-[10px] font-medium text-slate-400 mt-0.5">{245 - (idx * 40)} طلب هذا الشهر</p>
                                     </div>
                                 </div>
-                                <span className="text-sm font-bold text-indigo-600">${p.price}</span>
+                                <span className="text-sm font-bold text-indigo-600">{p.price.toLocaleString()} د.ع</span>
                             </div>
                         ))}
                     </div>
@@ -340,63 +341,65 @@ export default function MerchantDashboard() {
 
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-slate-800">أحدث الطلبات</h2>
+                    <h2 className="text-xl lg:text-2xl font-bold text-slate-800">أحدث الطلبات</h2>
                     <button className="text-sm font-bold text-indigo-600 hover:underline">عرض الكل</button>
                 </div>
 
-                <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-                    <table className="w-full text-right border-collapse">
-                        <thead className="bg-[#FBFBFF] border-b border-slate-50">
-                            <tr>
-                                <th className="px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">رقم الطلب</th>
-                                <th className="px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">العميل</th>
-                                <th className="px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">التاريخ</th>
-                                <th className="px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">المبلغ</th>
-                                <th className="px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">الحالة</th>
-                                <th className="px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            {recentOrders.length > 0 ? recentOrders.map((order: any, idx) => (
-                                <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="px-10 py-6">
-                                        <span className="text-sm font-bold text-slate-800">#ORD-{idx + 7342}</span>
-                                    </td>
-                                    <td className="px-10 py-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center text-xs font-bold text-slate-400">
-                                                {order.customer_info?.name?.charAt(0)}
-                                            </div>
-                                            <span className="text-sm font-bold text-slate-800">{order.customer_info?.name}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-10 py-6 text-sm font-medium text-slate-400">
-                                        {new Date(order.created_at).toLocaleDateString('ar-IQ', { day: 'numeric', month: 'long', year: 'numeric' })}
-                                    </td>
-                                    <td className="px-10 py-6 text-sm font-bold text-slate-800">${order.total_price}</td>
-                                    <td className="px-10 py-6">
-                                        <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-bold
-                                            ${order.status === 'completed' ? 'bg-emerald-50 text-emerald-600' :
-                                                order.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500'}
-                                        `}>
-                                            {order.status === 'completed' ? 'مكتمل' : order.status === 'pending' ? 'فيد التنفيذ' : 'ملغي'}
-                                        </span>
-                                    </td>
-                                    <td className="px-10 py-6">
-                                        <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-slate-800 transition-all">
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-                                            </svg>
-                                        </button>
-                                    </td>
-                                </tr>
-                            )) : (
+                <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-right border-collapse min-w-[800px] lg:min-w-0">
+                            <thead className="bg-[#FBFBFF] border-b border-slate-50">
                                 <tr>
-                                    <td colSpan={6} className="px-10 py-16 text-center text-slate-400 font-bold italic">لا توجد طلبات حديثة حالياً.</td>
+                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">رقم الطلب</th>
+                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">العميل</th>
+                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">التاريخ</th>
+                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">المبلغ</th>
+                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">الحالة</th>
+                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">الإجراءات</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {recentOrders.length > 0 ? recentOrders.map((order: any, idx) => (
+                                    <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-6 lg:px-10 py-6">
+                                            <span className="text-sm font-bold text-slate-800">#ORD-{idx + 7342}</span>
+                                        </td>
+                                        <td className="px-6 lg:px-10 py-6">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center text-xs font-bold text-slate-400">
+                                                    {order.customer_info?.name?.charAt(0)}
+                                                </div>
+                                                <span className="text-sm font-bold text-slate-800">{order.customer_info?.name}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 lg:px-10 py-6 text-sm font-medium text-slate-400">
+                                            {new Date(order.created_at).toLocaleDateString('ar-IQ', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                        </td>
+                                        <td className="px-6 lg:px-10 py-6 text-sm font-bold text-slate-800">{order.total_price.toLocaleString()} د.ع</td>
+                                        <td className="px-6 lg:px-10 py-6">
+                                            <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-bold
+                                                ${order.status === 'completed' ? 'bg-emerald-50 text-emerald-600' :
+                                                    order.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500'}
+                                            `}>
+                                                {order.status === 'completed' ? 'مكتمل' : order.status === 'pending' ? 'فيد التنفيذ' : 'ملغي'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 lg:px-10 py-6">
+                                            <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-slate-800 transition-all">
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <tr>
+                                        <td colSpan={6} className="px-6 lg:px-10 py-16 text-center text-slate-400 font-bold">لا توجد طلبات حديثة حالياً.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

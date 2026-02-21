@@ -20,9 +20,22 @@ export async function getSections(storeId: string) {
 
 export async function addSection(storeId: string, name: string, imageUrl?: string) {
     const supabase = await createServerClient();
+
+    // Check for duplicate name in the same store
+    const { data: existing } = await supabase
+        .from('sections')
+        .select('id')
+        .eq('store_id', storeId)
+        .ilike('name', name.trim())
+        .maybeSingle();
+
+    if (existing) {
+        throw new Error('يوجد قسم بهذا الاسم بالفعل. يرجى اختيار اسم مختلف.');
+    }
+
     const { data, error } = await supabase
         .from('sections')
-        .insert({ store_id: storeId, name, image_url: imageUrl })
+        .insert({ store_id: storeId, name: name.trim(), image_url: imageUrl })
         .select()
         .single();
 
@@ -30,7 +43,7 @@ export async function addSection(storeId: string, name: string, imageUrl?: strin
         throw new Error(error.message);
     }
 
-    revalidatePath('/merchant/sections');
+    revalidatePath('/merchant/products');
     revalidatePath('/merchant/products/add');
     return data;
 }
@@ -48,7 +61,7 @@ export async function updateSection(id: string, name: string, imageUrl?: string)
         throw new Error(error.message);
     }
 
-    revalidatePath('/merchant/sections');
+    revalidatePath('/merchant/products');
     revalidatePath('/merchant/products/add');
     return data;
 }
@@ -64,7 +77,7 @@ export async function deleteSection(sectionId: string) {
         throw new Error(error.message);
     }
 
-    revalidatePath('/merchant/sections');
+    revalidatePath('/merchant/products');
     revalidatePath('/merchant/products/add');
     return { success: true };
 }

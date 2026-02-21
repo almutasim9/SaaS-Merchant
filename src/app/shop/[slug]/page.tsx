@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import { CartProvider } from '@/context/CartContext';
 import StorefrontContent from './StorefrontContent';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 interface Props {
     params: Promise<{ slug: string }>;
@@ -30,7 +30,7 @@ export default async function ShopPage({ params }: Props) {
     // 1. Fetch Store Details
     const { data: store, error: storeError } = await supabase
         .from('stores')
-        .select('id, name')
+        .select('id, name, logo_url, social_links, delivery_fees')
         .eq('slug', slug)
         .single();
 
@@ -43,25 +43,28 @@ export default async function ShopPage({ params }: Props) {
                     </svg>
                 </div>
                 <h1 className="text-4xl font-bold text-slate-900 mb-2">404 - Store Not Found</h1>
-                <p className="text-slate-500 max-w-sm mb-8 font-medium">Ops! We couldn't find any store matching this link. It might have been moved or renamed.</p>
+                <p className="text-slate-500 max-w-sm mb-8 font-medium">Ops! We couldn&apos;t find any store matching this link. It might have been moved or renamed.</p>
             </div>
         );
     }
 
-    // 2. Fetch Sections (New)
-    const { data: sections } = await supabase
-        .from('sections')
-        .select('*')
-        .eq('store_id', store.id)
-        .order('created_at', { ascending: true });
+    // 2. Fetch Sections and Products in Parallel
+    const [sectionsRes, productsRes] = await Promise.all([
+        supabase
+            .from('sections')
+            .select('*')
+            .eq('store_id', store.id)
+            .order('created_at', { ascending: true }),
+        supabase
+            .from('products')
+            .select('*')
+            .eq('store_id', store.id)
+            .order('created_at', { ascending: false })
+            .limit(40) // Increased initial load limit slightly
+    ]);
 
-    // 2. Fetch Products (With Limit for better performance)
-    const { data: products } = await supabase
-        .from('products')
-        .select('*')
-        .eq('store_id', store.id)
-        .order('created_at', { ascending: false })
-        .limit(20); // Initial load limit
+    const sections = sectionsRes.data || [];
+    const products = productsRes.data || [];
 
     return (
         <CartProvider>

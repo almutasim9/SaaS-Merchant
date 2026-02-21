@@ -1,27 +1,31 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 
 // --- Types & Interfaces ---
-interface WeightOption {
-    value: string;
-    unit: string;
+interface VariantOption {
+    id: string;
+    name: string; // e.g., "Color", "Size"
+    values: string[]; // e.g., ["Red", "Blue"]
 }
 
-interface ProductOptions {
-    sizes: string[];
-    colors: string[];
-    weights: WeightOption[];
+interface VariantCombination {
+    id: string; // Derived from option values e.g., "Red-S"
+    options: Record<string, string>; // e.g., { "Color": "Red", "Size": "S" }
+    price: string; // Specific price override
 }
 
 interface ProductAttributes {
     hasVariants: boolean;
-    options: ProductOptions;
-    weightPrices: Record<string, string>;
-    isAvailable: boolean;
-    outOfStockBehavior: 'hide' | 'show_badge';
-    isHidden?: boolean;
+    variantOptions: VariantOption[];
+    variantCombinations: VariantCombination[];
+    isAvailable: boolean; // Global visibility
+}
+
+interface Section {
+    id: string;
+    name: string;
 }
 
 interface Product {
@@ -35,11 +39,6 @@ interface Product {
     stock_quantity: number;
 }
 
-interface Section {
-    id: string;
-    name: string;
-}
-
 interface AddProductModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -49,150 +48,165 @@ interface AddProductModalProps {
     initialData?: Product | null;
 }
 
-interface FormDataState {
-    name: string;
-    description: string;
-    price: string;
-    category: string;
-    isAvailable: boolean;
-    outOfStockBehavior: 'hide' | 'show_badge';
-    image_url: string;
-    hasVariants: boolean;
-    options: ProductOptions;
-    weightPrices: Record<string, string>;
-}
-
 export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, sections, initialData }: AddProductModalProps) {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
-    const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-    const [showColorPicker, setShowColorPicker] = useState(false);
-    const [tempColor, setTempColor] = useState('#4F46E5');
 
-    const [formData, setFormData] = useState<FormDataState>({
-        name: '',
-        description: '',
-        price: '',
-        category: '',
-        isAvailable: true,
-        outOfStockBehavior: 'hide',
-        image_url: '',
-        hasVariants: false,
-        options: {
-            sizes: [],
-            colors: [],
-            weights: []
-        },
-        weightPrices: {}
-    });
+    // Basic Info
+    const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
+    const [price, setPrice] = useState('');
+    const [category, setCategory] = useState('');
+    const [imageUrl, setImageUrl] = useState('');
+    const [isAvailable, setIsAvailable] = useState(true);
+
+    // Variants
+    const [hasVariants, setHasVariants] = useState(false);
+    const [variantOptions, setVariantOptions] = useState<VariantOption[]>([]);
+    const [variantCombinations, setVariantCombinations] = useState<VariantCombination[]>([]);
 
     useEffect(() => {
         if (isOpen) {
             if (initialData) {
-                setFormData({
-                    name: initialData.name || '',
-                    description: initialData.description || '',
-                    price: initialData.price?.toString() || '',
-                    category: initialData.category || (sections.length > 0 ? sections[0].name : ''),
-                    isAvailable: initialData.attributes?.isAvailable ?? true,
-                    outOfStockBehavior: initialData.attributes?.outOfStockBehavior || 'hide',
-                    image_url: initialData.image_url || '',
-                    hasVariants: initialData.attributes?.hasVariants || false,
-                    options: initialData.attributes?.options || { sizes: [], colors: [], weights: [] },
-                    weightPrices: initialData.attributes?.weightPrices || {}
-                });
-                setIsAdvancedOpen(initialData.attributes?.hasVariants || false);
+                setName(initialData.name || '');
+                setDescription(initialData.description || '');
+                setPrice(initialData.price?.toString() || '');
+                setCategory(initialData.category || (sections.length > 0 ? sections[0].name : ''));
+                setImageUrl(initialData.image_url || '');
+
+                const attrs = initialData.attributes;
+                setIsAvailable(attrs?.isAvailable ?? true);
+                setHasVariants(attrs?.hasVariants || false);
+                setVariantOptions(attrs?.variantOptions || []);
+                setVariantCombinations(attrs?.variantCombinations || []);
             } else {
-                setFormData({
-                    name: '',
-                    description: '',
-                    price: '',
-                    category: sections.length > 0 ? sections[0].name : '',
-                    isAvailable: true,
-                    outOfStockBehavior: 'hide',
-                    image_url: '',
-                    hasVariants: false,
-                    options: { sizes: [], colors: [], weights: [] },
-                    weightPrices: {}
-                });
-                setIsAdvancedOpen(false);
+                resetForm();
             }
-            setSuccess(false);
-            setError(null);
         }
     }, [isOpen, initialData, sections]);
 
-    if (!isOpen) return null;
+    // --- Variant Logic ---
 
-    // --- Variant Helper Functions ---
-    const addOptionValue = (type: 'sizes' | 'colors', value: string) => {
-        if (!value.trim()) return;
-        if (formData.options[type].includes(value)) return;
-        setFormData(prev => ({
-            ...prev,
-            options: { ...prev.options, [type]: [...prev.options[type], value] }
-        }));
-    };
+    // Generate combinations whenever options change
+    useEffect(() => {
+        if (!hasVariants || variantOptions.length === 0) {
+            if (variantCombinations.length > 0) setVariantCombinations([]);
+            return;
+        }
 
-    const addWeightVariant = (value: string, unit: string) => {
-        if (!value.trim()) return;
-        const weightStr = `${value}${unit}`;
-        if (formData.options.weights.some(w => `${w.value}${w.unit}` === weightStr)) return;
-        setFormData(prev => ({
-            ...prev,
-            options: { ...prev.options, weights: [...prev.options.weights, { value, unit }] }
-        }));
-    };
+        // Only generate options that have at least one value
+        const validOptions = variantOptions.filter(o => o.values.length > 0 && o.name.trim() !== '');
 
-    const removeOptionValue = (type: 'sizes' | 'colors' | 'weights', index: number) => {
-        setFormData(prev => {
-            let weightKey = '';
-            if (type === 'weights') {
-                const w = prev.options.weights[index];
-                weightKey = `${w.value}${w.unit}`;
-                const newWeights = prev.options.weights.filter((_, i) => i !== index);
-                const newWeightPrices = { ...prev.weightPrices };
-                delete newWeightPrices[weightKey];
-                return {
-                    ...prev,
-                    options: { ...prev.options, weights: newWeights },
-                    weightPrices: newWeightPrices
-                };
-            } else {
-                // Handle sizes and colors
-                const list = prev.options[type];
-                const newList = list.filter((_, i) => i !== index);
-                return {
-                    ...prev,
-                    options: { ...prev.options, [type]: newList }
-                };
+        if (validOptions.length === 0) {
+            setVariantCombinations([]);
+            return;
+        }
+
+        // Cartesian Product
+        const generateCombinations = (opts: VariantOption[], currentIdx: number, currentCombo: Record<string, string>): Record<string, string>[] => {
+            if (currentIdx === opts.length) return [currentCombo];
+
+            const option = opts[currentIdx];
+            let results: Record<string, string>[] = [];
+
+            for (const value of option.values) {
+                results = results.concat(
+                    generateCombinations(opts, currentIdx + 1, { ...currentCombo, [option.id]: value })
+                );
             }
+            return results;
+        };
+
+        const newCombosRaw = generateCombinations(validOptions, 0, {});
+
+        // Map to VariantCombination objects, preserving existing prices if possible
+        const newCombos: VariantCombination[] = newCombosRaw.map(comboMap => {
+            // Create a unique ID for this exact combination to match against old state
+            // Sort keys so order doesn't matter
+            const sortedKeys = Object.keys(comboMap).sort();
+            const comboId = sortedKeys.map(k => `${k}:${comboMap[k]}`).join('|');
+
+            const existing = variantCombinations.find(c => c.id === comboId);
+
+            return {
+                id: comboId,
+                options: comboMap,
+                price: existing ? existing.price : '' // preserve price if combo existed
+            };
         });
+
+        setVariantCombinations(newCombos);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [variantOptions, hasVariants]); // Intentionally omitting variantCombinations to avoid infinite loop
+
+    const addOption = (presetName: string = '', presetValues: string[] = []) => {
+        const newId = `opt-${Date.now()}`;
+        setVariantOptions([...variantOptions, { id: newId, name: presetName, values: presetValues }]);
     };
 
-    const setWeightPrice = (weight: string, price: string) => {
-        setFormData(prev => ({
-            ...prev,
-            weightPrices: { ...prev.weightPrices, [weight]: price }
+    const updateOptionName = (id: string, name: string) => {
+        setVariantOptions(prev => prev.map(o => o.id === id ? { ...o, name } : o));
+    };
+
+    const removeOption = (id: string) => {
+        setVariantOptions(prev => prev.filter(o => o.id !== id));
+    };
+
+    const addOptionValue = (id: string, value: string) => {
+        if (!value.trim()) return;
+        setVariantOptions(prev => prev.map(o => {
+            if (o.id === id && !o.values.includes(value.trim())) {
+                return { ...o, values: [...o.values, value.trim()] };
+            }
+            return o;
         }));
     };
-    // ----------------------------
 
+    const removeOptionValue = (id: string, valueToRemove: string) => {
+        setVariantOptions(prev => prev.map(o => {
+            if (o.id === id) {
+                return { ...o, values: o.values.filter(v => v !== valueToRemove) };
+            }
+            return o;
+        }));
+    };
+
+    const updateCombinationPrice = (comboId: string, price: string) => {
+        setVariantCombinations(prev => prev.map(c => c.id === comboId ? { ...c, price } : c));
+    };
+
+    // --- Media Upload ---
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        // Validation
+        if (file.size > 2 * 1024 * 1024) {
+            setError('حجم الصورة كبير جداً (الحد الأقصى 2MB).');
+            return;
+        }
+
         setUploading(true);
         setError(null);
         try {
             const fileExt = file.name.split('.').pop();
-            const fileName = `${Math.random()}.${fileExt}`;
+            const fileName = `${storeId}/${Date.now()}.${fileExt}`;
             const filePath = `products/${fileName}`;
-            const { error: uploadError } = await supabase.storage.from('store-assets').upload(filePath, file);
-            if (uploadError) throw uploadError;
-            const { data: { publicUrl } } = supabase.storage.from('store-assets').getPublicUrl(filePath);
-            setFormData(prev => ({ ...prev, image_url: publicUrl }));
+
+            // Try product_images bucket first, fallback to store-assets
+            let bucket = 'product_images';
+            const { error: uploadError } = await supabase.storage.from(bucket).upload(filePath, file);
+
+            if (uploadError) {
+                console.warn('Fallback to store-assets bucket');
+                bucket = 'store-assets';
+                const { error: fallbackError } = await supabase.storage.from(bucket).upload(filePath, file);
+                if (fallbackError) throw fallbackError;
+            }
+
+            const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(filePath);
+            setImageUrl(publicUrl);
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'فشل رفع الصورة.';
             setError(message);
@@ -201,22 +215,21 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
         }
     };
 
+    const handleRemoveImage = () => {
+        setImageUrl('');
+    };
+
     const resetForm = () => {
-        setFormData({
-            name: '',
-            description: '',
-            price: '',
-            category: sections.length > 0 ? sections[0].name : '',
-            isAvailable: true,
-            outOfStockBehavior: 'hide',
-            image_url: '',
-            hasVariants: false,
-            options: { sizes: [], colors: [], weights: [] },
-            weightPrices: {}
-        });
-        setSuccess(false);
+        setName('');
+        setDescription('');
+        setPrice('');
+        setCategory(sections.length > 0 ? sections[0].name : '');
+        setImageUrl('');
+        setIsAvailable(true);
+        setHasVariants(false);
+        setVariantOptions([]);
+        setVariantCombinations([]);
         setError(null);
-        setIsAdvancedOpen(false);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -224,27 +237,26 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
         setLoading(true);
         setError(null);
         try {
-            if (!formData.name.trim()) throw new Error('يرجى إدخال اسم المنتج.');
-            if (!formData.price || parseFloat(formData.price) <= 0) throw new Error('يرجى إدخال سعر صحيح للمنتج.');
-            if (!formData.category) throw new Error('يرجى اختيار قسم للمنتج.');
+            if (!name.trim()) throw new Error('يرجى إدخال اسم المنتج.');
+            if (!price || parseFloat(price) <= 0) throw new Error('يرجى إدخال السعر الأساسي للمنتج.');
+            if (!category) throw new Error('يرجى اختيار قسم للمنتج.');
 
             const attributes: ProductAttributes = {
-                hasVariants: formData.hasVariants,
-                options: formData.options,
-                weightPrices: formData.weightPrices,
-                isAvailable: formData.isAvailable,
-                outOfStockBehavior: formData.outOfStockBehavior
+                hasVariants,
+                variantOptions: hasVariants ? variantOptions.filter(o => o.name && o.values.length > 0) : [],
+                variantCombinations: hasVariants ? variantCombinations : [],
+                isAvailable
             };
 
             const productData = {
                 store_id: storeId,
-                name: formData.name,
-                description: formData.description,
-                price: parseFloat(formData.price || '0'),
-                category: formData.category,
-                stock_quantity: formData.isAvailable ? 999 : 0,
-                image_url: formData.image_url,
-                attributes: attributes, // Now strictly typed
+                name,
+                description,
+                price: parseFloat(price || '0'),
+                category,
+                stock_quantity: isAvailable ? 999 : 0, // Mock stock as requested
+                image_url: imageUrl,
+                attributes
             };
 
             const { error: dbError } = initialData
@@ -252,9 +264,8 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                 : await supabase.from('products').insert(productData);
 
             if (dbError) throw dbError;
-            setSuccess(true);
             onSuccess();
-            if (!initialData) setTimeout(() => resetForm(), 1500);
+            onClose();
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'حدث خطأ أثناء حفظ المنتج.';
             setError(message);
@@ -263,424 +274,285 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10" dir="rtl">
-            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl" onClick={() => !loading && onClose()} />
+    if (!isOpen) return null;
 
-            <div className="relative w-full max-w-4xl bg-white rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+    return (
+        <div className="fixed inset-0 z-[100] flex justify-end bg-slate-900/40 backdrop-blur-sm transition-all" dir="rtl">
+            <div className="w-full lg:w-[800px] bg-[#F8FAFC] h-full shadow-2xl flex flex-col animate-in slide-in-from-left duration-300 border-l border-slate-200/60 object-contain">
+
                 {/* Header */}
-                <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-white sticky top-0 z-20">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-indigo-600/10 rounded-2xl flex items-center justify-center text-indigo-600">
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-black text-slate-800 italic tracking-tight leading-none">
-                                {initialData ? 'تعديل المنتج' : 'إضافة منتج سريع'}
-                            </h2>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 italic">
-                                {initialData ? 'تحديث بيانات المنتج وتعديله.' : 'أدخل بيانات المنتج الأساسية والمتقدمة هنا.'}
-                            </p>
-                        </div>
+                <div className="px-8 py-5 bg-white border-b border-slate-200 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+                    <div>
+                        <h2 className="text-lg font-black text-slate-900">
+                            {initialData ? 'تعديل المنتج' : 'إضافة منتج جديد'}
+                        </h2>
+                        <p className="text-[11px] font-bold text-slate-500 mt-1 uppercase tracking-widest">
+                            {initialData ? 'قم بتحديث تفاصيل واسعار هذا المنتج.' : 'أضف منتجك لتوسيع كتالوج متجرك.'}
+                        </p>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-rose-50 hover:text-white transition-all active:scale-95 shadow-sm"
-                    >
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar bg-[#FAFBFF]">
-                    {success ? (
-                        <div className="py-20 text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="w-24 h-24 bg-emerald-500 text-white rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl shadow-emerald-500/20">
-                                <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                            <h3 className="text-4xl font-black text-slate-800 italic">تم الحفظ بنجاح!</h3>
-                            <div className="flex gap-4 justify-center">
-                                <button onClick={resetForm} className="px-10 py-5 bg-indigo-600 text-white rounded-3xl font-black italic shadow-xl shadow-indigo-600/20 hover:bg-slate-950 transition-all">إضافة منتج آخر</button>
-                                <button onClick={onClose} className="px-10 py-5 bg-white text-slate-500 border border-slate-200 rounded-3xl font-black italic">إغلاق</button>
-                            </div>
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto p-6 lg:p-8 custom-scrollbar">
+                    {error && (
+                        <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-600 rounded-2xl text-xs font-bold flex items-center gap-3">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            {error}
                         </div>
-                    ) : (
-                        <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                {/* Left Section - Main Inputs */}
-                                <div className="space-y-8">
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">اسم المنتج <span className="text-rose-500">*</span></label>
-                                        <input
-                                            type="text"
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            placeholder="مثال: فستان صيفي قطني"
-                                            className="w-full bg-white border border-slate-100 rounded-[1.5rem] px-6 py-4.5 text-sm font-bold italic shadow-sm focus:ring-[12px] focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none"
-                                        />
-                                    </div>
+                    )}
 
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">القسم <span className="text-rose-500">*</span></label>
-                                        <div className="relative">
-                                            <select
-                                                value={formData.category}
-                                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                                className="w-full bg-white border border-slate-100 rounded-[1.5rem] px-6 py-4.5 text-sm font-bold italic shadow-sm focus:ring-[12px] focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none appearance-none"
-                                            >
-                                                <option value="">اختر القسم المناسب</option>
-                                                {sections.map(section => (
-                                                    <option key={section.id} value={section.name}>{section.name}</option>
-                                                ))}
-                                            </select>
-                                            <svg className="w-5 h-5 text-slate-300 absolute left-6 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
-                                        </div>
-                                    </div>
+                    <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+                        {/* Right Column: Main Info (RTL) */}
+                        <div className="flex-1 space-y-6">
 
-                                    <div className="grid grid-cols-2 gap-6">
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">السعر <span className="text-rose-500">*</span></label>
-                                            <div className="relative">
-                                                <input
-                                                    type="text"
-                                                    value={formData.price}
-                                                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                                    placeholder="0.00"
-                                                    className="w-full bg-white border border-slate-100 rounded-[1.5rem] pl-14 pr-6 py-4.5 text-lg font-black italic shadow-sm focus:ring-[12px] focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none"
-                                                />
-                                                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 italic">ر.س</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-end pb-3">
-                                            <label className="flex items-center gap-3 cursor-pointer group bg-white border border-slate-100 px-6 py-4.5 rounded-[1.5rem] shadow-sm hover:border-emerald-500 transition-all w-full">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.isAvailable}
-                                                    onChange={(e) => setFormData({ ...formData, isAvailable: e.target.checked })}
-                                                    className="w-5 h-5 rounded-lg border-slate-200 text-emerald-500 focus:ring-emerald-500"
-                                                />
-                                                <span className="text-xs font-black text-slate-700 italic">متوفر للطلب</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Right Section - Image & Desc */}
-                                <div className="space-y-8">
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">صورة المنتج</label>
-                                        <div className="relative group aspect-video w-full rounded-[2rem] border-4 border-dashed border-white bg-slate-100/50 flex flex-col items-center justify-center transition-all overflow-hidden hover:bg-white hover:border-indigo-100 hover:shadow-2xl">
-                                            {formData.image_url ? (
+                            {/* Basic Details Card */}
+                            <div className="bg-white rounded-[2rem] p-6 lg:p-8 border border-slate-200/60 shadow-sm space-y-6">
+                                <div className="space-y-4">
+                                    <label className="text-xs font-black text-slate-700">الصورة الأساسية</label>
+                                    <div className="flex items-center gap-6">
+                                        <div className="relative w-28 h-28 rounded-2xl overflow-hidden bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center group">
+                                            {imageUrl ? (
                                                 <>
-                                                    <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
-                                                    <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                        <span className="px-4 py-2 bg-white text-slate-950 text-[10px] font-black rounded-xl">تغيير الصورة</span>
-                                                    </div>
+                                                    <img src={imageUrl} alt="preview" className="w-full h-full object-cover" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleRemoveImage}
+                                                        className="absolute top-1 right-1 w-6 h-6 bg-white/90 backdrop-blur-md text-rose-500 rounded-lg flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                    </button>
                                                 </>
                                             ) : (
-                                                <div className="flex flex-col items-center gap-4 text-center">
-                                                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-xl group-hover:scale-110 transition-all">
-                                                        {uploading ? (
-                                                            <div className="w-6 h-6 border-4 border-indigo-600/10 border-t-indigo-600 rounded-full animate-spin" />
-                                                        ) : (
-                                                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                                            </svg>
-                                                        )}
-                                                    </div>
-                                                    <span className="text-[11px] font-black text-slate-800 italic">اسحب الصورة أو اضغط هنا</span>
-                                                </div>
+                                                <svg className="w-8 h-8 text-slate-300 group-hover:text-indigo-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                             )}
-                                            <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                            {!imageUrl && (
+                                                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="absolute inset-0 opacity-0 cursor-pointer" title="اختر صورة" />
+                                            )}
+                                            {uploading && <div className="absolute inset-0 bg-white/80 flex items-center justify-center"><div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>}
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="text-sm font-bold text-slate-800">صورة المنتج</h4>
+                                            <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">قم برفع صورة واضحة ومربعة (1:1) للمنتج. تدعم PNG و JPG.</p>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">وصف المنتج</label>
-                                        <textarea
-                                            rows={3}
-                                            value={formData.description}
-                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                            placeholder="اكتب وصفاً جذاباً يشرح مميزات منتجك..."
-                                            className="w-full bg-white border border-slate-100 rounded-[1.5rem] px-6 py-4.5 text-sm font-bold italic shadow-sm focus:ring-[12px] focus:ring-indigo-600/5 focus:border-indigo-600 transition-all outline-none resize-none"
-                                        />
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">اسم المنتج</label>
+                                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="مثال: قميص قطني فاخر" className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none" />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">الوصف (اختياري)</label>
+                                    <textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="اكتب وصفاً جذاباً..." className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none resize-none" />
+                                </div>
+                            </div>
+
+                            {/* Pricing Card */}
+                            <div className="bg-white rounded-[2rem] p-6 lg:p-8 border border-slate-200/60 shadow-sm space-y-6">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    </div>
+                                    <h3 className="text-sm font-black text-slate-800">السعر والتسعير</h3>
+                                </div>
+                                <div className="space-y-2 relative">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">السعر الأساسي</label>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">د.ع</span>
+                                        <input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl pl-12 pr-4 text-sm font-bold text-slate-800 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none" dir="ltr" />
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Advanced Section Toggle */}
-                            <div className="pt-6 border-t border-slate-100">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-                                    className="flex items-center gap-3 text-[11px] font-black text-indigo-600 uppercase tracking-[0.2em] italic hover:text-slate-950 transition-all group"
-                                >
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isAdvancedOpen ? 'bg-slate-900 text-white' : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white'}`}>
-                                        <svg className={`w-4 h-4 transition-transform ${isAdvancedOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
-                                    {isAdvancedOpen ? 'إخفاء الإعدادات المتقدمة' : 'الإعدادات المتقدمة والمتغيرات'}
-                                </button>
-                            </div>
-
-                            {isAdvancedOpen && (
-                                <div className="space-y-12 pt-10 animate-in fade-in slide-in-from-top-6 duration-500">
-                                    {/* Variant Management */}
-                                    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-                                        <div className="p-8 border-b border-slate-50 flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
-                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                                                    </svg>
-                                                </div>
-                                                <h3 className="text-xl font-black text-slate-800 italic">المتغيرات (Variants)</h3>
+                            {/* Variants Matrix Card */}
+                            <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden">
+                                <div className="p-6 lg:p-8 border-b border-slate-100 flex items-start justify-between">
+                                    <div>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
                                             </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => setFormData(prev => ({ ...prev, hasVariants: !prev.hasVariants }))}
-                                                className={`w-14 h-7 rounded-full transition-all relative ${formData.hasVariants ? 'bg-indigo-600' : 'bg-slate-200'}`}
-                                            >
-                                                <div className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-md transition-all ${formData.hasVariants ? 'right-8' : 'right-1'}`} />
-                                            </button>
+                                            <h3 className="text-sm font-black text-slate-800">المتغيرات (Variants)</h3>
                                         </div>
+                                        <p className="text-[10px] text-slate-500 mt-2 font-medium">أضف خيارات مثل المقاس أو اللون. هذه الحقول لن تؤثر على المخزون (كتالوج فقط).</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setHasVariants(!hasVariants)}
+                                        className={`w-12 h-6 rounded-full transition-all relative ${hasVariants ? 'bg-indigo-600' : 'bg-slate-200'}`}
+                                    >
+                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transition-all ${hasVariants ? 'right-7' : 'right-1'}`} />
+                                    </button>
+                                </div>
 
-                                        {formData.hasVariants && (
-                                            <div className="p-10 space-y-10">
-                                                {/* Global Sizes */}
-                                                <div className="space-y-5">
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">المقاسات المتاحة (Sizes)</label>
-                                                    <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
-                                                        {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map((size) => {
-                                                            const isActive = formData.options.sizes.includes(size);
-                                                            return (
-                                                                <button
-                                                                    key={size}
-                                                                    type="button"
-                                                                    onClick={() => isActive ? removeOptionValue('sizes', formData.options.sizes.indexOf(size)) : addOptionValue('sizes', size)}
-                                                                    className={`h-11 flex items-center justify-center rounded-xl font-black italic text-xs border transition-all ${isActive ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-400 border-slate-100 hover:border-indigo-100'}`}
-                                                                >
-                                                                    {size}
-                                                                </button>
-                                                            );
-                                                        })}
+                                {hasVariants && (
+                                    <div className="p-6 lg:p-8 space-y-8 bg-slate-50/50">
+
+                                        {/* Options Builder */}
+                                        <div className="space-y-6">
+                                            {variantOptions.map((option, idx) => (
+                                                <div key={option.id} className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-4 relative group">
+                                                    <button onClick={() => removeOption(option.id)} className="absolute top-4 left-4 w-6 h-6 bg-slate-100 text-slate-400 rounded-lg flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">اسم الخيار {idx + 1}</label>
+                                                        <input type="text" value={option.name} onChange={(e) => updateOptionName(option.id, e.target.value)} placeholder="مثال: الحجم، اللون، المقاس" className="w-full lg:w-1/2 h-10 border-b-2 border-slate-100 bg-transparent px-2 text-sm font-bold text-slate-800 focus:border-indigo-500 transition-colors outline-none" />
                                                     </div>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="+ أضف مقاس مخصص واضغط Enter..."
-                                                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addOptionValue('sizes', e.currentTarget.value); e.currentTarget.value = ''; } }}
-                                                        className="h-11 w-full border border-slate-100 border-dashed rounded-xl px-5 text-slate-400 font-black italic text-[10px] focus:outline-none focus:border-indigo-600 transition-all bg-slate-50/30"
-                                                    />
-                                                </div>
-
-                                                {/* Colors */}
-                                                <div className="space-y-5 pt-8 border-t border-slate-50">
-                                                    <div className="flex items-center justify-between">
-                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">الألوان المتوفرة (Colors)</label>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setShowColorPicker(!showColorPicker);
-                                                                if (!showColorPicker) setTempColor('#4F46E5');
-                                                            }}
-                                                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${showColorPicker ? 'bg-rose-500 text-white rotate-45' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 active:scale-90 hover:bg-slate-900'}`}
-                                                        >
-                                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
-                                                        </button>
-                                                    </div>
-
-                                                    {showColorPicker && (
-                                                        <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex flex-col sm:flex-row items-center gap-6 animate-in slide-in-from-top-4 duration-300">
-                                                            <div className="relative group">
-                                                                <div
-                                                                    className="w-16 h-16 rounded-3xl border-4 border-white shadow-2xl transition-transform duration-500 group-hover:scale-105"
-                                                                    style={{ backgroundColor: tempColor }}
-                                                                />
-                                                                <input
-                                                                    type="color"
-                                                                    value={tempColor}
-                                                                    onChange={(e) => setTempColor(e.target.value)}
-                                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                                />
-                                                            </div>
-                                                            <div className="flex-1 space-y-3 w-full text-center sm:text-right">
-                                                                <div className="flex flex-wrap justify-center sm:justify-start gap-2">
-                                                                    {['#FFFFFF', '#000000', '#FF0000', '#0000FF', '#008000', '#FFFF00'].map(p => (
-                                                                        <button
-                                                                            key={p}
-                                                                            type="button"
-                                                                            onClick={() => setTempColor(p)}
-                                                                            className="w-7 h-7 rounded-full border-2 border-white shadow-sm ring-1 ring-slate-200 hover:scale-110 transition-all"
-                                                                            style={{ backgroundColor: p }}
-                                                                        />
-                                                                    ))}
-                                                                </div>
-                                                                <p className="text-[10px] font-black text-slate-400 italic">اضغط على المربع لاختيار لون مخصص</p>
-                                                            </div>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    addOptionValue('colors', tempColor);
-                                                                    setShowColorPicker(false);
-                                                                }}
-                                                                className="px-8 py-3.5 bg-slate-950 text-white rounded-2xl font-black italic text-xs shadow-xl active:scale-95 transition-all hover:bg-emerald-600"
-                                                            >
-                                                                حفظ اللون
-                                                            </button>
-                                                        </div>
-                                                    )}
-
-                                                    <div className="flex flex-wrap items-center gap-4 min-h-[40px]">
-                                                        {formData.options.colors.length === 0 && !showColorPicker && (
-                                                            <span className="text-[10px] font-bold text-slate-300 italic">لم يتم إضافة ألوان بعد...</span>
-                                                        )}
-                                                        {formData.options.colors.map((color, idx) => (
-                                                            <div key={idx} className="group relative">
-                                                                <div className="w-11 h-11 rounded-full border-4 border-white shadow-lg ring-1 ring-slate-100 transition-transform group-hover:scale-110" style={{ backgroundColor: color }} />
-                                                                <button onClick={() => removeOptionValue('colors', idx)} className="absolute -top-1 -right-1 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-all shadow-lg active:scale-90 border-2 border-white">×</button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-
-                                                {/* Weights */}
-                                                <div className="space-y-5 pt-8 border-t border-slate-50">
-                                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">الأوزان والأحجام (Weights/Volumes)</label>
-                                                    <div className="flex flex-wrap gap-4">
-                                                        {formData.options.weights.map((w, idx) => (
-                                                            <div key={idx} className="group relative px-5 py-3 bg-indigo-50 text-indigo-600 rounded-xl font-black italic text-xs border border-indigo-100 shadow-sm flex items-center gap-3">
-                                                                {w.value} {w.unit}
-                                                                <button onClick={() => removeOptionValue('weights', idx)} className="w-5 h-5 bg-rose-500/10 text-rose-500 rounded-lg flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all text-sm">×</button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                    <div className="flex items-center gap-4 pt-2">
-                                                        <input id="w-val" type="text" placeholder="الكمية (مثال: 500)" className="h-12 flex-1 border border-slate-100 rounded-xl px-4 text-xs font-bold italic outline-none focus:border-indigo-600" />
-                                                        <select id="w-unit" className="h-12 w-28 border border-slate-100 rounded-xl px-3 text-xs font-bold italic outline-none focus:border-indigo-600 appearance-none bg-white">
-                                                            <option value="g">جم (g)</option>
-                                                            <option value="kg">كجم (kg)</option>
-                                                            <option value="ml">مل (ml)</option>
-                                                            <option value="L">لتر (L)</option>
-                                                        </select>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const v = (document.getElementById('w-val') as HTMLInputElement).value;
-                                                                const u = (document.getElementById('w-unit') as HTMLSelectElement).value;
-                                                                if (v) { addWeightVariant(v, u); (document.getElementById('w-val') as HTMLInputElement).value = ''; }
-                                                            }}
-                                                            className="h-12 px-8 bg-slate-900 text-white rounded-xl font-black italic text-xs hover:bg-indigo-600 transition-all shadow-lg"
-                                                        >
-                                                            إضافة
-                                                        </button>
-                                                    </div>
-
-                                                    {/* Price Overrides */}
-                                                    {formData.options.weights.length > 0 && (
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
-                                                            {formData.options.weights.map((w, idx) => {
-                                                                const key = `${w.value}${w.unit}`;
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">القيم المتاحة</label>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {option.values.map(val => {
+                                                                const isColorOption = option.name === 'اللون';
+                                                                const isHex = isColorOption && val.startsWith('#');
                                                                 return (
-                                                                    <div key={idx} className="space-y-2">
-                                                                        <label className="text-[9px] font-black text-slate-400 italic">سعر {w.value}{w.unit} (اختياري)</label>
-                                                                        <div className="relative">
-                                                                            <input
-                                                                                type="text"
-                                                                                value={formData.weightPrices[key] || ''}
-                                                                                onChange={(e) => setWeightPrice(key, e.target.value)}
-                                                                                placeholder="سعر مخصص"
-                                                                                className="w-full h-11 bg-white border border-slate-100 rounded-xl px-4 text-xs font-bold italic outline-none"
-                                                                            />
-                                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[9px] text-slate-300 font-black">ر.س</span>
-                                                                        </div>
+                                                                    <div key={val} className={`px-3 py-1.5 bg-slate-100 text-slate-700 font-bold text-xs rounded-lg flex items-center gap-2 ${isHex ? 'pl-2' : ''}`}>
+                                                                        {isHex ? (
+                                                                            <div className="w-5 h-5 rounded-full border border-slate-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]" style={{ backgroundColor: val }} title="لون" />
+                                                                        ) : (
+                                                                            <span>{val}</span>
+                                                                        )}
+                                                                        <button onClick={() => removeOptionValue(option.id, val)} className={`text-slate-400 hover:text-rose-500 ${isHex ? 'mr-1' : ''}`}>×</button>
                                                                     </div>
                                                                 );
                                                             })}
+                                                            {option.name === 'اللون' ? (
+                                                                <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                                                                    <div className="relative w-9 h-9 rounded-lg overflow-hidden border border-slate-200 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] cursor-pointer hover:scale-105 transition-transform">
+                                                                        <input type="color" id={`color-picker-${option.id}`} className="absolute -inset-2 w-[200%] h-[200%] cursor-pointer" defaultValue="#3b82f6" />
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const colorInput = document.getElementById(`color-picker-${option.id}`) as HTMLInputElement;
+                                                                            if (colorInput) {
+                                                                                addOptionValue(option.id, colorInput.value.toUpperCase());
+                                                                            }
+                                                                        }}
+                                                                        className="h-9 px-4 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-[11px] font-black text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                                                                    >
+                                                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                                                        تأكيد الإضافة
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <input type="text" placeholder="أضف قيمة ثم اضغط Enter للحفظ..." onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addOptionValue(option.id, e.currentTarget.value); e.currentTarget.value = ''; } }} className="min-w-[200px] flex-1 h-9 bg-slate-50 border border-slate-200 border-dashed rounded-lg px-3 text-xs font-bold text-slate-600 focus:bg-white focus:border-indigo-500 outline-none transition-all" />
+                                                            )}
                                                         </div>
-                                                    )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            <button onClick={() => addOption()} className="w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-xs font-black text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 transition-all flex items-center justify-center gap-2">
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+                                                إضافة خيار مخصص
+                                            </button>
+
+                                            {/* Quick Templates */}
+                                            <div className="flex items-center gap-2 flex-wrap pt-2">
+                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">قوالب جاهزة:</span>
+                                                <button onClick={() => addOption('المقاس', ['S', 'M', 'L', 'XL'])} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-lg transition-colors">المقاسات</button>
+                                                <button onClick={() => addOption('اللون', ['#000000', '#FFFFFF'])} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-lg transition-colors">الألوان</button>
+                                                <button onClick={() => addOption('الوزن', ['500g', '1kg'])} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-lg transition-colors">الأوزان</button>
+                                            </div>
+                                        </div>
+
+                                        {/* Combinations Matrix */}
+                                        {variantCombinations.length > 0 && (
+                                            <div className="space-y-4 pt-6 border-t border-slate-200">
+                                                <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-widest">تخصيص الأسعار (اختياري)</h4>
+                                                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                                                    <table className="w-full text-right text-xs font-bold">
+                                                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-400">
+                                                            <tr>
+                                                                <th className="px-4 py-3 w-4/6 font-black uppercase tracking-widest">المتغير</th>
+                                                                <th className="px-4 py-3 font-black uppercase tracking-widest">السعر المخصص</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-slate-100">
+                                                            {variantCombinations.map((combo) => (
+                                                                <tr key={combo.id} className="hover:bg-slate-50/50 transition-colors">
+                                                                    <td className="px-3 py-2 text-slate-700">
+                                                                        <div className="flex flex-wrap gap-1">
+                                                                            {Object.entries(combo.options).map(([optId, val]) => {
+                                                                                const isHex = val.startsWith('#');
+                                                                                return (
+                                                                                    <span key={optId} className={`px-1.5 py-0.5 bg-slate-100/80 border border-slate-200/60 rounded-md text-[10px] font-bold text-slate-700 flex items-center justify-center ${isHex ? 'min-w-[20px]' : ''}`}>
+                                                                                        {isHex ? (
+                                                                                            <div className="w-3 h-3 rounded-full border border-slate-200 shadow-sm" style={{ backgroundColor: val }} title="لون" />
+                                                                                        ) : (
+                                                                                            val
+                                                                                        )}
+                                                                                    </span>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="px-3 py-1.5 w-1/3">
+                                                                        <div className="relative">
+                                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">د.ع</span>
+                                                                            <input
+                                                                                type="number"
+                                                                                placeholder="الافتراضي"
+                                                                                value={combo.price}
+                                                                                onChange={(e) => updateCombinationPrice(combo.id, e.target.value)}
+                                                                                className="w-full h-8 bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-3 text-xs font-bold outline-none focus:border-indigo-500 focus:bg-white transition-colors"
+                                                                                dir="ltr"
+                                                                            />
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                             </div>
                                         )}
                                     </div>
-
-                                    {/* Out of Stock Logic */}
-                                    <div className="bg-white rounded-[2.5rem] border border-slate-100 p-10 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8">
-                                        <div className="space-y-2 text-right">
-                                            <h4 className="text-[10px] font-black text-rose-500 uppercase tracking-widest italic">إدارة المخزون</h4>
-                                            <p className="text-xl font-black text-slate-800 italic">سلوك المسوق عند نفاذ الكمية</p>
-                                        </div>
-                                        <div className="flex gap-4">
-                                            <button
-                                                type="button"
-                                                onClick={() => setFormData({ ...formData, outOfStockBehavior: 'hide' })}
-                                                className={`px-8 py-4 rounded-2xl border-2 transition-all font-black italic text-xs ${formData.outOfStockBehavior === 'hide' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-100 text-slate-400 hover:border-slate-200'}`}
-                                            >
-                                                إخفاء المنتج تماماً
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setFormData({ ...formData, outOfStockBehavior: 'show_badge' })}
-                                                className={`px-8 py-4 rounded-2xl border-2 transition-all font-black italic text-xs ${formData.outOfStockBehavior === 'show_badge' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-100 text-slate-400 hover:border-slate-200'}`}
-                                            >
-                                                إظهار "نفذ من المخزون"
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {error && (
-                                <div className="p-6 bg-rose-50 border border-rose-100 text-rose-600 rounded-3xl text-sm font-black italic animate-shake">
-                                    ⚠️ {error}
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
-
-                {/* Footer Actions */}
-                {!success && (
-                    <div className="p-8 bg-white border-t border-slate-50 flex items-center justify-between sticky bottom-0 z-20">
-                        <button onClick={onClose} className="px-10 py-4 text-slate-400 font-black italic hover:text-slate-900 transition-all">إلغاء العملية</button>
-                        <div className="flex gap-4">
-                            <button
-                                onClick={handleSubmit}
-                                disabled={loading || uploading}
-                                className="px-14 py-4.5 bg-indigo-600 text-white rounded-3xl font-black italic shadow-2xl shadow-indigo-600/30 hover:bg-slate-950 transition-all active:scale-95 disabled:opacity-50 min-w-[200px] flex items-center justify-center gap-3"
-                            >
-                                {loading ? (
-                                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                                ) : (
-                                    <>
-                                        <span>{initialData ? 'تحديث البيانات' : 'إضافة هذا المنتج'}</span>
-                                        {!initialData && <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>}
-                                    </>
                                 )}
-                            </button>
+                            </div>
+
+                        </div>
+
+                        {/* Left Column: Organization (RTL) */}
+                        <div className="w-full lg:w-72 space-y-6 flex-shrink-0">
+
+
+
+                            {/* Organization Card */}
+                            <div className="bg-white rounded-[2rem] p-6 border border-slate-200/60 shadow-sm space-y-5">
+                                <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">التنظيم</h3>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-700">القسم (Category)</label>
+                                    <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 outline-none focus:bg-white focus:border-indigo-500 transition-colors appearance-none cursor-pointer">
+                                        <option value="" disabled>اختر القسم المناسب</option>
+                                        {sections.map(sec => (
+                                            <option key={sec.id} value={sec.name}>{sec.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
-                )}
+                </div>
+
+                {/* Footer Action */}
+                <div className="p-6 bg-white border-t border-slate-200 flex items-center justify-between shadow-[0_-10px_40px_rgba(0,0,0,0.03)] z-30">
+                    <button onClick={onClose} className="px-6 py-3 text-slate-500 font-bold hover:text-slate-800 text-xs transition-colors">إلغاء</button>
+                    <button onClick={handleSubmit} disabled={loading || uploading} className="px-10 py-3.5 bg-slate-900 text-white rounded-xl font-black text-xs shadow-xl hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2">
+                        {loading ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <span>{initialData ? 'حفظ التعديلات' : 'إضافة المنتج'}</span>}
+                    </button>
+                </div>
             </div>
 
             <style jsx global>{`
                 .custom-scrollbar::-webkit-scrollbar { width: 6px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
-                
-                @keyframes shake {
-                    0%, 100% { transform: translateX(0); }
-                    25% { transform: translateX(-5px); }
-                    75% { transform: translateX(5px); }
-                }
-                .animate-shake { animation: shake 0.3s ease-in-out; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
             `}</style>
         </div>
     );

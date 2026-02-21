@@ -11,12 +11,14 @@ const OrderItemSchema = z.object({
     // We include it here just to validate structure.
     price: z.number().nonnegative().optional(),
     name: z.string().optional(),
+    selections: z.record(z.string(), z.string()).optional(),
 });
 
 const CustomerInfoSchema = z.object({
     name: z.string().min(2, 'الاسم يجب أن يكون حرفين على الأقل').max(100),
     phone: z.string().min(8, 'رقم الهاتف غير صحيح').max(20).regex(/^\+?[0-9\s-]+$/, 'رقم الهاتف يجب أن يحتوي على أرقام فقط'),
-    address: z.string().max(500).optional().or(z.literal('')),
+    city: z.string().min(2, 'الرجاء اختيار المحافظة'),
+    landmark: z.string().max(500).optional().or(z.literal('')),
     notes: z.string().max(1000).optional().or(z.literal('')),
 });
 
@@ -26,7 +28,9 @@ const PlaceOrderSchema = z.object({
     customerInfo: CustomerInfoSchema,
 });
 
-export async function placeOrderAction(orderData: any) {
+type OrderData = z.infer<typeof PlaceOrderSchema>;
+
+export async function placeOrderAction(orderData: OrderData) {
     console.log('[SERVER] placeOrderAction started');
 
     const supabaseAdmin = createAdminClient(
@@ -65,6 +69,49 @@ export async function placeOrderAction(orderData: any) {
             throw new Error('فشل التحقق من المنتجات في قاعدة البيانات.');
         }
 
+        // 2b. Fetch Store Delivery Fees
+        const { data: store, error: storeError } = await supabaseAdmin
+            .from('stores')
+            .select('delivery_fees')
+            .eq('id', storeId)
+            .single();
+
+        if (storeError) {
+            console.error('[SERVER] Store fetch error:', storeError);
+        }
+
+        const IRAQ_CITIES = ['بغداد', 'البصرة', 'الموصل', 'أربيل', 'السليمانية', 'دهوك', 'كركوك', 'النجف', 'كربلاء', 'الحلة', 'الأنبار', 'الديوانية', 'الكوت', 'العمارة', 'الناصرية', 'السماوة', 'ديالى', 'صلاح الدين'];
+        const rawFees = store?.delivery_fees;
+
+        let cityToFeeMap: Record<string, number> = {};
+
+        if (rawFees && Array.isArray(rawFees.zones)) {
+            rawFees.zones.forEach((zone: any) => {
+                if (zone.enabled) {
+                    zone.cities.forEach((city: string) => {
+                        cityToFeeMap[city] = zone.fee;
+                    });
+                }
+            });
+        } else if (rawFees && typeof rawFees === 'object' && !('baghdad' in rawFees) && Object.keys(rawFees).length > 2) {
+            Object.keys(rawFees).forEach(city => {
+                if (rawFees[city].enabled) {
+                    cityToFeeMap[city] = rawFees[city].fee;
+                }
+            });
+        } else {
+            const bFee = rawFees?.baghdad ?? 5000;
+            const pFee = rawFees?.provinces ?? 8000;
+            IRAQ_CITIES.forEach(city => {
+                cityToFeeMap[city] = city === 'بغداد' ? bFee : pFee;
+            });
+        }
+
+        const fee = cityToFeeMap[customerInfo.city];
+        if (fee === undefined) {
+            return { success: false, error: 'نعتذر، التوصيل غير متاح إلى هذه المحافظة حالياً.' };
+        }
+
         // 3. Logic & Price Calculation
         let serverTotalPrice = 0;
         const validatedItems = [];
@@ -84,10 +131,14 @@ export async function placeOrderAction(orderData: any) {
             validatedItems.push({
                 id: item.id,
                 quantity: item.quantity,
-                name: product.name,
-                price: unitPrice // Always use server price
+                name: product.name, // Always use server name
+                price: unitPrice, // Always use server price
+                selections: item.selections || {}
             });
         }
+
+        // Add the delivery fee to the total sum
+        serverTotalPrice += fee;
 
         // 4. Create Order
         const { data: newOrder, error: insertError } = await supabaseAdmin
@@ -97,6 +148,8 @@ export async function placeOrderAction(orderData: any) {
                 customer_info: customerInfo, // Trusted z.parsed data
                 items: validatedItems,
                 total_price: serverTotalPrice,
+                delivery_fee: fee,
+                governorate: customerInfo.city,
                 status: 'pending'
             })
             .select()
