@@ -87,13 +87,15 @@ export default function MerchantDashboard() {
             setActiveStoreIdx(0); // Set the first store as active
             const activeStore = storesData[0];
 
-            // Fetch All Orders for Stats Calculation
-            const { data: allOrders, error: statsError } = await supabase
-                .from('orders')
-                .select('total_price, status, created_at')
-                .eq('store_id', activeStore.id);
+            // Parallel fetch: stats, products, and recent orders
+            const [allOrdersResult, productsResult, ordersResult] = await Promise.all([
+                supabase.from('orders').select('total_price, status, created_at').eq('store_id', activeStore.id),
+                supabase.from('products').select('id, name, price, image_url').eq('store_id', activeStore.id).limit(3),
+                supabase.from('orders').select('id, customer_info, created_at, total_price, status').eq('store_id', activeStore.id).order('created_at', { ascending: false }).limit(5)
+            ]);
 
-            if (statsError) throw statsError;
+            const allOrders = allOrdersResult.data;
+            if (allOrdersResult.error) throw allOrdersResult.error;
 
             if (allOrders) {
                 // Only count sales for orders that are delivered/completed
@@ -134,22 +136,8 @@ export default function MerchantDashboard() {
                 });
             }
 
-            // Fetch Top Products
-            const { data: productsData } = await supabase
-                .from('products')
-                .select('id, name, price, image_url')
-                .eq('store_id', activeStore.id)
-                .limit(3);
-            setProducts(productsData || []);
-
-            // Fetch Recent Orders (Limit to 5)
-            const { data: ordersData } = await supabase
-                .from('orders')
-                .select('*')
-                .eq('store_id', activeStore.id)
-                .order('created_at', { ascending: false })
-                .limit(5);
-            setRecentOrders(ordersData || []);
+            setProducts(productsResult.data || []);
+            setRecentOrders(ordersResult.data || []);
 
             const subscription = supabase
                 .channel('merchant-dashboard-updates')
@@ -160,7 +148,10 @@ export default function MerchantDashboard() {
                 }, (payload) => {
                     if (payload.new && payload.new.store_id === activeStore.id) {
                         toast.success('طلب جديد!', { description: 'لقد استلمت طلباً جديداً للتو.' });
-                        fetchDashboardData(userId); // Refresh dashboard data
+                        // Append new order to the list instead of full refetch
+                        setRecentOrders(prev => [payload.new as Order, ...prev].slice(0, 5));
+                        // Update pending count
+                        setStats(prev => ({ ...prev, newOrders: prev.newOrders + 1 }));
                     }
                 })
                 .subscribe();

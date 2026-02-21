@@ -105,10 +105,12 @@ export default function MerchantOrdersPage() {
                 schema: 'public',
                 table: 'orders',
             }, (payload) => {
-                // Filter manually to avoid type mismatch in PostgREST realtime filters
                 if (payload.new && payload.new.store_id === storeId) {
                     toast.success('طلب جديد!', { description: 'لقد استلمت طلباً جديداً للتو من متجرك.' });
-                    fetchOrders(storeId);
+                    // Append new order locally instead of full refetch
+                    const newOrder = payload.new as Order;
+                    setOrders(prev => [newOrder, ...prev]);
+                    setStats(prev => ({ ...prev, total: prev.total + 1, pending: prev.pending + 1 }));
                 }
             })
             .subscribe();

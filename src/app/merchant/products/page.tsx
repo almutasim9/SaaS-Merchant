@@ -87,7 +87,7 @@ export default function MerchantProductsPage() {
                 getSections(storeData.id),
                 supabase
                     .from('products')
-                    .select('*')
+                    .select('id, name, description, category, price, image_url, created_at, attributes')
                     .eq('store_id', storeData.id)
                     .order('created_at', { ascending: false })
             ]);
@@ -131,32 +131,30 @@ export default function MerchantProductsPage() {
 
     const toggleAvailability = async (product: Product) => {
         const newAvailability = !(product.attributes?.isAvailable ?? true);
+        // Optimistic local update
+        setProducts(prev => prev.map(p => p.id === product.id
+            ? { ...p, attributes: { ...p.attributes, isAvailable: newAvailability } as ProductAttributes }
+            : p
+        ));
         const { error } = await supabase
             .from('products')
-            .update({
-                attributes: {
-                    ...product.attributes,
-                    isAvailable: newAvailability
-                }
-            })
+            .update({ attributes: { ...product.attributes, isAvailable: newAvailability } })
             .eq('id', product.id);
-
-        if (!error) fetchProducts();
+        if (error) fetchProducts(); // Revert on error
     };
 
     const toggleVisibility = async (product: Product) => {
         const newHidden = !(product.attributes?.isHidden ?? false);
+        // Optimistic local update
+        setProducts(prev => prev.map(p => p.id === product.id
+            ? { ...p, attributes: { ...p.attributes, isHidden: newHidden } as ProductAttributes }
+            : p
+        ));
         const { error } = await supabase
             .from('products')
-            .update({
-                attributes: {
-                    ...product.attributes,
-                    isHidden: newHidden
-                }
-            })
+            .update({ attributes: { ...product.attributes, isHidden: newHidden } })
             .eq('id', product.id);
-
-        if (!error) fetchProducts();
+        if (error) fetchProducts(); // Revert on error
     };
 
     const StatusBadge = ({ status }: { status: Product['status'] }) => {
