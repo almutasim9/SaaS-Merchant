@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase-server';
 import { z } from 'zod';
 
 // Input Validation Schemas
@@ -31,18 +31,6 @@ const PlaceOrderSchema = z.object({
 type OrderData = z.infer<typeof PlaceOrderSchema>;
 
 export async function placeOrderAction(orderData: OrderData) {
-    console.log('[SERVER] placeOrderAction started');
-
-    const supabaseAdmin = createAdminClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-            auth: {
-                autoRefreshToken: false,
-                persistSession: false
-            }
-        }
-    );
 
     try {
         // 1. Input Validation
@@ -121,8 +109,8 @@ export async function placeOrderAction(orderData: OrderData) {
             if (!product) throw new Error(`المنتج ذو المعرف ${item.id} غير متوفر.`);
 
             // Stock Check
-            if (product.stock_quantity !== null && product.stock_quantity <= 0) {
-                throw new Error(`المنتج ${product.name} نفذ من المخزن.`);
+            if (product.stock_quantity !== null && product.stock_quantity < item.quantity) {
+                throw new Error(`الكمية المطلوبة من ${product.name} (${item.quantity}) أكبر من المتوفر (${product.stock_quantity}).`);
             }
 
             const unitPrice = Number(product.price);

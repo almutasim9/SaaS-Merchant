@@ -1,12 +1,6 @@
 'use server';
 
-import { createClient as createServerClient } from '@/lib/supabase-server';
-import { createClient as createAdminClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabaseAdmin = createAdminClient(supabaseUrl, supabaseServiceKey);
+import { createClient as createServerClient, supabaseAdmin } from '@/lib/supabase-server';
 
 // Helper to verify merchant session
 async function verifyMerchantSession(userId: string) {
@@ -48,6 +42,10 @@ const MOCK_PRODUCTS = [
 
 export async function seedProductsAction(userId: string) {
     try {
+        // 0. Auth Check
+        const isValid = await verifyMerchantSession(userId);
+        if (!isValid) return { success: false, error: 'غير مصرح لك بالقيام بهذا الإجراء.' };
+
         // 1. Get store_id
         const { data: storeData, error: storeError } = await supabaseAdmin
             .from('stores')

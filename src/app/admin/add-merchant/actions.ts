@@ -1,18 +1,7 @@
 'use server';
 
-import { createClient as createServerClient } from '@/lib/supabase-server';
-import { createClient as createAdminClient } from '@supabase/supabase-js';
-
-const supabaseAdmin = createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false
-        }
-    }
-);
+import { createClient as createServerClient, supabaseAdmin } from '@/lib/supabase-server';
+import { z } from 'zod';
 
 // Helper to verify admin session
 async function verifyAdminSession() {
@@ -29,12 +18,31 @@ async function verifyAdminSession() {
     return profile?.role === 'super_admin';
 }
 
+const RegisterMerchantSchema = z.object({
+    storeName: z.string().min(2, 'اسم المتجر مطلوب').max(100),
+    slug: z.string().min(2).regex(/^[a-z0-9-]+$/, 'الرابط يجب أن يحتوي على أحرف إنجليزية وأرقام فقط'),
+    category: z.string().min(1, 'يرجى اختيار التصنيف'),
+    subscriptionType: z.enum(['Free', 'Pro', 'Premium']).default('Free'),
+    ownerName: z.string().min(2, 'اسم المالك مطلوب'),
+    phone: z.string().min(9, 'رقم الهاتف غير صحيح'),
+    email: z.string().email('البريد الإلكتروني غير صحيح'),
+    password: z.string().min(6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'),
+});
+
 export async function registerMerchantAction(formData: any) {
     // 0. Server-side Authorization Check
     const isAdmin = await verifyAdminSession();
     if (!isAdmin) {
         return { success: false, error: 'غير مصرح لك بالقيام بهذا الإجراء.' };
     }
+
+    // 0b. Input Validation
+    const validation = RegisterMerchantSchema.safeParse(formData);
+    if (!validation.success) {
+        const errorMessage = validation.error.issues.map(e => e.message).join(', ');
+        return { success: false, error: errorMessage };
+    }
+    const validData = validation.data;
 
     let userId: string | null = null;
 
@@ -58,8 +66,8 @@ export async function registerMerchantAction(formData: any) {
             .upsert({
                 id: userId,
                 role: 'merchant',
-                full_name: formData.ownerName,
-                phone_number: formData.phone,
+                full_name: validData.ownerName,
+                phone_number: validData.phone,
             });
 
         if (profileError) throw profileError;
@@ -68,10 +76,10 @@ export async function registerMerchantAction(formData: any) {
         const { error: storeError } = await supabaseAdmin
             .from('stores')
             .insert({
-                name: formData.storeName,
-                slug: formData.slug,
-                category: formData.category,
-                subscription_type: formData.subscriptionType,
+                name: validData.storeName,
+                slug: validData.slug,
+                category: validData.category,
+                subscription_type: validData.subscriptionType,
                 merchant_id: userId,
                 is_active: true
             });
@@ -90,7 +98,6 @@ export async function registerMerchantAction(formData: any) {
 
         // ROLLBACK: If any step failed after user creation, delete the user
         if (userId) {
-            console.log('Rolling back: Deleting user ID', userId);
             await supabaseAdmin.auth.admin.deleteUser(userId);
         }
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { updateOrderStatusAction } from './actions';
 
 interface Order {
     id: string;
@@ -11,10 +12,14 @@ interface Order {
     customer_info: {
         name: string;
         phone: string;
-        address: string;
+        city: string;
+        landmark?: string;
+        notes?: string;
     };
     items: any[];
     total_price: number;
+    delivery_fee: number;
+    governorate: string;
     status: string;
     created_at: string;
 }
@@ -126,23 +131,18 @@ export default function MerchantOrdersPage() {
             setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
         }
 
-        const { error } = await supabase
-            .from('orders')
-            .update({ status: newStatus })
-            .eq('id', orderId);
+        const result = await updateOrderStatusAction(orderId, newStatus);
 
-        if (error) {
-            toast.error('حدث خطأ أثناء تحديث حالة الطلب');
+        if (!result.success) {
+            toast.error(result.error || 'حدث خطأ أثناء تحديث حالة الطلب');
             setOrders(previousOrders); // Revert on error
         } else {
             toast.success('تم تحديث حالة الطلب بنجاح');
-            // Recalculate stats based on local new orders
             if (newStatus === 'completed' || newStatus === 'cancelled') {
                 calculateStats(orders.filter(o => o.id !== orderId));
             } else {
                 calculateStats(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
             }
-            // Ask layout to re-fetch the specific counts
             window.dispatchEvent(new Event('orderStatusUpdated'));
         }
     };
@@ -385,7 +385,7 @@ export default function MerchantOrdersPage() {
                                         </div>
                                         <div className="pt-4 lg:pt-6 border-t border-slate-200/50">
                                             <div className="text-[10px] font-bold text-slate-400 uppercase pr-1 mb-2">عنوان التوصيل</div>
-                                            <div className="text-sm font-medium text-slate-600 leading-relaxed">{selectedOrder.customer_info.address}</div>
+                                            <div className="text-sm font-medium text-slate-600 leading-relaxed">{selectedOrder.governorate}{selectedOrder.customer_info.landmark ? ` — ${selectedOrder.customer_info.landmark}` : ''}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -414,11 +414,11 @@ export default function MerchantOrdersPage() {
                                     <div className="space-y-3 lg:space-y-4">
                                         <div className="flex justify-between items-center text-xs lg:text-sm font-medium text-slate-400">
                                             <span>المجموع الفرعي</span>
-                                            <span>{selectedOrder.total_price.toLocaleString()} د.ع</span>
+                                            <span>{(selectedOrder.total_price - (selectedOrder.delivery_fee || 0)).toLocaleString()} د.ع</span>
                                         </div>
                                         <div className="flex justify-between items-center text-xs lg:text-sm font-medium text-slate-400">
-                                            <span>رسوم التوصيل</span>
-                                            <span className="text-emerald-500">مجاني</span>
+                                            <span>رسوم التوصيل ({selectedOrder.governorate || 'غير محدد'})</span>
+                                            <span className="text-amber-600">{(selectedOrder.delivery_fee || 0).toLocaleString()} د.ع</span>
                                         </div>
                                         <div className="pt-4 lg:pt-6 flex justify-between items-center">
                                             <span className="text-lg lg:text-xl font-bold text-slate-800">الإجمالي النهائي</span>
@@ -455,7 +455,7 @@ export default function MerchantOrdersPage() {
                         <div className="mb-1"><strong>العميل:</strong> {selectedOrder.customer_info.name}</div>
                         <div className="mb-1"><strong>المحافظة:</strong> {(selectedOrder as any).governorate || 'غير محدد'}</div>
                         <div className="mb-1"><strong>الهاتف:</strong> {selectedOrder.customer_info.phone}</div>
-                        <div className="mb-2"><strong>العنوان:</strong> <span className="whitespace-pre-wrap">{selectedOrder.customer_info.address}</span></div>
+                        <div className="mb-2"><strong>العنوان:</strong> <span className="whitespace-pre-wrap">{selectedOrder.governorate}{selectedOrder.customer_info.landmark ? ` - ${selectedOrder.customer_info.landmark}` : ''}</span></div>
 
                         <table className="w-full text-right border-t border-b border-black mt-2 mb-2">
                             <thead>

@@ -92,7 +92,6 @@ export async function publicRegisterMerchantAction(formData: any) {
 
         // ROLLBACK: If any step failed after user creation, delete the user to maintain consistency
         if (userId) {
-            console.log('[Public Register] Rolling back: Deleting user ID', userId);
             await supabaseAdmin.auth.admin.deleteUser(userId);
         }
 

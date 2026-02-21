@@ -22,12 +22,13 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export const CartProvider = ({ children }: { children: React.ReactNode }) => {
+export const CartProvider = ({ children, storeSlug }: { children: React.ReactNode; storeSlug?: string }) => {
     const [cart, setCart] = useState<CartItem[]>([]);
+    const storageKey = storeSlug ? `shopping-cart-${storeSlug}` : 'shopping-cart';
 
     // Load cart from localStorage
     useEffect(() => {
-        const savedCart = localStorage.getItem('shopping-cart');
+        const savedCart = localStorage.getItem(storageKey);
         if (savedCart) {
             try {
                 const parsedCart = JSON.parse(savedCart);
@@ -42,7 +43,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Save cart to localStorage
     useEffect(() => {
-        localStorage.setItem('shopping-cart', JSON.stringify(cart));
+        localStorage.setItem(storageKey, JSON.stringify(cart));
     }, [cart]);
 
     const addToCart = (product: any) => {
