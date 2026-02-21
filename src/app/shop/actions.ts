@@ -108,11 +108,6 @@ export async function placeOrderAction(orderData: OrderData) {
             const product = dbProducts.find(p => p.id === item.id);
             if (!product) throw new Error(`المنتج ذو المعرف ${item.id} غير متوفر.`);
 
-            // Stock Check
-            if (product.stock_quantity !== null && product.stock_quantity < item.quantity) {
-                throw new Error(`الكمية المطلوبة من ${product.name} (${item.quantity}) أكبر من المتوفر (${product.stock_quantity}).`);
-            }
-
             const unitPrice = Number(product.price);
             serverTotalPrice += unitPrice * item.quantity;
 
