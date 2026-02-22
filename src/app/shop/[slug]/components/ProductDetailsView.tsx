@@ -27,6 +27,7 @@ interface Product {
         isAvailable?: boolean;
         variantOptions?: VariantOption[];
         variantCombinations?: VariantCombination[];
+        images?: string[];
     };
 }
 
@@ -50,6 +51,19 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
     const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
     const [quantity, setQuantity] = useState(1);
     const [isAdded, setIsAdded] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    // Build gallery images array: primary + additional
+    const galleryImages = useMemo(() => {
+        const imgs = [product.image_url].filter(Boolean);
+        if (attributes?.images && Array.isArray(attributes.images)) {
+            imgs.push(...attributes.images.filter(Boolean));
+        }
+        return imgs.length > 0 ? imgs : ['/placeholder-product.png'];
+    }, [product.image_url, attributes?.images]);
+
+    // Touch swipe handlers
+    const [touchStart, setTouchStart] = useState<number | null>(null);
 
     useEffect(() => {
         if (hasVariants && variantOptions.length > 0) {
@@ -132,15 +146,80 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                 )}
             </header>
 
-            {/* Image Gallery Mock */}
-            <div className="relative aspect-square lg:aspect-auto lg:w-1/2 lg:h-full bg-[#F2F4F7] flex items-center justify-center">
+            {/* Image Gallery */}
+            <div className="relative aspect-square lg:aspect-auto lg:w-1/2 lg:h-full bg-[#F2F4F7] flex items-center justify-center overflow-hidden"
+                onTouchStart={(e) => setTouchStart(e.touches[0].clientX)}
+                onTouchEnd={(e) => {
+                    if (touchStart === null) return;
+                    const diff = touchStart - e.changedTouches[0].clientX;
+                    if (Math.abs(diff) > 50) {
+                        if (diff > 0 && currentImageIndex < galleryImages.length - 1) {
+                            setCurrentImageIndex(prev => prev + 1);
+                        } else if (diff < 0 && currentImageIndex > 0) {
+                            setCurrentImageIndex(prev => prev - 1);
+                        }
+                    }
+                    setTouchStart(null);
+                }}
+            >
                 <Image
-                    src={product.image_url || '/placeholder-product.png'}
+                    src={galleryImages[currentImageIndex]}
                     alt={product.name}
                     fill
                     priority
-                    className="object-cover"
+                    className="object-cover transition-all duration-500"
+                    key={currentImageIndex}
                 />
+
+                {/* Gallery Navigation Arrows (Desktop) */}
+                {galleryImages.length > 1 && (
+                    <>
+                        {currentImageIndex > 0 && (
+                            <button
+                                onClick={() => setCurrentImageIndex(prev => prev - 1)}
+                                className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full items-center justify-center text-slate-600 hover:bg-white hover:scale-110 transition-all shadow-lg z-10"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                            </button>
+                        )}
+                        {currentImageIndex < galleryImages.length - 1 && (
+                            <button
+                                onClick={() => setCurrentImageIndex(prev => prev + 1)}
+                                className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full items-center justify-center text-slate-600 hover:bg-white hover:scale-110 transition-all shadow-lg z-10"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+                            </button>
+                        )}
+                    </>
+                )}
+
+                {/* Dot Indicators */}
+                {galleryImages.length > 1 && (
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-full px-3 py-1.5 z-10">
+                        {galleryImages.map((_, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => setCurrentImageIndex(idx)}
+                                className={`transition-all rounded-full ${idx === currentImageIndex ? 'w-5 h-2 bg-indigo-600' : 'w-2 h-2 bg-slate-400/60 hover:bg-slate-500'}`}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                {/* Thumbnail strip (Desktop) */}
+                {galleryImages.length > 1 && (
+                    <div className="hidden lg:flex absolute bottom-6 left-6 gap-2 z-10">
+                        {galleryImages.map((img, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => setCurrentImageIndex(idx)}
+                                className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all ${idx === currentImageIndex ? 'border-indigo-600 scale-110 shadow-xl' : 'border-white/60 opacity-70 hover:opacity-100'}`}
+                            >
+                                <img src={img} alt={`صورة ${idx + 1}`} className="w-full h-full object-cover" />
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Product Info */}

@@ -13,6 +13,7 @@ export default function AddProductPage() {
     const [storeId, setStoreId] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [additionalImages, setAdditionalImages] = useState<string[]>([]);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -75,6 +76,10 @@ export default function AddProductPage() {
         }
     };
 
+    const MAX_IMAGES = 5;
+    const allImages = [formData.image_url, ...additionalImages].filter(Boolean);
+    const canAddMore = allImages.length < MAX_IMAGES;
+
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -97,12 +102,29 @@ export default function AddProductPage() {
                 .from('store-assets')
                 .getPublicUrl(filePath);
 
-            setFormData(prev => ({ ...prev, image_url: publicUrl }));
+            if (!formData.image_url) {
+                setFormData(prev => ({ ...prev, image_url: publicUrl }));
+            } else {
+                setAdditionalImages(prev => [...prev, publicUrl]);
+            }
         } catch (err: any) {
             setError('فشل رفع الصورة. تأكد من إعداد صلاحيات التخزين.');
             console.error(err);
         } finally {
             setUploading(false);
+        }
+    };
+
+    const handleRemoveImage = (url: string) => {
+        if (url === formData.image_url) {
+            if (additionalImages.length > 0) {
+                setFormData(prev => ({ ...prev, image_url: additionalImages[0] }));
+                setAdditionalImages(prev => prev.slice(1));
+            } else {
+                setFormData(prev => ({ ...prev, image_url: '' }));
+            }
+        } else {
+            setAdditionalImages(prev => prev.filter(img => img !== url));
         }
     };
 
@@ -181,6 +203,7 @@ export default function AddProductPage() {
             },
             weightPrices: {}
         }));
+        setAdditionalImages([]);
         setSuccess(false);
         setError(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -220,7 +243,8 @@ export default function AddProductPage() {
                         options: formData.options,
                         weightPrices: formData.weightPrices,
                         isAvailable: formData.isAvailable,
-                        outOfStockBehavior: formData.outOfStockBehavior
+                        outOfStockBehavior: formData.outOfStockBehavior,
+                        images: additionalImages
                     },
                 });
 
@@ -585,46 +609,56 @@ export default function AddProductPage() {
                 <div className="space-y-10">
                     {/* Image Upload Card */}
                     <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-                        <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center gap-4">
-                            <div className="w-9 h-9 lg:w-10 lg:h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
+                        <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-9 h-9 lg:w-10 lg:h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <h2 className="text-lg lg:text-xl font-black text-slate-800">صور المنتج</h2>
                             </div>
-                            <h2 className="text-lg lg:text-xl font-black text-slate-800">صورة المنتج</h2>
+                            <span className="text-xs font-bold text-slate-400">{allImages.length}/{MAX_IMAGES}</span>
                         </div>
 
                         <div className="p-6 lg:p-10">
-                            <div className="relative group">
-                                <div className="aspect-square w-full rounded-2xl lg:rounded-[2rem] border-4 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center transition-all overflow-hidden hover:bg-white hover:border-indigo-100 hover:shadow-indigo-500/10 hover:shadow-2xl">
-                                    {formData.image_url ? (
-                                        <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="flex flex-col items-center gap-4 lg:gap-5 text-center px-4 lg:px-10">
-                                            <div className="w-12 h-12 lg:w-16 lg:h-16 bg-white rounded-full flex items-center justify-center text-indigo-600 shadow-lg group-hover:scale-110 transition-all">
-                                                {uploading ? (
-                                                    <div className="w-6 h-6 lg:w-8 lg:h-8 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
-                                                ) : (
-                                                    <svg className="w-7 h-7 lg:w-8 lg:h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                                    </svg>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <span className="block text-xs lg:text-sm font-black text-slate-800">اسحب الصورة هنا أو اختر ملفاً</span>
-                                                <span className="block text-[8px] lg:text-[10px] text-slate-300 font-bold mt-2">حتى 5 ميجابايت PNG, JPG</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                        disabled={uploading}
-                                        className="absolute inset-0 opacity-0 cursor-pointer"
-                                    />
-                                </div>
+                            <div className="grid grid-cols-3 lg:grid-cols-5 gap-3">
+                                {allImages.map((url, idx) => (
+                                    <div key={url} className="relative aspect-square rounded-2xl overflow-hidden bg-slate-50 border-2 border-slate-200 group">
+                                        <img src={url} alt={`صورة ${idx + 1}`} className="w-full h-full object-cover" />
+                                        {idx === 0 && <span className="absolute bottom-1.5 left-1.5 px-2 py-0.5 bg-indigo-600 text-white text-[8px] font-black rounded-lg uppercase">رئيسية</span>}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveImage(url)}
+                                            className="absolute top-1.5 right-1.5 w-6 h-6 bg-white/90 backdrop-blur-md text-rose-500 rounded-lg flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                                        </button>
+                                    </div>
+                                ))}
+                                {canAddMore && (
+                                    <div className="relative aspect-square rounded-2xl bg-slate-50/50 border-4 border-dashed border-slate-100 flex flex-col items-center justify-center group hover:border-indigo-200 hover:bg-indigo-50/20 transition-all cursor-pointer">
+                                        {uploading ? (
+                                            <div className="w-8 h-8 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
+                                        ) : (
+                                            <>
+                                                <svg className="w-7 h-7 text-slate-300 group-hover:text-indigo-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                </svg>
+                                                <span className="text-[9px] font-bold text-slate-400 mt-1">أضف صورة</span>
+                                            </>
+                                        )}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageUpload}
+                                            disabled={uploading}
+                                            className="absolute inset-0 opacity-0 cursor-pointer"
+                                        />
+                                    </div>
+                                )}
                             </div>
+                            <p className="text-[10px] text-slate-400 font-medium mt-4">الصورة الأولى هي الرئيسية في الكتالوج. أضف حتى {MAX_IMAGES} صور (PNG, JPG).</p>
                         </div>
                     </div>
 

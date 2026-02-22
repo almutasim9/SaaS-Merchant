@@ -59,6 +59,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
     const [price, setPrice] = useState('');
     const [category, setCategory] = useState('');
     const [imageUrl, setImageUrl] = useState('');
+    const [additionalImages, setAdditionalImages] = useState<string[]>([]);
     const [isAvailable, setIsAvailable] = useState(true);
 
     // Variants
@@ -74,6 +75,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                 setPrice(initialData.price?.toString() || '');
                 setCategory(initialData.category || (sections.length > 0 ? sections[0].name : ''));
                 setImageUrl(initialData.image_url || '');
+                setAdditionalImages((initialData.attributes as any)?.images || []);
 
                 const attrs = initialData.attributes;
                 setIsAvailable(attrs?.isAvailable ?? true);
@@ -177,11 +179,14 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
     };
 
     // --- Media Upload ---
+    const MAX_IMAGES = 5; // 1 primary + 4 additional
+    const allImages = [imageUrl, ...additionalImages].filter(Boolean);
+    const canAddMore = allImages.length < MAX_IMAGES;
+
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validation
         if (file.size > 2 * 1024 * 1024) {
             setError('حجم الصورة كبير جداً (الحد الأقصى 2MB).');
             return;
@@ -194,7 +199,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
             const fileName = `${storeId}/${Date.now()}.${fileExt}`;
             const filePath = `products/${fileName}`;
 
-            // Try product_images bucket first, fallback to store-assets
             let bucket = 'product_images';
             const { error: uploadError } = await supabase.storage.from(bucket).upload(filePath, file);
 
@@ -206,7 +210,13 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
             }
 
             const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(filePath);
-            setImageUrl(publicUrl);
+
+            // If no primary image yet, set as primary. Otherwise add to additional.
+            if (!imageUrl) {
+                setImageUrl(publicUrl);
+            } else {
+                setAdditionalImages(prev => [...prev, publicUrl]);
+            }
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'فشل رفع الصورة.';
             setError(message);
@@ -215,8 +225,18 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
         }
     };
 
-    const handleRemoveImage = () => {
-        setImageUrl('');
+    const handleRemoveImage = (url: string) => {
+        if (url === imageUrl) {
+            // Remove primary → promote first additional to primary
+            if (additionalImages.length > 0) {
+                setImageUrl(additionalImages[0]);
+                setAdditionalImages(prev => prev.slice(1));
+            } else {
+                setImageUrl('');
+            }
+        } else {
+            setAdditionalImages(prev => prev.filter(img => img !== url));
+        }
     };
 
     const resetForm = () => {
@@ -225,6 +245,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
         setPrice('');
         setCategory(sections.length > 0 ? sections[0].name : '');
         setImageUrl('');
+        setAdditionalImages([]);
         setIsAvailable(true);
         setHasVariants(false);
         setVariantOptions([]);
@@ -241,11 +262,12 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
             if (!price || parseFloat(price) <= 0) throw new Error('يرجى إدخال السعر الأساسي للمنتج.');
             if (!category) throw new Error('يرجى اختيار قسم للمنتج.');
 
-            const attributes: ProductAttributes = {
+            const attributes: any = {
                 hasVariants,
                 variantOptions: hasVariants ? variantOptions.filter(o => o.name && o.values.length > 0) : [],
                 variantCombinations: hasVariants ? variantCombinations : [],
-                isAvailable
+                isAvailable,
+                images: additionalImages
             };
 
             const productData = {
@@ -313,33 +335,36 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                             {/* Basic Details Card */}
                             <div className="bg-white rounded-[2rem] p-6 lg:p-8 border border-slate-200/60 shadow-sm space-y-6">
                                 <div className="space-y-4">
-                                    <label className="text-xs font-black text-slate-700">الصورة الأساسية</label>
-                                    <div className="flex items-center gap-6">
-                                        <div className="relative w-28 h-28 rounded-2xl overflow-hidden bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center group">
-                                            {imageUrl ? (
-                                                <>
-                                                    <img src={imageUrl} alt="preview" className="w-full h-full object-cover" />
-                                                    <button
-                                                        type="button"
-                                                        onClick={handleRemoveImage}
-                                                        className="absolute top-1 right-1 w-6 h-6 bg-white/90 backdrop-blur-md text-rose-500 rounded-lg flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
-                                                    </button>
-                                                </>
-                                            ) : (
-                                                <svg className="w-8 h-8 text-slate-300 group-hover:text-indigo-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                            )}
-                                            {!imageUrl && (
-                                                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="absolute inset-0 opacity-0 cursor-pointer" title="اختر صورة" />
-                                            )}
-                                            {uploading && <div className="absolute inset-0 bg-white/80 flex items-center justify-center"><div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" /></div>}
-                                        </div>
-                                        <div className="flex-1">
-                                            <h4 className="text-sm font-bold text-slate-800">صورة المنتج</h4>
-                                            <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">قم برفع صورة واضحة ومربعة (1:1) للمنتج. تدعم PNG و JPG.</p>
-                                        </div>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-black text-slate-700">صور المنتج</label>
+                                        <span className="text-[10px] font-bold text-slate-400">{allImages.length}/{MAX_IMAGES}</span>
                                     </div>
+                                    <div className="grid grid-cols-5 gap-3">
+                                        {allImages.map((url, idx) => (
+                                            <div key={url} className="relative aspect-square rounded-xl overflow-hidden bg-slate-50 border-2 border-slate-200 group">
+                                                <img src={url} alt={`صورة ${idx + 1}`} className="w-full h-full object-cover" />
+                                                {idx === 0 && <span className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-indigo-600 text-white text-[7px] font-black rounded-md uppercase">رئيسية</span>}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveImage(url)}
+                                                    className="absolute top-1 right-1 w-5 h-5 bg-white/90 backdrop-blur-md text-rose-500 rounded-md flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {canAddMore && (
+                                            <div className="relative aspect-square rounded-xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center group hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer">
+                                                {uploading ? (
+                                                    <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                                                ) : (
+                                                    <svg className="w-6 h-6 text-slate-300 group-hover:text-indigo-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                                                )}
+                                                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="absolute inset-0 opacity-0 cursor-pointer" title="أضف صورة" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 font-medium">الصورة الأولى هي الرئيسية. أضف حتى {MAX_IMAGES} صور (PNG, JPG — حتى 2MB).</p>
                                 </div>
 
                                 <div className="space-y-2">
