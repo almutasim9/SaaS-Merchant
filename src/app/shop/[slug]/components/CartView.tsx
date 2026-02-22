@@ -5,18 +5,18 @@ import Image from 'next/image';
 
 interface CartItem {
     id: string;
+    cartKey: string;
     name: string;
     price: number;
     quantity: number;
     image_url: string;
-    color?: string;
-    size?: string;
+    selections?: Record<string, string>;
 }
 
 interface CartViewProps {
     items: CartItem[];
-    onUpdateQuantity: (id: string, q: number) => void;
-    onRemoveItem: (id: string) => void;
+    onUpdateQuantity: (cartKey: string, q: number) => void;
+    onRemoveItem: (cartKey: string) => void;
     onContinue: () => void;
     onBack: () => void;
     totalPrice: number;
@@ -65,7 +65,7 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                     <>
                         <div className="space-y-6">
                             {items.map((item) => (
-                                <div key={item.id} className="group flex gap-6 p-6 bg-white rounded-[3.5rem] border border-slate-100/50 shadow-[0_10px_40px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] transition-all duration-500 relative overflow-hidden">
+                                <div key={item.cartKey} className="group flex gap-6 p-6 bg-white rounded-[3.5rem] border border-slate-100/50 shadow-[0_10px_40px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] transition-all duration-500 relative overflow-hidden">
                                     <div className="w-32 h-32 bg-slate-50 rounded-[2.5rem] overflow-hidden flex-shrink-0 shadow-inner relative">
                                         <Image
                                             src={item.image_url || '/placeholder-product.png'}
@@ -80,7 +80,7 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                                             <div className="flex items-start justify-between">
                                                 <h4 className="font-black text-slate-800 uppercase text-sm tracking-tight leading-tight group-hover:text-indigo-600 transition-colors">{item.name}</h4>
                                                 <button
-                                                    onClick={() => onRemoveItem(item.id)}
+                                                    onClick={() => onRemoveItem(item.cartKey)}
                                                     className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all transform hover:rotate-12 active:scale-75"
                                                 >
                                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -88,22 +88,35 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                                                     </svg>
                                                 </button>
                                             </div>
-                                            <p className="text-[9px] font-black text-slate-400 tracking-[0.2em] uppercase">
-                                                المقاس: {item.size || 'M'} • السعر للقطعة: {item.price} د.ع
-                                            </p>
+                                            <div className="flex flex-wrap items-center gap-2 text-[9px] font-black text-slate-400 tracking-[0.1em] uppercase">
+                                                {item.selections && Object.keys(item.selections).length > 0 ? (
+                                                    Object.entries(item.selections).map(([key, val]) => (
+                                                        <span key={key} className="flex items-center gap-1">
+                                                            {key}:
+                                                            {val.startsWith('#') ? (
+                                                                <span className="inline-block w-4 h-4 rounded-full border border-slate-200 shadow-sm" style={{ backgroundColor: val }} />
+                                                            ) : (
+                                                                <span className="text-slate-600">{val}</span>
+                                                            )}
+                                                            <span className="text-slate-200 mx-1">•</span>
+                                                        </span>
+                                                    ))
+                                                ) : null}
+                                                <span>السعر للقطعة: {item.price.toLocaleString()} د.ع</span>
+                                            </div>
                                         </div>
 
                                         <div className="flex items-center justify-between pt-4">
                                             <div className="inline-flex items-center bg-slate-50/50 border border-slate-100 rounded-2xl p-1 gap-4">
                                                 <button
-                                                    onClick={() => onUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                                                    onClick={() => onUpdateQuantity(item.cartKey, Math.max(1, item.quantity - 1))}
                                                     className="w-8 h-8 bg-white shadow-sm rounded-xl flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all font-black"
                                                 >
                                                     -
                                                 </button>
                                                 <span className="text-[11px] font-black text-slate-800 w-4 text-center">{item.quantity}</span>
                                                 <button
-                                                    onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                                                    onClick={() => onUpdateQuantity(item.cartKey, item.quantity + 1)}
                                                     className="w-8 h-8 bg-white shadow-sm rounded-xl flex items-center justify-center text-slate-400 hover:bg-indigo-600 hover:text-white transition-all font-black"
                                                 >
                                                     +
@@ -157,6 +170,6 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                     </>
                 )}
             </div>
-        </div>
+        </div >
     );
 }
