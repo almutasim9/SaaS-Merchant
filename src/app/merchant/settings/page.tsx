@@ -97,9 +97,8 @@ export default function MerchantSettingsPage() {
     const handleSave = async () => {
         if (!store) return;
         setSaving(true);
-        console.log("ATTEMPTING SAVE WITH STORE");
 
-        // Define payload based strictly on DB Schema to avoid PostgREST silent failures
+        // All columns that exist in the stores table
         const payload = {
             name: store.name || '',
             description: store.description || '',
@@ -111,16 +110,14 @@ export default function MerchantSettingsPage() {
             delivery_fees: store.delivery_fees || { baghdad: 5000, provinces: 8000 }
         };
 
-        console.log("PAYLOAD SENT TO DB:", payload);
-
         const { error } = await supabase
             .from('stores')
             .update(payload)
             .eq('id', store.id);
 
         if (error) {
-            console.error('Save error:', error);
-            toast.error('حدث خطأ أثناء الحفظ: ' + error.message);
+            console.error('Save error:', JSON.stringify(error));
+            toast.error('حدث خطأ أثناء الحفظ: ' + (error.message || error.details || 'خطأ غير معروف'));
         } else {
             toast.success('تم حفظ الإعدادات بنجاح');
             setTimeout(() => window.location.reload(), 1500);
