@@ -32,34 +32,38 @@ export default function MerchantOrdersPage() {
     const router = useRouter();
 
     useEffect(() => {
-        checkMerchant();
+        let cleanup: (() => void) | undefined;
+
+        const init = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                router.push('/login');
+                return;
+            }
+
+            const { data: storeData } = await supabase
+                .from('stores')
+                .select('id, currency')
+                .eq('merchant_id', user.id)
+                .single();
+
+            if (storeData) {
+                fetchOrders(storeData.id);
+                cleanup = subscribeToOrders(storeData.id);
+            } else {
+                setLoading(false);
+            }
+        };
+
+        init();
+
+        return () => { cleanup?.(); };
     }, []);
-
-    const checkMerchant = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            router.push('/login');
-            return;
-        }
-
-        const { data: storeData } = await supabase
-            .from('stores')
-            .select('id, currency')
-            .eq('merchant_id', user.id)
-            .single();
-
-        if (storeData) {
-            fetchOrders(storeData.id);
-            subscribeToOrders(storeData.id);
-        } else {
-            setLoading(false);
-        }
-    };
 
     const fetchOrders = async (storeId: string) => {
         const { data, error } = await supabase
             .from('orders')
-            .select('*')
+            .select('id, store_id, customer_info, items, total_price, delivery_fee, status, created_at')
             .eq('store_id', storeId)
             .in('status', ['completed', 'delivered', 'cancelled'])
             .order('created_at', { ascending: false });
@@ -72,7 +76,7 @@ export default function MerchantOrdersPage() {
 
     const subscribeToOrders = (storeId: string) => {
         const subscription = supabase
-            .channel('orders-realtime-premium')
+            .channel('orders-history-realtime')
             .on('postgres_changes', {
                 event: '*',
                 schema: 'public',

@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase-server';
 import { Metadata } from 'next';
 import { CartProvider } from '@/context/CartContext';
 import StorefrontContent from './StorefrontContent';
@@ -11,6 +11,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
+    const supabase = await createClient();
 
     const { data: store } = await supabase
         .from('stores')
@@ -26,6 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ShopPage({ params }: Props) {
     const { slug } = await params;
+    const supabase = await createClient();
 
     // 1. Fetch Store Details
     const { data: store, error: storeError } = await supabase
@@ -52,15 +54,15 @@ export default async function ShopPage({ params }: Props) {
     const [sectionsRes, productsRes] = await Promise.all([
         supabase
             .from('sections')
-            .select('*')
+            .select('id, name, image_url')
             .eq('store_id', store.id)
             .order('created_at', { ascending: true }),
         supabase
             .from('products')
-            .select('*')
+            .select('id, name, description, price, category, image_url, attributes, stock_quantity')
             .eq('store_id', store.id)
             .order('created_at', { ascending: false })
-            .limit(40) // Increased initial load limit slightly
+            .limit(40)
     ]);
 
     const sections = sectionsRes.data || [];

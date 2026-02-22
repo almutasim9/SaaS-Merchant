@@ -36,7 +36,31 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
     const pathname = usePathname();
 
     useEffect(() => {
-        checkUser();
+        let cleanup: (() => void) | undefined;
+
+        const init = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                router.push('/login');
+                return;
+            }
+
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single();
+
+            if (profile?.role !== 'merchant') {
+                router.push('/login');
+            } else {
+                cleanup = await fetchStore(user.id);
+            }
+        };
+
+        init();
+
+        return () => { cleanup?.(); };
     }, []);
 
     // Close mobile menu on route change
@@ -54,26 +78,6 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
         window.addEventListener('orderStatusUpdated', handleStatusUpdate);
         return () => window.removeEventListener('orderStatusUpdated', handleStatusUpdate);
     }, [store?.id]);
-
-    const checkUser = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            router.push('/login');
-            return;
-        }
-
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-
-        if (profile?.role !== 'merchant') {
-            router.push('/login');
-        } else {
-            fetchStore(user.id);
-        }
-    };
 
     const fetchOrdersCount = async (storeId: string) => {
         const { count } = await supabase
