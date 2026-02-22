@@ -44,6 +44,47 @@ export async function saveLogoAction(storeId: string, logoUrl: string) {
     return { success: true };
 }
 
+export async function uploadLogoAction(storeId: string, base64Data: string, fileExt: string) {
+    try {
+        const fileName = `${storeId}-${Date.now()}.${fileExt}`;
+        const filePath = `logos/${fileName}`;
+
+        // Convert base64 to Buffer
+        const buffer = Buffer.from(base64Data, 'base64');
+
+        // Upload using admin client (bypasses RLS)
+        const { error: uploadError } = await supabaseAdmin.storage
+            .from('store_logos')
+            .upload(filePath, buffer, {
+                contentType: `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`,
+                upsert: true
+            });
+
+        if (uploadError) {
+            return { success: false, error: 'فشل في رفع الصورة: ' + uploadError.message };
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabaseAdmin.storage
+            .from('store_logos')
+            .getPublicUrl(filePath);
+
+        // Save to store record
+        const { error: dbError } = await supabaseAdmin
+            .from('stores')
+            .update({ logo_url: publicUrl })
+            .eq('id', storeId);
+
+        if (dbError) {
+            return { success: false, error: 'فشل في حفظ رابط الشعار: ' + dbError.message };
+        }
+
+        return { success: true, url: publicUrl };
+    } catch (err: any) {
+        return { success: false, error: err.message || 'خطأ غير متوقع' };
+    }
+}
+
 // --- Slug Update (One-Time) ---
 
 export async function updateSlugAction(storeId: string, merchantId: string, newSlug: string) {

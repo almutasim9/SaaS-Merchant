@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { saveGeneralInfoAction, saveContactInfoAction, saveSocialLinksAction, saveLogoAction, updateSlugAction } from './actions';
+import { saveGeneralInfoAction, saveContactInfoAction, saveSocialLinksAction, uploadLogoAction, updateSlugAction } from './actions';
 
 interface Store {
     id: string;
@@ -79,31 +79,28 @@ export default function MerchantSettingsPage() {
 
         try {
             setSavingLogo(true);
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${store.id}-${Date.now()}.${fileExt}`;
-            const filePath = `logos/${fileName}`;
+            const fileExt = file.name.split('.').pop() || 'png';
 
-            const { error: uploadError } = await supabase.storage
-                .from('store_logos')
-                .upload(filePath, file, { upsert: true });
-
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl } } = supabase.storage
-                .from('store_logos')
-                .getPublicUrl(filePath);
-
-            // Save via server action (bypasses RLS)
-            const result = await saveLogoAction(store.id, publicUrl);
-            if (result.success) {
-                setStore({ ...store, logo_url: publicUrl });
-                toast.success('تم تحديث الشعار بنجاح ✅');
-            } else {
-                toast.error(result.error || 'فشل في حفظ الشعار');
-            }
+            // Convert file to base64
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const base64 = (reader.result as string).split(',')[1]; // Remove data:image/xxx;base64, prefix
+                const result = await uploadLogoAction(store.id, base64, fileExt);
+                if (result.success && result.url) {
+                    setStore({ ...store, logo_url: result.url });
+                    toast.success('تم تحديث الشعار بنجاح ✅');
+                } else {
+                    toast.error(result.error || 'فشل في رفع الشعار');
+                }
+                setSavingLogo(false);
+            };
+            reader.onerror = () => {
+                toast.error('فشل في قراءة الملف');
+                setSavingLogo(false);
+            };
+            reader.readAsDataURL(file);
         } catch (err: any) {
             toast.error('خطأ في رفع الشعار: ' + err.message);
-        } finally {
             setSavingLogo(false);
         }
     };
