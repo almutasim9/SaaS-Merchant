@@ -15,6 +15,7 @@ interface Order {
     };
     items: any[];
     total_price: number;
+    delivery_fee?: number;
     status: string;
     created_at: string;
 }
@@ -222,7 +223,7 @@ export default function MerchantOrdersPage() {
                                         </div>
                                     </td>
                                     <td className="px-6 lg:px-10 py-6 text-center">
-                                        <div className="font-bold text-indigo-600 text-base lg:text-lg tracking-tight">{order.total_price.toLocaleString()} د.ع</div>
+                                        <div className="font-bold text-indigo-600 text-base lg:text-lg tracking-tight">{(order.total_price - (order.delivery_fee || 0)).toLocaleString()} د.ع</div>
                                     </td>
                                     <td className="px-6 lg:px-10 py-6 text-center">
                                         <StatusBadge status={order.status} />
@@ -326,16 +327,16 @@ export default function MerchantOrdersPage() {
                             <div className="pt-8 lg:pt-10 border-t border-slate-100">
                                 <div className="space-y-3 lg:space-y-4">
                                     <div className="flex justify-between items-center text-xs lg:text-sm font-medium text-slate-400">
-                                        <span>المجموع الفرعي</span>
-                                        <span>{selectedOrder.total_price.toLocaleString()} د.ع</span>
+                                        <span>سعر المنتجات</span>
+                                        <span>{(selectedOrder.total_price - (selectedOrder.delivery_fee || 0)).toLocaleString()} د.ع</span>
                                     </div>
                                     <div className="flex justify-between items-center text-xs lg:text-sm font-medium text-slate-400">
                                         <span>رسوم التوصيل</span>
-                                        <span className="text-emerald-500">مجاني</span>
+                                        <span className="text-amber-600">{(selectedOrder.delivery_fee || 0).toLocaleString()} د.ع</span>
                                     </div>
                                     <div className="pt-4 lg:pt-6 flex justify-between items-center">
-                                        <span className="text-lg lg:text-xl font-bold text-slate-800">الإجمالي المبيعات</span>
-                                        <span className="text-2xl lg:text-4xl font-black text-indigo-600 tracking-tighter">{selectedOrder.total_price.toLocaleString()} د.ع</span>
+                                        <span className="text-lg lg:text-xl font-bold text-slate-800">إجمالي المبيعات</span>
+                                        <span className="text-2xl lg:text-4xl font-black text-indigo-600 tracking-tighter">{(selectedOrder.total_price - (selectedOrder.delivery_fee || 0)).toLocaleString()} د.ع</span>
                                     </div>
                                 </div>
                             </div>

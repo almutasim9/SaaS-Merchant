@@ -21,6 +21,7 @@ interface Order {
     };
     created_at: string;
     total_price: number;
+    delivery_fee?: number;
     status: string;
 }
 
@@ -89,9 +90,9 @@ export default function MerchantDashboard() {
 
             // Parallel fetch: stats, products, and recent orders
             const [allOrdersResult, productsResult, ordersResult] = await Promise.all([
-                supabase.from('orders').select('total_price, status, created_at').eq('store_id', activeStore.id),
+                supabase.from('orders').select('total_price, delivery_fee, status, created_at').eq('store_id', activeStore.id),
                 supabase.from('products').select('id, name, price, image_url').eq('store_id', activeStore.id).limit(3),
-                supabase.from('orders').select('id, customer_info, created_at, total_price, status').eq('store_id', activeStore.id).order('created_at', { ascending: false }).limit(5)
+                supabase.from('orders').select('id, customer_info, created_at, total_price, delivery_fee, status').eq('store_id', activeStore.id).order('created_at', { ascending: false }).limit(5)
             ]);
 
             const allOrders = allOrdersResult.data;
@@ -100,7 +101,7 @@ export default function MerchantDashboard() {
             if (allOrders) {
                 // Only count sales for orders that are delivered/completed
                 const completedOrders = allOrders.filter(o => o.status === 'completed' || o.status === 'delivered');
-                const totalSales = completedOrders.reduce((acc, order) => acc + (order.total_price || 0), 0);
+                const totalSales = completedOrders.reduce((acc, order) => acc + ((order.total_price || 0) - (order.delivery_fee || 0)), 0);
 
                 const newOrdersCount = allOrders.filter(o => o.status === 'pending').length;
                 const avg = completedOrders.length > 0 ? totalSales / completedOrders.length : 0;
@@ -123,7 +124,7 @@ export default function MerchantDashboard() {
                     orderDate.setHours(0, 0, 0, 0);
                     const day = last7Days.find(d => d.date.getTime() === orderDate.getTime());
                     if (day) {
-                        day.total += order.total_price || 0;
+                        day.total += (order.total_price || 0) - (order.delivery_fee || 0);
                     }
                 });
 

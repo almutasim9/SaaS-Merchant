@@ -91,7 +91,7 @@ export default function MerchantOrdersPage() {
         // Wait, if an order is completed, we should probably fetch the total completed from DB if we really wanted accurate stats,
         // but keeping it simple for now based on what's visible.
         const completedOrders = orderList.filter(o => o.status === 'completed' || o.status === 'delivered');
-        const sum = completedOrders.reduce((acc, curr) => acc + curr.total_price, 0);
+        const sum = completedOrders.reduce((acc, curr) => acc + (curr.total_price - (curr.delivery_fee || 0)), 0);
         const avg = completedOrders.length > 0 ? sum / completedOrders.length : 0;
 
         setStats({ total, pending, processing, completed, avgValue: avg });
