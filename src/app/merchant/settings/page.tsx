@@ -4,15 +4,19 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { updateSlugAction } from './actions';
 
 interface Store {
     id: string;
     name: string;
+    slug: string;
+    slug_changed?: boolean;
     description: string;
     phone: string;
     email: string;
     address: string;
     logo_url?: string;
+    merchant_id: string;
     delivery_fees?: {
         baghdad: number;
         provinces: number;
@@ -29,6 +33,10 @@ export default function MerchantSettingsPage() {
     const [store, setStore] = useState<Store | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [slugEditing, setSlugEditing] = useState(false);
+    const [newSlug, setNewSlug] = useState('');
+    const [slugSaving, setSlugSaving] = useState(false);
+    const [showSlugConfirm, setShowSlugConfirm] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -218,6 +226,139 @@ export default function MerchantSettingsPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Store URL (Slug) - One Time Edit */}
+                <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+                    <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center gap-4">
+                        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-amber-50 text-amber-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
+                            <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 className="text-lg lg:text-xl font-bold text-slate-800">رابط المتجر (URL)</h3>
+                            <p className="text-slate-400 text-[10px] lg:text-xs font-medium">الرابط الذي يصل به العملاء لمتجرك. يمكنك تغييره <span className="text-amber-600 font-bold">مرة واحدة فقط</span>.</p>
+                        </div>
+                    </div>
+                    <div className="p-6 lg:p-10">
+                        <div className="space-y-4">
+                            {/* Current Slug Display */}
+                            <div className="flex items-center gap-3" dir="ltr">
+                                <span className="text-sm text-slate-400 font-medium whitespace-nowrap">saasplus.com/shop/</span>
+                                <span className="text-lg font-bold text-indigo-600">{store?.slug}</span>
+                            </div>
+
+                            {store?.slug_changed ? (
+                                /* Already changed - show disabled state */
+                                <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <svg className="w-5 h-5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    <p className="text-xs font-bold text-slate-400">تم تغيير الرابط مسبقاً. لا يمكن تغييره مرة أخرى.</p>
+                                </div>
+                            ) : slugEditing ? (
+                                /* Edit Mode */
+                                <div className="space-y-4">
+                                    <div className="relative" dir="ltr">
+                                        <span className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">saasplus.com/shop/</span>
+                                        <input
+                                            type="text"
+                                            value={newSlug}
+                                            onChange={(e) => setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                                            className="w-full bg-[#FBFBFF] border-2 border-amber-200 rounded-2xl pl-5 pr-44 py-4 text-indigo-600 font-bold focus:outline-none focus:ring-4 focus:ring-amber-100 transition-all text-left"
+                                            placeholder="my-store"
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => {
+                                                if (!newSlug || newSlug.length < 3) {
+                                                    toast.error('الرابط يجب أن يكون 3 أحرف على الأقل.');
+                                                    return;
+                                                }
+                                                setShowSlugConfirm(true);
+                                            }}
+                                            className="px-6 py-3 bg-amber-500 text-white font-bold rounded-xl text-sm hover:bg-amber-600 transition-all active:scale-95"
+                                        >
+                                            تأكيد التغيير
+                                        </button>
+                                        <button
+                                            onClick={() => { setSlugEditing(false); setNewSlug(''); }}
+                                            className="px-6 py-3 bg-slate-100 text-slate-500 font-bold rounded-xl text-sm hover:bg-slate-200 transition-all"
+                                        >
+                                            إلغاء
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* Show Edit Button */
+                                <button
+                                    onClick={() => { setSlugEditing(true); setNewSlug(store?.slug || ''); }}
+                                    className="flex items-center gap-2 px-5 py-3 bg-amber-50 text-amber-700 rounded-xl text-sm font-bold hover:bg-amber-100 transition-all border border-amber-200"
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                    تعديل الرابط (مرة واحدة)
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Slug Confirmation Modal */}
+                {showSlugConfirm && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" dir="rtl">
+                        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowSlugConfirm(false)} />
+                        <div className="relative bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full animate-in zoom-in-95 duration-300">
+                            <div className="text-center space-y-4">
+                                <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto">
+                                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-xl font-black text-slate-800">تأكيد تغيير الرابط</h3>
+                                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-right space-y-2">
+                                    <p className="text-sm font-bold text-amber-800">⚠️ تنبيه مهم:</p>
+                                    <p className="text-xs text-amber-700 leading-relaxed">تغيير رابط المتجر سيؤثر على جميع الروابط السابقة التي شاركتها مع عملائك. <strong>لا يمكنك التراجع عن هذا التغيير.</strong></p>
+                                </div>
+                                <div className="bg-slate-50 rounded-2xl p-4 text-center" dir="ltr">
+                                    <p className="text-xs text-slate-400 mb-1">الرابط الجديد:</p>
+                                    <p className="text-lg font-bold text-indigo-600">saasplus.com/shop/{newSlug}</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    disabled={slugSaving}
+                                    onClick={async () => {
+                                        if (!store) return;
+                                        setSlugSaving(true);
+                                        const result = await updateSlugAction(store.id, store.merchant_id, newSlug);
+                                        if (result.success) {
+                                            toast.success('تم تغيير الرابط بنجاح! 🎉');
+                                            setShowSlugConfirm(false);
+                                            setSlugEditing(false);
+                                            setStore(prev => prev ? { ...prev, slug: newSlug, slug_changed: true } : null);
+                                        } else {
+                                            toast.error(result.error || 'حدث خطأ.');
+                                        }
+                                        setSlugSaving(false);
+                                    }}
+                                    className="flex-1 py-4 bg-amber-500 text-white font-bold rounded-2xl hover:bg-amber-600 transition-all active:scale-95 disabled:opacity-50 text-sm"
+                                >
+                                    {slugSaving ? 'جاري التحديث...' : 'نعم، غيّر الرابط'}
+                                </button>
+                                <button
+                                    onClick={() => setShowSlugConfirm(false)}
+                                    className="px-6 py-4 bg-slate-100 text-slate-500 font-bold rounded-2xl hover:bg-slate-200 transition-all text-sm"
+                                >
+                                    تراجع
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Contact Info */}
                 <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">

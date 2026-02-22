@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function AdminSidebarLinks() {
     const pathname = usePathname();
+    const router = useRouter();
 
     const links = [
         {
@@ -27,27 +29,47 @@ export default function AdminSidebarLinks() {
         }
     ];
 
-    return (
-        <nav className="flex-1 px-4 py-6 space-y-2">
-            {links.map((link) => {
-                const isActive = pathname === link.href || pathname?.startsWith(`${link.href}/`);
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        router.push('/login');
+    };
 
-                return (
-                    <Link
-                        key={link.href}
-                        href={link.href}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${isActive
+    return (
+        <div className="flex flex-col flex-1">
+            <nav className="flex-1 px-4 py-6 space-y-2">
+                {links.map((link) => {
+                    const isActive = pathname === link.href || pathname?.startsWith(`${link.href}/`);
+
+                    return (
+                        <Link
+                            key={link.href}
+                            href={link.href}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${isActive
                                 ? 'bg-slate-800/50 text-white'
                                 : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                            }`}
-                    >
-                        <div className={isActive ? 'text-emerald-400' : 'text-slate-400'}>
-                            {link.icon}
-                        </div>
-                        {link.label}
-                    </Link>
-                );
-            })}
-        </nav>
+                                }`}
+                        >
+                            <div className={isActive ? 'text-emerald-400' : 'text-slate-400'}>
+                                {link.icon}
+                            </div>
+                            {link.label}
+                        </Link>
+                    );
+                })}
+            </nav>
+
+            {/* Logout Button */}
+            <div className="px-4 pb-6">
+                <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-all font-bold"
+                >
+                    <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    تسجيل الخروج
+                </button>
+            </div>
+        </div>
     );
 }

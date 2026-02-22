@@ -119,7 +119,6 @@ export default function LoginPage() {
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between px-1">
                                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">كلمة المرور</label>
-                                    <button type="button" className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest hover:underline">نسيت كلمة المرور؟</button>
                                 </div>
                                 <div className="relative">
                                     <input
@@ -176,7 +175,7 @@ export default function LoginPage() {
 
                 <div className="mt-10 text-center space-y-6">
                     <p className="text-xs font-bold text-slate-400">
-                        ليس لديك حساب؟ <Link href="/#pricing" className="text-indigo-600 hover:underline">ابدأ الآن مجاناً</Link>
+                        ليس لديك حساب؟ <a href="https://wa.me/9647703854913" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">تواصل معنا</a>
                     </p>
                     <div className="pt-6 border-t border-slate-100">
                         <p className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.3em] leading-relaxed">

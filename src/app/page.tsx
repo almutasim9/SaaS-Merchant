@@ -2,18 +2,17 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import RegisterMerchantModal from '@/components/landing/RegisterMerchantModal';
 
 const translations: any = {
   ar: {
     dir: 'rtl',
-    nav: { features: 'المميزات', pricing: 'الأسعار', login: 'تسجيل الدخول', start: 'ابدأ مجاناً' },
+    nav: { features: 'المميزات', pricing: 'الأسعار', login: 'تسجيل الدخول', start: 'تواصل معنا' },
     hero: {
       badge: 'الجيل الجديد من التجارة الإلكترونية أصبح متاحاً',
       title: 'انطلق بمتجرك',
       titleHighlight: 'في دقائق',
       subtitle: 'المنصة الأذكى للتجار في العراق والعالم العربي. قم بإدارة وبيع منتجاتك بأدوات احترافية مصممة خصيصاً لنمو أعمالك.',
-      primaryBtn: 'افتح متجرك الآن مجاناً',
+      primaryBtn: 'تواصل معنا',
       secondaryBtn: 'اكتشف المزايا',
       trusted: 'موثوق من قبل العلامات الصاعدة'
     },
@@ -27,18 +26,18 @@ const translations: any = {
         { title: 'تحكم كامل من الموبايل', desc: 'قم بإدارة منتجاتك، وتواصل مع عملائك من أي مكان وفي أي وقت عبر واجهة موبايل سريعة.' }
       ]
     },
-    cta: { title: 'جاهز لإحداث ثورة في', titleHighlight: 'تجارتك الرقمية؟', subtitle: 'انضم الآن إلى مئات التجار الذين اختاروا منصتنا لبداية قوية واحترافية.', btn: 'افتح متجرك المجاني الآن' },
+    cta: { title: 'جاهز لإحداث ثورة في', titleHighlight: 'تجارتك الرقمية؟', subtitle: 'انضم الآن إلى مئات التجار الذين اختاروا منصتنا لبداية قوية واحترافية.', btn: 'تواصل معنا الآن' },
     footer: { desc: 'تمكين التجار في العالم العربي بأحدث تقنيات التجارة الإلكترونية. صنع خصيصاً للتوسع والنمو.', platform: 'المنصة', support: 'الدعم', rights: '© 2026 SaaS-Plus Platform. جميع الحقوق محفوظة.' }
   },
   en: {
     dir: 'ltr',
-    nav: { features: 'Features', pricing: 'Pricing', login: 'Login', start: 'Get Started' },
+    nav: { features: 'Features', pricing: 'Pricing', login: 'Login', start: 'Contact Us' },
     hero: {
       badge: 'Next generation e-commerce is here',
       title: 'Launch Your Store',
       titleHighlight: 'In Minutes',
       subtitle: 'The smartest platform for merchants in Iraq and the MENA. Manage and sell your products with professional tools built for growth.',
-      primaryBtn: 'Open Your Free Store',
+      primaryBtn: 'Contact Us',
       secondaryBtn: 'Explore Features',
       trusted: 'Trusted by rising brands'
     },
@@ -52,18 +51,18 @@ const translations: any = {
         { title: 'Mobile Control', desc: 'Manage your products and connect with customers anytime, anywhere via a fast mobile interface.' }
       ]
     },
-    cta: { title: 'Ready to Revolutionize', titleHighlight: 'Your Digital Trade?', subtitle: 'Join hundreds of merchants who chose our platform for a powerful and professional start.', btn: 'Open Your Free Store Now' },
+    cta: { title: 'Ready to Revolutionize', titleHighlight: 'Your Digital Trade?', subtitle: 'Join hundreds of merchants who chose our platform for a powerful and professional start.', btn: 'Contact Us Now' },
     footer: { desc: 'Empowering merchants across the Arab world with cutting-edge e-commerce tech. Built for scale.', platform: 'Platform', support: 'Support', rights: '© 2026 SaaS-Plus Platform. All Rights Reserved.' }
   },
   ku: {
     dir: 'rtl',
-    nav: { features: 'تایبەتمەندییەکان', pricing: 'نرخەکان', login: 'چوونەژوورەوە', start: 'دەستپێبکە' },
+    nav: { features: 'تایبەتمەندییەکان', pricing: 'نرخەکان', login: 'چوونەژوورەوە', start: 'پەیوەندیمان پێوە بکە' },
     hero: {
       badge: 'نەوەی نوێی بازرگانی ئەلیکترۆنی ئێستا بەردەستە',
       title: 'فڕۆشگاکەت',
       titleHighlight: 'لە چەند خولەکێکدا',
       subtitle: 'ژیرترین پلاتفۆرم بۆ بازرگانان لە عێراق و جیهانی عەرەبی. بەرهەمەکانت بفرۆشە بە ئامرازی پرۆفیشناڵ.',
-      primaryBtn: 'فڕۆشگاکەت ئێستا بە خۆڕایی بکەرەوە',
+      primaryBtn: 'پەیوەندیمان پێوە بکە',
       secondaryBtn: 'تایبەتمەندییەکان ببینە',
       trusted: 'لەلایەن براندە پێشەنگەکانەوە متمانەی پێکراوە'
     },
@@ -77,13 +76,13 @@ const translations: any = {
         { title: 'کۆنترۆڵی تەواو بە مۆبایل', desc: 'بەرهەمەکانت بەڕێوەببەرە و پەیوەندی بە کڕیارانەوە بکە لە هەر کات و شوێنێکدا.' }
       ]
     },
-    cta: { title: 'ئامادەی بۆ گۆڕانکاری لە', titleHighlight: 'بازرگانی دیجیتاڵیدا؟', subtitle: 'پەیوەندی بکە بە سەدان بازرگان کە پلاتفۆرمەکەمانیان هەڵبژاردووە بۆ سەرەتایەکی بەهێز.', btn: 'فڕۆشگا بێ بەرامبەرەکەت بکەرەوە' },
+    cta: { title: 'ئامادەی بۆ گۆڕانکاری لە', titleHighlight: 'بازرگانی دیجیتاڵیدا؟', subtitle: 'پەیوەندی بکە بە سەدان بازرگان کە پلاتفۆرمەکەمانیان هەڵبژاردووە بۆ سەرەتایەکی بەهێز.', btn: 'پەیوەندیمان پێوە بکە' },
     footer: { desc: 'بەهێزکردنی بازرگانان لە جیهانی عەرەبیدا بە نوێترین تەکنەلۆژیای بازرگانی ئەلیکترۆنی.', platform: 'پلاتفۆرم', support: 'پشتیوانی', rights: '© 2026 SaaS-Plus Platform. هەموو مافەکان پارێزراوە.' }
   }
 };
 
 export default function LandingPage() {
-  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const WHATSAPP_LINK = 'https://wa.me/9647703854913';
   const [scrolled, setScrolled] = useState(false);
   const [language, setLanguage] = useState<'ar' | 'en' | 'ku'>('ar');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -150,12 +149,14 @@ export default function LandingPage() {
 
             <Link href="/login" className={`text-sm font-bold transition-colors ${theme === 'dark' ? 'text-white hover:text-indigo-400 border-r border-white/10 pr-10' : 'text-slate-900 hover:text-indigo-600 border-r border-slate-200 pr-10'}`}>{t.nav.login}</Link>
 
-            <button
-              onClick={() => setIsRegisterOpen(true)}
+            <a
+              href={WHATSAPP_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
               className={`relative group px-8 py-3.5 text-sm font-black rounded-2xl shadow-xl transition-all active:scale-95 overflow-hidden ${theme === 'dark' ? 'bg-white text-slate-950 hover:bg-indigo-50' : 'bg-indigo-600 text-white hover:bg-slate-900 shadow-indigo-600/20'}`}
             >
               <span className="relative z-10 font-black">{t.nav.start}</span>
-            </button>
+            </a>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -195,12 +196,15 @@ export default function LandingPage() {
 
             <div className="flex flex-col gap-4 pt-4 border-t border-white/5">
               <Link href="/login" className={`text-lg font-black transition-colors ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t.nav.login}</Link>
-              <button
-                onClick={() => { setIsRegisterOpen(true); setIsMobileMenuOpen(false); }}
-                className={`w-full py-5 font-black rounded-[2rem] shadow-xl text-lg transition-all active:scale-95 ${theme === 'dark' ? 'bg-indigo-600 text-white shadow-indigo-600/20' : 'bg-slate-900 text-white shadow-slate-900/20'}`}
+              <a
+                href={WHATSAPP_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`w-full py-5 font-black rounded-[2rem] shadow-xl text-lg transition-all active:scale-95 text-center block ${theme === 'dark' ? 'bg-indigo-600 text-white shadow-indigo-600/20' : 'bg-slate-900 text-white shadow-slate-900/20'}`}
               >
                 {t.nav.start}
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -228,13 +232,15 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-5 pt-4">
-              <button
-                onClick={() => setIsRegisterOpen(true)}
-                className={`group relative w-full sm:w-auto px-10 md:px-12 py-5 font-black rounded-[2rem] shadow-2xl transition-all active:scale-95 text-xl overflow-hidden ${theme === 'dark' ? 'bg-indigo-600 text-white shadow-indigo-600/40' : 'bg-slate-900 text-white shadow-slate-900/20'}`}
+              <a
+                href={WHATSAPP_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group relative w-full sm:w-auto px-10 md:px-12 py-5 font-black rounded-[2rem] shadow-2xl transition-all active:scale-95 text-xl overflow-hidden text-center ${theme === 'dark' ? 'bg-indigo-600 text-white shadow-indigo-600/40' : 'bg-slate-900 text-white shadow-slate-900/20'}`}
               >
                 <span className="relative z-10">{t.hero.primaryBtn}</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              </button>
+              </a>
               <Link href="#features" className={`w-full sm:w-auto px-10 md:px-12 py-5 backdrop-blur-xl font-black rounded-[2rem] border transition-all text-xl text-center ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-900 hover:bg-slate-50 shadow-sm'}`}>
                 {t.hero.secondaryBtn}
               </Link>
@@ -342,9 +348,11 @@ export default function LandingPage() {
             {t.cta.subtitle}
           </p>
           <div className="pt-6 relative z-10">
-            <button
-              onClick={() => setIsRegisterOpen(true)}
-              className="group inline-flex items-center gap-4 px-10 md:px-14 py-5 md:py-6 bg-white text-indigo-600 font-black rounded-[2rem] md:rounded-[2.5rem] text-xl md:text-2xl shadow-2xl hover:bg-slate-900 hover:text-white transition-all hover:scale-105 active:scale-95 transition-colors"
+            <a
+              href={WHATSAPP_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-4 px-10 md:px-14 py-5 md:py-6 bg-white text-indigo-600 font-black rounded-[2rem] md:rounded-[2.5rem] text-xl md:text-2xl shadow-2xl hover:bg-slate-900 hover:text-white transition-all hover:scale-105 active:scale-95"
             >
               {t.cta.btn}
               <svg
@@ -353,7 +361,7 @@ export default function LandingPage() {
               >
                 <path d="M14 5l7 7m0 0l-7 7m7-7H3" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </button>
+            </a>
           </div>
         </div>
       </section>
@@ -388,10 +396,7 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      <RegisterMerchantModal
-        isOpen={isRegisterOpen}
-        onClose={() => setIsRegisterOpen(false)}
-      />
+
 
       <style jsx global>{`
         @keyframes float {
