@@ -136,6 +136,10 @@ interface HomeViewProps {
     setSelectedSection: (cat: string | null) => void;
     storeName: string;
     storeLogo?: string;
+    storeDescription?: string;
+    storePhone?: string;
+    storeEmail?: string;
+    storeAddress?: string;
     socialLinks?: {
         whatsapp?: string;
         instagram?: string;
@@ -154,6 +158,10 @@ export default function HomeView({
     selectedSection,
     storeName,
     storeLogo,
+    storeDescription,
+    storePhone,
+    storeEmail,
+    storeAddress,
     socialLinks
 }: HomeViewProps) {
 
@@ -307,41 +315,68 @@ export default function HomeView({
                             <span className="text-2xl font-black text-slate-400 uppercase">{storeName.charAt(0)}</span>
                         )}
                     </div>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em]">{storeName}</p>
-                </div>
-
-                {socialLinks && (
-                    <div className="flex items-center justify-center gap-6 lg:gap-8">
-                        {socialLinks.whatsapp && (
-                            <a href={`https://wa.me/${socialLinks.whatsapp}`} target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all hover:scale-110 shadow-lg shadow-emerald-500/10">
-                                <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.484 8.412-.003 6.557-5.338 11.892-11.893 11.892-1.997 0-3.951-.5-5.688-1.448l-6.309 1.656zm6.29-4.143c1.559.925 3.328 1.413 5.127 1.414 5.564 0 10.091-4.527 10.093-10.091 0-2.693-1.05-5.228-2.955-7.134-1.905-1.906-4.44-2.956-7.134-2.957-5.564 0-10.09 4.526-10.093 10.091 0 1.782.47 3.522 1.36 5.068l-.893 3.255 3.492-.916zm11.503-7.534c.007.133.003.265-.046.39-.156.46-.74.654-1.211.772-.491.125-1.12.094-1.883-.244-.759-.335-1.891-.825-3.372-2.482-1.282-1.438-2.147-3.218-2.398-3.535-.25-.317-.438-.687-.438-1.054 0-.367.187-.706.375-.971.188-.265.407-.315.531-.315.125 0 .25.015.344.015.118.013.232.012.33.082.125.088.438 1.054.469 1.12.031.066.031.132.062.197.051.106.012.213-.038.319l-.375.462c-.046.05-.1.115-.042.215.3.521.664 1.045 1.11 1.543a8.66 8.66 0 001.625 1.48c.11.085.18.103.255.038.075-.065.312-.36.397-.48.084-.121.171-.102.261-.067.09.035.569.269.667.317.098.048.164.072.2.087.034.01.077.01.12.03.111.052.175.25.175.406z" />
-                                </svg>
-                            </a>
-                        )}
-                        {socialLinks.instagram && (
-                            <a href={`https://instagram.com/${socialLinks.instagram}`} target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-pink-50 text-pink-500 rounded-2xl flex items-center justify-center hover:bg-pink-500 hover:text-white transition-all hover:scale-110 shadow-lg shadow-pink-500/10">
-                                <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                                </svg>
-                            </a>
-                        )}
-                        {socialLinks.tiktok && (
-                            <a href={`https://tiktok.com/@${socialLinks.tiktok}`} target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-slate-800 transition-all hover:scale-110 shadow-lg shadow-slate-900/10">
-                                <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.6-4.12-1.31a8.6 8.6 0 01-1.87-1.41v8.74c0 1.39-.3 2.8-.91 4.05a7.8 7.8 0 01-2.49 3.01c-1.25.86-2.73 1.36-4.24 1.47-1.52.11-3.08-.1-4.49-.69a7.8 7.8 0 01-3.23-2.58A7.8 7.8 0 010 13.9c.01-1.39.29-2.8.91-4.05a7.8 7.8 0 012.49-3.01c1.25-.86 2.73-1.36 4.24-1.47 1.52-.11 3.08.1 4.49.69.21.09.41.19.61.3V1.52c-.01-.5-.01-1 0-1.5z" />
-                                </svg>
-                            </a>
-                        )}
-                        {socialLinks.facebook && (
-                            <a href={socialLinks.facebook.startsWith('http') ? socialLinks.facebook : `https://${socialLinks.facebook}`} target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all hover:scale-110 shadow-lg shadow-blue-600/10">
-                                <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                                </svg>
-                            </a>
-                        )}
+                    <div className="space-y-3">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em]">{storeName}</p>
+                        {storeDescription && <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">{storeDescription}</p>}
                     </div>
-                )}
+
+                    {/* Contact Info */}
+                    {(storePhone || storeEmail || storeAddress) && (
+                        <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+                            {storePhone && (
+                                <a href={`tel:+964${storePhone}`} className="flex items-center gap-2 text-sm text-slate-500 hover:text-indigo-600 transition-colors">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                    <span dir="ltr">{storePhone}</span>
+                                </a>
+                            )}
+                            {storeEmail && (
+                                <a href={`mailto:${storeEmail}`} className="flex items-center gap-2 text-sm text-slate-500 hover:text-indigo-600 transition-colors">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                    <span dir="ltr">{storeEmail}</span>
+                                </a>
+                            )}
+                            {storeAddress && (
+                                <div className="flex items-center gap-2 text-sm text-slate-500">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                    <span>{storeAddress}</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {socialLinks && (
+                        <div className="flex items-center justify-center gap-6 lg:gap-8">
+                            {socialLinks.whatsapp && (
+                                <a href={`https://wa.me/${socialLinks.whatsapp}`} target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all hover:scale-110 shadow-lg shadow-emerald-500/10">
+                                    <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.484 8.412-.003 6.557-5.338 11.892-11.893 11.892-1.997 0-3.951-.5-5.688-1.448l-6.309 1.656zm6.29-4.143c1.559.925 3.328 1.413 5.127 1.414 5.564 0 10.091-4.527 10.093-10.091 0-2.693-1.05-5.228-2.955-7.134-1.905-1.906-4.44-2.956-7.134-2.957-5.564 0-10.09 4.526-10.093 10.091 0 1.782.47 3.522 1.36 5.068l-.893 3.255 3.492-.916zm11.503-7.534c.007.133.003.265-.046.39-.156.46-.74.654-1.211.772-.491.125-1.12.094-1.883-.244-.759-.335-1.891-.825-3.372-2.482-1.282-1.438-2.147-3.218-2.398-3.535-.25-.317-.438-.687-.438-1.054 0-.367.187-.706.375-.971.188-.265.407-.315.531-.315.125 0 .25.015.344.015.118.013.232.012.33.082.125.088.438 1.054.469 1.12.031.066.031.132.062.197.051.106.012.213-.038.319l-.375.462c-.046.05-.1.115-.042.215.3.521.664 1.045 1.11 1.543a8.66 8.66 0 001.625 1.48c.11.085.18.103.255.038.075-.065.312-.36.397-.48.084-.121.171-.102.261-.067.09.035.569.269.667.317.098.048.164.072.2.087.034.01.077.01.12.03.111.052.175.25.175.406z" />
+                                    </svg>
+                                </a>
+                            )}
+                            {socialLinks.instagram && (
+                                <a href={`https://instagram.com/${socialLinks.instagram}`} target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-pink-50 text-pink-500 rounded-2xl flex items-center justify-center hover:bg-pink-500 hover:text-white transition-all hover:scale-110 shadow-lg shadow-pink-500/10">
+                                    <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                                    </svg>
+                                </a>
+                            )}
+                            {socialLinks.tiktok && (
+                                <a href={`https://tiktok.com/@${socialLinks.tiktok}`} target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-slate-800 transition-all hover:scale-110 shadow-lg shadow-slate-900/10">
+                                    <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.6-4.12-1.31a8.6 8.6 0 01-1.87-1.41v8.74c0 1.39-.3 2.8-.91 4.05a7.8 7.8 0 01-2.49 3.01c-1.25.86-2.73 1.36-4.24 1.47-1.52.11-3.08-.1-4.49-.69a7.8 7.8 0 01-3.23-2.58A7.8 7.8 0 010 13.9c.01-1.39.29-2.8.91-4.05a7.8 7.8 0 012.49-3.01c1.25-.86 2.73-1.36 4.24-1.47 1.52-.11 3.08.1 4.49.69.21.09.41.19.61.3V1.52c-.01-.5-.01-1 0-1.5z" />
+                                    </svg>
+                                </a>
+                            )}
+                            {socialLinks.facebook && (
+                                <a href={socialLinks.facebook.startsWith('http') ? socialLinks.facebook : `https://${socialLinks.facebook}`} target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all hover:scale-110 shadow-lg shadow-blue-600/10">
+                                    <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                    </svg>
+                                </a>
+                            )}
+                        </div>
+                    )}
+                </div>
 
                 <p className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.4em]">صمم بواسطة SaaSPlus &copy; {new Date().getFullYear()}</p>
             </footer>

@@ -33,6 +33,10 @@ interface Product {
 interface Store {
     id: string;
     name: string;
+    description?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
 
     logo_url?: string;
     social_links?: {
@@ -212,7 +216,10 @@ export default function StorefrontContent({ store, products, sections }: { store
                         selectedSection={selectedSection}
                         setSelectedSection={setSelectedSection}
                         storeName={store.name}
-
+                        storeDescription={store.description}
+                        storePhone={store.phone}
+                        storeEmail={store.email}
+                        storeAddress={store.address}
                         storeLogo={store.logo_url}
                         socialLinks={store.social_links}
                     />
