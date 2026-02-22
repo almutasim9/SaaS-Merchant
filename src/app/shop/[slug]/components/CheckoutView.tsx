@@ -106,7 +106,7 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                                         placeholder="أدخل اسمك الكامل"
                                         value={info.name}
                                         onChange={(e) => setInfo({ ...info, name: e.target.value })}
-                                        className="w-full bg-white lg:bg-[#F8F9FB] border border-slate-100 lg:border-transparent rounded-2xl px-5 py-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 lg:focus:bg-white transition-all text-right"
+                                        className="w-full bg-white lg:bg-[#F8F9FB] border border-slate-100 lg:border-transparent rounded-2xl px-5 py-4 pr-12 text-sm text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 lg:focus:bg-white transition-all text-right"
                                     />
                                     <svg className="w-5 h-5 text-slate-300 absolute right-4 top-[42px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -120,7 +120,7 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                                         placeholder="05xxxxxxxx"
                                         value={info.phone}
                                         onChange={(e) => setInfo({ ...info, phone: e.target.value })}
-                                        className="w-full bg-white lg:bg-[#F8F9FB] border border-slate-100 lg:border-transparent rounded-2xl px-5 py-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 lg:focus:bg-white transition-all text-right placeholder:opacity-30"
+                                        className="w-full bg-white lg:bg-[#F8F9FB] border border-slate-100 lg:border-transparent rounded-2xl px-5 py-4 pr-12 text-sm text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 lg:focus:bg-white transition-all text-right placeholder:opacity-30"
                                     />
                                     <svg className="w-5 h-5 text-slate-300 absolute right-4 top-[42px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -141,7 +141,7 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                                         required
                                         value={info.city}
                                         onChange={(e) => setInfo({ ...info, city: e.target.value })}
-                                        className="w-full bg-white lg:bg-[#F8F9FB] border border-slate-100 lg:border-transparent rounded-2xl px-5 py-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 lg:focus:bg-white transition-all text-right appearance-none cursor-pointer"
+                                        className="w-full bg-white lg:bg-[#F8F9FB] border border-slate-100 lg:border-transparent rounded-2xl px-5 py-4 pr-12 text-sm text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 lg:focus:bg-white transition-all text-right appearance-none cursor-pointer"
                                     >
                                         <option value="">اختر المدينة</option>
                                         {availableCities.map(c => <option key={c} value={c}>{c}</option>)}
@@ -163,7 +163,7 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                                         placeholder="مثلاً: بجانب المسجد الكبير"
                                         value={info.landmark}
                                         onChange={(e) => setInfo({ ...info, landmark: e.target.value })}
-                                        className="w-full bg-white lg:bg-[#F8F9FB] border border-slate-100 lg:border-transparent rounded-2xl px-5 py-4 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 lg:focus:bg-white transition-all text-right"
+                                        className="w-full bg-white lg:bg-[#F8F9FB] border border-slate-100 lg:border-transparent rounded-2xl px-5 py-4 pr-12 text-sm text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 lg:focus:bg-white transition-all text-right"
                                     />
                                     <svg className="w-5 h-5 text-slate-300 absolute right-4 top-[42px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 4L9 7" />
@@ -182,7 +182,7 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                                 value={info.notes}
                                 onChange={(e) => setInfo({ ...info, notes: e.target.value })}
                                 rows={4}
-                                className="w-full bg-white lg:bg-[#F8F9FB] border border-slate-100 lg:border-transparent rounded-2xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 lg:focus:bg-white transition-all text-right resize-none"
+                                className="w-full bg-white lg:bg-[#F8F9FB] border border-slate-100 lg:border-transparent rounded-2xl px-5 py-4 text-sm text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 lg:focus:bg-white transition-all text-right resize-none"
                             ></textarea>
                         </div>
                     </div>

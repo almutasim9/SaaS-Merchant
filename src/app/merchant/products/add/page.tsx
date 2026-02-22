@@ -366,7 +366,7 @@ export default function AddProductPage() {
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                         placeholder="اكتب وصفاً تفصيلياً لمنتجك هنا..."
-                                        className="w-full bg-transparent px-5 lg:px-6 py-4 lg:py-5 text-sm lg:text-base text-slate-600 focus:outline-none font-bold resize-none"
+                                        className="w-full bg-transparent px-5 lg:px-6 py-4 lg:py-5 text-sm lg:text-base text-slate-800 focus:outline-none font-bold resize-none"
                                     />
                                 </div>
                             </div>
@@ -511,11 +511,11 @@ export default function AddProductPage() {
                                             id="weight-value"
                                             type="text"
                                             placeholder="الكمية (مثال: 500)"
-                                            className="h-12 flex-1 border border-slate-100 rounded-xl px-4 text-slate-600 font-bold text-sm focus:outline-none focus:border-indigo-100"
+                                            className="h-12 flex-1 border border-slate-100 rounded-xl px-4 text-slate-800 font-bold text-sm focus:outline-none focus:border-indigo-100"
                                         />
                                         <select
                                             id="weight-unit"
-                                            className="h-12 w-24 border border-slate-100 rounded-xl px-2 text-slate-600 font-bold text-sm focus:outline-none focus:border-indigo-100"
+                                            className="h-12 w-24 border border-slate-100 rounded-xl px-2 text-slate-800 font-bold text-sm focus:outline-none focus:border-indigo-100"
                                         >
                                             <option value="g">جم (g)</option>
                                             <option value="kg">كجم (kg)</option>
@@ -660,7 +660,7 @@ export default function AddProductPage() {
                                     <select
                                         value={formData.category}
                                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-xl lg:rounded-2xl px-5 lg:px-6 py-4 lg:py-5 text-sm lg:text-base text-slate-600 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold appearance-none"
+                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-xl lg:rounded-2xl px-5 lg:px-6 py-4 lg:py-5 text-sm lg:text-base text-slate-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold appearance-none"
                                     >
                                         <option value="">اختر القسم</option>
                                         {sections.map(section => (

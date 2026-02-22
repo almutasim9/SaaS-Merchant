@@ -49,7 +49,7 @@ export async function placeOrderAction(orderData: OrderData) {
 
         const { data: dbProducts, error: fetchError } = await supabaseAdmin
             .from('products')
-            .select('id, name, price, stock_quantity')
+            .select('id, name, price, stock_quantity, attributes')
             .in('id', productIds);
 
         if (fetchError || !dbProducts) {
@@ -100,7 +100,7 @@ export async function placeOrderAction(orderData: OrderData) {
             return { success: false, error: 'نعتذر، التوصيل غير متاح إلى هذه المحافظة حالياً.' };
         }
 
-        // 3. Logic & Price Calculation
+        // 3. Logic & Price Calculation (with variant support)
         let serverTotalPrice = 0;
         const validatedItems = [];
 
@@ -108,14 +108,52 @@ export async function placeOrderAction(orderData: OrderData) {
             const product = dbProducts.find(p => p.id === item.id);
             if (!product) throw new Error(`المنتج ذو المعرف ${item.id} غير متوفر.`);
 
-            const unitPrice = Number(product.price);
+            let unitPrice = Number(product.price); // Default: base price
+
+            // Check if this item has variant selections → look up the correct price
+            const attrs = product.attributes as any;
+            if (item.selections && Object.keys(item.selections).length > 0 && attrs?.variantCombinations?.length > 0) {
+                const variantOptions = attrs.variantOptions || [];
+                const variantCombinations = attrs.variantCombinations || [];
+
+                // Reconstruct combo ID: map human-readable names back to option IDs
+                // selections comes as { "اللون": "#000000", "المقاس": "XL" }
+                // We need to convert to "optId1:value1|optId2:value2" format
+                const optionMap: Record<string, string> = {}; // optionId -> selected value
+                for (const [humanName, selectedValue] of Object.entries(item.selections)) {
+                    const opt = variantOptions.find((o: any) => o.name === humanName);
+                    if (opt) {
+                        optionMap[opt.id] = selectedValue as string;
+                    }
+                }
+
+                if (Object.keys(optionMap).length > 0) {
+                    const sortedKeys = Object.keys(optionMap).sort();
+                    const comboId = sortedKeys.map(k => `${k}:${optionMap[k]}`).join('|');
+                    const combo = variantCombinations.find((c: any) => c.id === comboId);
+                    if (combo && combo.price && parseFloat(combo.price) > 0) {
+                        unitPrice = parseFloat(combo.price);
+                    }
+                }
+            }
+
+            // Also check for weight-based pricing
+            if (item.selections && attrs?.weightPrices) {
+                for (const [, selectedValue] of Object.entries(item.selections)) {
+                    const weightPrice = attrs.weightPrices[selectedValue as string];
+                    if (weightPrice && parseFloat(weightPrice) > 0) {
+                        unitPrice = parseFloat(weightPrice);
+                    }
+                }
+            }
+
             serverTotalPrice += unitPrice * item.quantity;
 
             validatedItems.push({
                 id: item.id,
                 quantity: item.quantity,
-                name: product.name, // Always use server name
-                price: unitPrice, // Always use server price
+                name: product.name,
+                price: unitPrice, // Now correctly uses variant price
                 selections: item.selections || {}
             });
         }
