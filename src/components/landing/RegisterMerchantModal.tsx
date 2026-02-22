@@ -40,6 +40,10 @@ export default function RegisterMerchantModal({ isOpen, onClose }: RegisterMerch
                 .replace(/\s+/g, '-')
                 .trim();
             setFormData(prev => ({ ...prev, storeName: value, slug: generatedSlug }));
+        } else if (name === 'slug') {
+            // Auto-lowercase and sanitize slug
+            const sanitizedSlug = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+            setFormData(prev => ({ ...prev, slug: sanitizedSlug }));
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
         }
@@ -140,53 +144,63 @@ export default function RegisterMerchantModal({ isOpen, onClose }: RegisterMerch
 
                             {/* Step 1: Owner Info */}
                             {step === 1 && (
-                                <div className="space-y-6 animate-in slide-in-from-right-8 fade-in duration-300">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">البريد الإلكتروني</label>
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleInputChange}
-                                            placeholder="your@email.com"
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
-                                            autoFocus
-                                        />
+                                <>
+                                    <div className="space-y-6 animate-in slide-in-from-right-8 fade-in duration-300">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">البريد الإلكتروني</label>
+                                            <input
+                                                type="email"
+                                                name="email"
+                                                value={formData.email}
+                                                onChange={handleInputChange}
+                                                placeholder="your@email.com"
+                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
+                                                autoFocus
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">كلمة المرور</label>
+                                            <input
+                                                type="password"
+                                                name="password"
+                                                value={formData.password}
+                                                onChange={handleInputChange}
+                                                placeholder="••••••••"
+                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">رقم الهاتف</label>
+                                            <input
+                                                type="tel"
+                                                name="phone"
+                                                value={formData.phone}
+                                                onChange={handleInputChange}
+                                                placeholder="07xxxxxxxxx"
+                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">اسمك الكامل</label>
+                                            <input
+                                                type="text"
+                                                name="ownerName"
+                                                value={formData.ownerName}
+                                                onChange={handleInputChange}
+                                                placeholder="الاسم الثلاثي"
+                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">كلمة المرور</label>
-                                        <input
-                                            type="password"
-                                            name="password"
-                                            value={formData.password}
-                                            onChange={handleInputChange}
-                                            placeholder="••••••••"
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
-                                        />
+
+                                    {/* Login Link */}
+                                    <div className="text-center pt-2">
+                                        <p className="text-sm text-slate-400">
+                                            لديك حساب بالفعل؟{' '}
+                                            <a href="/login" className="text-indigo-600 font-bold hover:underline">تسجيل الدخول</a>
+                                        </p>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">رقم الهاتف</label>
-                                        <input
-                                            type="tel"
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleInputChange}
-                                            placeholder="07xxxxxxxxx"
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">اسمك الكامل</label>
-                                        <input
-                                            type="text"
-                                            name="ownerName"
-                                            value={formData.ownerName}
-                                            onChange={handleInputChange}
-                                            placeholder="الاسم الثلاثي"
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
-                                        />
-                                    </div>
-                                </div>
+                                </>
                             )}
 
                             {/* Step 2: Store Info */}
@@ -301,6 +315,6 @@ export default function RegisterMerchantModal({ isOpen, onClose }: RegisterMerch
                 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
                 .animate-shake { animation: shake 0.3s ease-in-out; }
             `}</style>
-        </div>
+        </div >
     );
 }
