@@ -85,6 +85,57 @@ export async function uploadLogoAction(storeId: string, base64Data: string, file
     }
 }
 
+// --- Banner Image Upload ---
+
+export async function uploadBannerImageAction(storeId: string, base64Data: string, fileExt: string) {
+    try {
+        const fileName = `banner-${storeId}-${Date.now()}.${fileExt}`;
+        const filePath = `banners/${fileName}`;
+        const buffer = Buffer.from(base64Data, 'base64');
+
+        const { error: uploadError } = await supabaseAdmin.storage
+            .from('store_logos')
+            .upload(filePath, buffer, {
+                contentType: `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`,
+                upsert: true
+            });
+
+        if (uploadError) return { success: false, error: 'فشل في رفع الصورة: ' + uploadError.message };
+
+        const { data: { publicUrl } } = supabaseAdmin.storage
+            .from('store_logos')
+            .getPublicUrl(filePath);
+
+        return { success: true, url: publicUrl };
+    } catch (err: any) {
+        return { success: false, error: err.message || 'خطأ غير متوقع' };
+    }
+}
+
+export async function deleteBannerImageAction(imageUrl: string) {
+    try {
+        const path = imageUrl.split('/store_logos/')[1];
+        if (path) {
+            await supabaseAdmin.storage.from('store_logos').remove([path]);
+        }
+        return { success: true };
+    } catch {
+        return { success: true }; // Still succeed even if delete fails
+    }
+}
+
+// --- Storefront Config (Banner, About, Contact) ---
+
+export async function saveStorefrontConfigAction(storeId: string, config: any) {
+    const { error } = await supabaseAdmin
+        .from('stores')
+        .update({ storefront_config: config })
+        .eq('id', storeId);
+
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+}
+
 // --- Slug Update (One-Time) ---
 
 export async function updateSlugAction(storeId: string, merchantId: string, newSlug: string) {

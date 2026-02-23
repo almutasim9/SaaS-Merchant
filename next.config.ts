@@ -9,11 +9,15 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'nzlyuxhmtatjlyuaxvyo.supabase.co',
+        hostname: '**.supabase.co',
       },
       {
         protocol: 'https',
         hostname: 'placehold.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ui-avatars.com',
       },
     ],
   },

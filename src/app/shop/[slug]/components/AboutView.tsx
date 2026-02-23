@@ -7,9 +7,10 @@ interface AboutViewProps {
     storeName: string;
     storeDescription?: string;
     storeLogo?: string;
+    aboutContent?: string;
 }
 
-export default function AboutView({ onBack, storeName, storeDescription }: AboutViewProps) {
+export default function AboutView({ onBack, storeName, storeDescription, aboutContent }: AboutViewProps) {
     return (
         <div className="min-h-screen bg-white" dir="rtl">
             {/* Header */}
@@ -26,7 +27,7 @@ export default function AboutView({ onBack, storeName, storeDescription }: About
             </header>
 
             {/* Hero */}
-            <div className="relative mx-4 mt-4 rounded-2xl overflow-hidden bg-gradient-to-bl from-[#00D084] to-[#006B42] h-[200px] flex items-end">
+            <div className="relative mx-4 mt-4 rounded-2xl overflow-hidden h-[200px] flex items-end shadow-sm" style={{ background: 'linear-gradient(to bottom left, color-mix(in srgb, var(--theme-primary) 85%, black), var(--theme-primary))' }}>
                 <div className="absolute inset-0 bg-black/20" />
                 <div className="relative z-10 p-6">
                     <span className="inline-block bg-white/20 backdrop-blur-sm text-white text-[11px] font-bold px-3 py-1 rounded-full mb-2">
@@ -43,17 +44,17 @@ export default function AboutView({ onBack, storeName, storeDescription }: About
             {/* Welcome Text */}
             <div className="px-5 pt-8 pb-6 text-right">
                 <h3 className="text-xl font-bold text-slate-800 mb-3">
-                    أهلاً بكم في <span className="text-[#00D084]">{storeName}</span>
+                    أهلاً بكم في <span style={{ color: 'var(--theme-primary)' }}>{storeName}</span>
                 </h3>
                 <p className="text-sm text-slate-500 leading-7">
-                    {storeDescription || `نحن متجر إلكتروني رائد نسعى لتقديم أفضل المنتجات التي تلبي احتياجاتكم اليومية بجودة عالية وأسعار منافسة. تأسس متجرنا برؤية واضحة تهدف إلى تسهيل تجربة التسوق الرقمي وجعلها أكثر متعة وسهولة.`}
+                    {aboutContent || storeDescription || `نحن متجر إلكتروني رائد نسعى لتقديم أفضل المنتجات التي تلبي احتياجاتكم اليومية بجودة عالية وأسعار منافسة. تأسس متجرنا برؤية واضحة تهدف إلى تسهيل تجربة التسوق الرقمي وجعلها أكثر متعة وسهولة.`}
                 </p>
             </div>
 
             {/* Values */}
             <div className="px-5 pb-6">
                 <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-                    <span className="text-[#00D084]">|</span>
+                    <span style={{ color: 'var(--theme-primary)' }}>|</span>
                     قيمنا ومبادئنا
                 </h3>
                 <div className="space-y-3">
@@ -126,7 +127,8 @@ export default function AboutView({ onBack, storeName, storeDescription }: About
             <div className="px-5 pb-8">
                 <button
                     onClick={onBack}
-                    className="w-full py-3.5 bg-[#00D084] text-white font-bold rounded-xl hover:bg-[#00B870] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+                    className="w-full py-3.5 text-white font-bold rounded-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg hover:brightness-95"
+                    style={{ backgroundColor: 'var(--theme-primary)' }}
                 >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />

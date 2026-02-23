@@ -87,9 +87,10 @@ function ProductCard({ product, onAddToCart, onClick }: ProductCardProps) {
                     onClick={handleAddToCart}
                     disabled={isUnavailable}
                     className={`absolute bottom-2 left-2 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${isUnavailable
-                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                            : 'bg-[#00D084] text-white hover:bg-[#00B870] active:scale-90'
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        : 'text-white hover:brightness-95 active:scale-90'
                         }`}
+                    style={!isUnavailable ? { backgroundColor: 'var(--theme-primary)' } : undefined}
                 >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -118,10 +119,10 @@ function ProductCard({ product, onAddToCart, onClick }: ProductCardProps) {
                     {product.discount_price && product.discount_price < product.price ? (
                         <>
                             <span className="text-[11px] text-slate-400 line-through">{product.price.toLocaleString()}</span>
-                            <span className="text-[15px] font-bold text-[#00D084]">{product.discount_price.toLocaleString()}</span>
+                            <span className="text-[15px] font-bold" style={{ color: 'var(--theme-primary)' }}>{product.discount_price.toLocaleString()}</span>
                         </>
                     ) : (
-                        <span className="text-[15px] font-bold text-[#00D084]">
+                        <span className="text-[15px] font-bold" style={{ color: 'var(--theme-primary)' }}>
                             {hasVariants ? `${displayPrice.toLocaleString()}+` : displayPrice.toLocaleString()}
                         </span>
                     )}
@@ -156,6 +157,10 @@ interface HomeViewProps {
     onMenuOpen: () => void;
     onCartOpen: () => void;
     totalItems: number;
+    storefrontConfig?: {
+        banner?: { title?: string; subtitle?: string; badge?: string; show?: boolean; images?: string[] };
+        about?: { content?: string };
+    };
 }
 
 export default function HomeView({
@@ -173,6 +178,7 @@ export default function HomeView({
     onMenuOpen,
     onCartOpen,
     totalItems,
+    storefrontConfig,
 }: HomeViewProps) {
 
     const sectionsRef = useRef<HTMLDivElement>(null);
@@ -191,8 +197,17 @@ export default function HomeView({
     // All products for search mode
     const isSearching = searchQuery.trim().length > 0;
 
-    // Section icons - we'll use placeholder icons based on index
-    const sectionIcons = ['👗', '📱', '🏠', '🎮', '👟', '💄', '🎒', '📚', '🍳', '⚽'];
+    // Colors for section avatars
+    const sectionColors = [
+        { bg: 'bg-emerald-100', text: 'text-emerald-600' },
+        { bg: 'bg-blue-100', text: 'text-blue-600' },
+        { bg: 'bg-purple-100', text: 'text-purple-600' },
+        { bg: 'bg-amber-100', text: 'text-amber-600' },
+        { bg: 'bg-rose-100', text: 'text-rose-600' },
+        { bg: 'bg-cyan-100', text: 'text-cyan-600' },
+        { bg: 'bg-indigo-100', text: 'text-indigo-600' },
+        { bg: 'bg-teal-100', text: 'text-teal-600' },
+    ];
 
     return (
         <div className="min-h-screen bg-[#F8F9FB] pb-24">
@@ -210,11 +225,11 @@ export default function HomeView({
                     <div className="flex items-center gap-2">
                         <h1 className="text-lg font-bold text-slate-800">{storeName}</h1>
                         {storeLogo ? (
-                            <div className="w-9 h-9 rounded-xl bg-[#00D084] flex items-center justify-center overflow-hidden shadow-sm shadow-emerald-200">
-                                <Image src={storeLogo} alt={storeName} width={36} height={36} className="object-cover rounded-xl" />
+                            <div className="w-9 h-9 flex items-center justify-center overflow-hidden">
+                                <Image src={storeLogo} alt={storeName} width={36} height={36} className="object-contain rounded-xl" />
                             </div>
                         ) : (
-                            <div className="w-9 h-9 rounded-xl bg-[#00D084] flex items-center justify-center shadow-sm shadow-emerald-200">
+                            <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm" style={{ backgroundColor: 'var(--theme-primary)' }}>
                                 <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                                 </svg>
@@ -228,7 +243,7 @@ export default function HomeView({
                             <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
                         {totalItems > 0 && (
-                            <span className="absolute -top-0.5 -right-0.5 bg-[#00D084] text-white text-[9px] font-black min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full animate-in zoom-in">
+                            <span className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full animate-in zoom-in" style={{ backgroundColor: 'var(--theme-primary)' }}>
                                 {totalItems}
                             </span>
                         )}
@@ -244,7 +259,8 @@ export default function HomeView({
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="ابحث عن منتج، ماركة، أو فئة..."
-                        className="w-full h-12 pl-4 pr-12 bg-white rounded-xl border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00D084]/30 focus:border-[#00D084] transition-all text-right"
+                        className="w-full h-12 pl-4 pr-12 bg-white rounded-xl border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition-all text-right"
+                        style={{ '--tw-ring-color': 'var(--theme-primary)' } as any}
                         dir="rtl"
                     />
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
@@ -255,39 +271,58 @@ export default function HomeView({
                 </div>
             </div>
 
-            {/* ─── Hero Banner ─── */}
+            {/* ─── Hero Banner / Slider ─── */}
             {!isSearching && !selectedSection && (
                 <div className="px-4 pt-3 pb-2">
-                    <div className="relative bg-gradient-to-l from-[#00D084] to-[#00B870] rounded-2xl overflow-hidden p-6 min-h-[160px]">
-                        {/* Badge */}
-                        <span className="inline-block bg-[#006B42] text-white text-[11px] font-bold px-3 py-1 rounded-full mb-3">
-                            جديد
-                        </span>
-                        {/* Text */}
-                        <h2 className="text-white text-xl font-bold leading-tight mb-1 text-right">
-                            {storeDescription ? storeDescription.slice(0, 50) : `مرحباً بكم في ${storeName}`}
-                        </h2>
-                        <p className="text-emerald-100 text-sm mb-4 text-right">
-                            {storeDescription ? storeDescription.slice(50, 120) : 'تصفح أفضل المنتجات بأسعار مميزة'}
-                        </p>
-                        <button
-                            onClick={() => sectionsRef.current?.scrollIntoView({ behavior: 'smooth' })}
-                            className="bg-white text-[#00B870] text-sm font-bold px-5 py-2 rounded-lg hover:bg-emerald-50 transition-colors float-right"
-                        >
-                            تسوق الآن
-                        </button>
-
-                        {/* Decorative circles */}
-                        <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/10" />
-                        <div className="absolute -top-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
-
-                        {/* Dots */}
-                        <div className="absolute bottom-3 left-4 flex gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-white" />
-                            <span className="w-2 h-2 rounded-full bg-white/40" />
-                            <span className="w-2 h-2 rounded-full bg-white/40" />
+                    {/* Render Image Slider if images exist */}
+                    {storefrontConfig?.banner?.images && storefrontConfig.banner.images.length > 0 ? (
+                        <div className="relative rounded-2xl overflow-hidden aspect-[16/9] shadow-sm">
+                            <div className="w-full h-full flex overflow-x-auto snap-x snap-mandatory no-scrollbar" dir="ltr">
+                                {storefrontConfig.banner.images.map((img: string, idx: number) => (
+                                    <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
+                                        <img src={img} alt={`Banner ${idx + 1}`} className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Slide Indicators */}
+                            {storefrontConfig.banner.images.length > 1 && (
+                                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5" dir="ltr">
+                                    {storefrontConfig.banner.images.map((_: any, idx: number) => (
+                                        <span key={idx} className={`w-2 h-2 rounded-full ${idx === 0 ? 'bg-white' : 'bg-white/50'}`} />
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                    </div>
+                    ) : (
+                        /* Text Banner Fallback (only if there is some text config) */
+                        (storefrontConfig?.banner?.title || storefrontConfig?.banner?.subtitle) && (
+                            <div className="relative rounded-2xl overflow-hidden p-6 min-h-[160px] shadow-sm" style={{ background: `var(--theme-primary)` }}>
+                                <div className="absolute inset-0 bg-black/10 mix-blend-overlay" />
+                                {/* Badge */}
+                                <span className="relative inline-block bg-black/20 text-white text-[11px] font-bold px-3 py-1 rounded-full mb-3 backdrop-blur-[2px]">
+                                    {storefrontConfig?.banner?.badge || 'جديد'}
+                                </span>
+                                {/* Text */}
+                                <h2 className="relative text-white text-xl font-bold leading-tight mb-1 text-right">
+                                    {storefrontConfig?.banner?.title || `مرحباً بكم في ${storeName}`}
+                                </h2>
+                                <p className="relative text-white/90 text-sm mb-4 text-right">
+                                    {storefrontConfig?.banner?.subtitle || storeDescription || 'تصفح أفضل المنتجات بأسعار مميزة'}
+                                </p>
+                                <button
+                                    onClick={() => sectionsRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                                    className="relative bg-white text-sm font-bold px-5 py-2 rounded-lg hover:bg-slate-50 transition-colors float-right"
+                                    style={{ color: 'var(--theme-primary)' }}
+                                >
+                                    تسوق الآن
+                                </button>
+                                {/* Decorative circles */}
+                                <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/10" />
+                                <div className="absolute -top-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
+                            </div>
+                        )
+                    )}
                 </div>
             )}
 
@@ -302,38 +337,30 @@ export default function HomeView({
                             className={`flex flex-col items-center gap-2 min-w-[64px] transition-all ${!selectedSection ? 'opacity-100' : 'opacity-60 hover:opacity-100'
                                 }`}
                         >
-                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-all ${!selectedSection ? 'bg-[#E8FFF4] ring-2 ring-[#00D084] shadow-sm' : 'bg-slate-100'
-                                }`}>
-                                🏪
+                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${!selectedSection ? 'ring-2 shadow-sm' : 'bg-slate-100'
+                                }`} style={!selectedSection ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)', '--tw-ring-color': 'var(--theme-primary)' } as any : {}}>
+                                <svg className={`w-6 h-6 ${!selectedSection ? '' : 'text-slate-400'}`} style={!selectedSection ? { color: 'var(--theme-primary)' } : {}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zm0 9.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zm0 9.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                                </svg>
                             </div>
                             <span className="text-xs font-medium text-slate-600">الكل</span>
                         </button>
 
-                        {sections.map((section, idx) => (
+                        {sections.map((section) => (
                             <button
                                 key={section.id}
                                 onClick={() => setSelectedSection(selectedSection === section.name ? null : section.name)}
                                 className={`flex flex-col items-center gap-2 min-w-[64px] transition-all ${selectedSection === section.name ? 'opacity-100' : 'opacity-60 hover:opacity-100'
                                     }`}
                             >
-                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden transition-all ${selectedSection === section.name ? 'ring-2 ring-[#00D084] shadow-sm' : ''
-                                    }`}>
-                                    {section.image_url ? (
-                                        <Image
-                                            src={section.image_url}
-                                            alt={section.name}
-                                            width={56}
-                                            height={56}
-                                            className="w-full h-full object-cover rounded-2xl"
-                                        />
-                                    ) : (
-                                        <div className={`w-full h-full flex items-center justify-center text-2xl ${selectedSection === section.name ? 'bg-[#E8FFF4]' : 'bg-slate-100'
-                                            }`}>
-                                            {sectionIcons[idx % sectionIcons.length]}
-                                        </div>
-                                    )}
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${selectedSection === section.name ? 'ring-2 shadow-sm' : 'bg-slate-100'
+                                    }`} style={selectedSection === section.name ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)', '--tw-ring-color': 'var(--theme-primary)' } as any : {}}>
+                                    <svg className={`w-6 h-6 ${selectedSection === section.name ? '' : 'text-slate-400'}`} style={selectedSection === section.name ? { color: 'var(--theme-primary)' } : {}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
+                                    </svg>
                                 </div>
-                                <span className="text-xs font-medium text-slate-600 line-clamp-1">{section.name}</span>
+                                <span className={`text-xs font-medium line-clamp-1 ${selectedSection === section.name ? 'font-bold' : 'text-slate-600'}`} style={selectedSection === section.name ? { color: 'var(--theme-primary)' } : {}}>{section.name}</span>
                             </button>
                         ))}
                     </div>
@@ -353,7 +380,8 @@ export default function HomeView({
                                 <div className="flex items-center justify-between px-4 mb-3">
                                     <button
                                         onClick={() => setSelectedSection(section.name)}
-                                        className="text-sm font-medium text-[#00D084] hover:underline"
+                                        className="text-sm font-medium hover:underline"
+                                        style={{ color: 'var(--theme-primary)' }}
                                     >
                                         عرض الكل
                                     </button>
@@ -407,7 +435,8 @@ export default function HomeView({
                         <div className="flex items-center justify-between mb-4">
                             <button
                                 onClick={() => setSelectedSection(null)}
-                                className="text-sm text-[#00D084] font-medium hover:underline"
+                                className="text-sm font-medium hover:underline"
+                                style={{ color: 'var(--theme-primary)' }}
                             >
                                 ← عودة
                             </button>

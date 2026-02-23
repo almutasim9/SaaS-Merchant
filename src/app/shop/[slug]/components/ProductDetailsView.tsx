@@ -166,7 +166,8 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                             <button
                                 key={idx}
                                 onClick={() => setCurrentImageIndex(idx)}
-                                className={`transition-all rounded-full ${idx === currentImageIndex ? 'w-6 h-2 bg-[#00D084]' : 'w-2 h-2 bg-white/60'}`}
+                                className={`transition-all rounded-full ${idx === currentImageIndex ? 'w-6 h-2' : 'w-2 h-2 bg-white/60'}`}
+                                style={idx === currentImageIndex ? { backgroundColor: 'var(--theme-primary)' } : undefined}
                             />
                         ))}
                     </div>
@@ -219,8 +220,9 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                                                 <button
                                                     key={val}
                                                     onClick={() => setSelectedOptions(prev => ({ ...prev, [opt.id]: val }))}
-                                                    className={`w-11 h-11 rounded-full border-2 transition-all flex items-center justify-center ${isSelected ? 'border-[#00D084] scale-110 shadow-md' : 'border-slate-200 hover:scale-105'
+                                                    className={`w-11 h-11 rounded-full border-2 transition-all flex items-center justify-center ${isSelected ? 'scale-110 shadow-md' : 'border-slate-200 hover:scale-105'
                                                         }`}
+                                                    style={isSelected ? { borderColor: 'var(--theme-primary)' } : undefined}
                                                 >
                                                     <div className="w-8 h-8 rounded-full shadow-inner" style={{ backgroundColor: val }} />
                                                 </button>
@@ -232,9 +234,10 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                                                 key={val}
                                                 onClick={() => setSelectedOptions(prev => ({ ...prev, [opt.id]: val }))}
                                                 className={`min-w-[48px] px-4 h-11 rounded-xl border-2 font-bold text-sm transition-all ${isSelected
-                                                        ? 'border-[#00D084] bg-[#E8FFF4] text-[#00B870]'
-                                                        : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                                                    ? ''
+                                                    : 'border-slate-200 text-slate-500 hover:border-slate-300'
                                                     }`}
+                                                style={isSelected ? { borderColor: 'var(--theme-primary)', backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)', color: 'var(--theme-primary)' } : undefined}
                                             >
                                                 {val}
                                             </button>
@@ -286,12 +289,11 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                     <button
                         onClick={handleAddToCart}
                         disabled={!isAvailable}
-                        className={`flex-1 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${!isAvailable
-                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                : isAdded
-                                    ? 'bg-[#00B870] text-white'
-                                    : 'bg-[#00D084] text-white shadow-lg shadow-emerald-500/20 hover:bg-[#00B870] active:scale-[0.98]'
+                        className={`flex-1 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg ${!isAvailable
+                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
+                            : 'text-white hover:brightness-95 active:scale-[0.98]'
                             }`}
+                        style={isAvailable ? (isAdded ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 85%, black)' } : { backgroundColor: 'var(--theme-primary)' }) : undefined}
                     >
                         {!isAvailable ? (
                             'غير متاح'

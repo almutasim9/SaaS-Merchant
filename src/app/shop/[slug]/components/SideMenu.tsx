@@ -66,11 +66,11 @@ export default function SideMenu({ isOpen, onClose, onNavigate, storeName, store
                 <div className="flex items-center justify-between p-5 pb-2">
                     {/* Logo */}
                     {storeLogo ? (
-                        <div className="w-12 h-12 rounded-xl bg-[#00D084] flex items-center justify-center overflow-hidden shadow-sm shadow-emerald-200">
-                            <Image src={storeLogo} alt={storeName} width={48} height={48} className="object-cover rounded-xl" />
+                        <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
+                            <Image src={storeLogo} alt={storeName} width={48} height={48} className="object-contain rounded-xl" />
                         </div>
                     ) : (
-                        <div className="w-12 h-12 rounded-xl bg-[#00D084] flex items-center justify-center shadow-sm shadow-emerald-200">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm" style={{ backgroundColor: 'var(--theme-primary)' }}>
                             <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                             </svg>
@@ -104,11 +104,12 @@ export default function SideMenu({ isOpen, onClose, onNavigate, storeName, store
                                 onClose();
                             }}
                             className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl mb-1 transition-all text-right ${activeView === item.id
-                                    ? 'bg-[#E8FFF4] text-[#00B870] font-bold'
-                                    : 'text-slate-600 hover:bg-slate-50 font-medium'
+                                ? 'font-bold'
+                                : 'text-slate-600 hover:bg-slate-50 font-medium'
                                 }`}
+                            style={activeView === item.id ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)', color: 'var(--theme-primary)' } : undefined}
                         >
-                            <span className={activeView === item.id ? 'text-[#00D084]' : 'text-slate-400'}>
+                            <span style={activeView === item.id ? { color: 'var(--theme-primary)' } : { color: '#94a3b8' }}>
                                 {item.icon}
                             </span>
                             <span className="text-sm">{item.label}</span>

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { saveGeneralInfoAction, saveContactInfoAction, saveSocialLinksAction, uploadLogoAction, updateSlugAction } from './actions';
+import { saveGeneralInfoAction, saveContactInfoAction, saveSocialLinksAction, uploadLogoAction, updateSlugAction, saveStorefrontConfigAction, uploadBannerImageAction, deleteBannerImageAction } from './actions';
 
 interface Store {
     id: string;
@@ -23,6 +23,11 @@ interface Store {
         instagram?: string;
         tiktok?: string;
         facebook?: string;
+    };
+    storefront_config?: {
+        banner?: { title?: string; subtitle?: string; badge?: string; show?: boolean; images?: string[] };
+        about?: { content?: string };
+        theme_color?: string;
     };
 }
 
@@ -53,6 +58,7 @@ export default function MerchantSettingsPage() {
     const [newSlug, setNewSlug] = useState('');
     const [slugSaving, setSlugSaving] = useState(false);
     const [showSlugConfirm, setShowSlugConfirm] = useState(false);
+    const [savingStorefront, setSavingStorefront] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -130,6 +136,54 @@ export default function MerchantSettingsPage() {
         if (result.success) toast.success('تم حفظ روابط التواصل الاجتماعي ✅');
         else toast.error(result.error || 'فشل في الحفظ');
         setSavingSocial(false);
+    };
+
+    const handleSaveStorefront = async () => {
+        if (!store) return;
+        setSavingStorefront(true);
+        const result = await saveStorefrontConfigAction(store.id, store.storefront_config || {});
+        if (result.success) toast.success('تم حفظ إعدادات واجهة المتجر ✅');
+        else toast.error(result.error || 'فشل في الحفظ');
+        setSavingStorefront(false);
+    };
+
+    const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !store) return;
+        const fileExt = file.name.split('.').pop() || 'png';
+        const reader = new FileReader();
+        reader.onload = async () => {
+            const base64 = (reader.result as string).split(',')[1];
+            const result = await uploadBannerImageAction(store.id, base64, fileExt);
+            if (result.success && result.url) {
+                const currentImages = store.storefront_config?.banner?.images || [];
+                const updatedConfig = {
+                    ...store.storefront_config,
+                    banner: { ...store.storefront_config?.banner, images: [...currentImages, result.url] }
+                };
+                setStore(prev => prev ? { ...prev, storefront_config: updatedConfig } : null);
+                await saveStorefrontConfigAction(store.id, updatedConfig);
+                toast.success('تم رفع صورة البانر ✅');
+            } else {
+                toast.error(result.error || 'فشل في رفع الصورة');
+            }
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    };
+
+    const handleBannerDelete = async (imgUrl: string) => {
+        if (!store) return;
+        await deleteBannerImageAction(imgUrl);
+        const currentImages = store.storefront_config?.banner?.images || [];
+        const updatedImages = currentImages.filter(u => u !== imgUrl);
+        const updatedConfig = {
+            ...store.storefront_config,
+            banner: { ...store.storefront_config?.banner, images: updatedImages }
+        };
+        setStore(prev => prev ? { ...prev, storefront_config: updatedConfig } : null);
+        await saveStorefrontConfigAction(store.id, updatedConfig);
+        toast.success('تم حذف الصورة');
     };
 
     if (loading) {
@@ -408,6 +462,189 @@ export default function MerchantSettingsPage() {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ═══════════════════ Storefront: Appearance ═══════════════════ */}
+            <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden mb-6 lg:mb-8">
+                <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-pink-50 text-pink-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
+                            <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 className="text-lg lg:text-xl font-bold text-slate-800">مظهر المتجر</h3>
+                            <p className="text-slate-400 text-[10px] lg:text-xs font-medium">تخصيص الألوان والمظهر العام للمتجر</p>
+                        </div>
+                    </div>
+                    <SectionSaveButton saving={savingStorefront} onClick={handleSaveStorefront} />
+                </div>
+                <div className="p-6 lg:p-10">
+                    <div className="space-y-3">
+                        <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1 flex items-center gap-2">
+                            اللون الأساسي
+                        </label>
+                        <div className="flex items-center gap-4">
+                            <input
+                                type="color"
+                                value={store?.storefront_config?.theme_color || '#00D084'}
+                                onChange={(e) => setStore(prev => prev ? { ...prev, storefront_config: { ...prev.storefront_config, theme_color: e.target.value } } : null)}
+                                className="w-14 h-14 rounded-xl cursor-pointer border-0 p-0 bg-transparent flex-shrink-0"
+                            />
+                            <div className="flex-1 bg-[#FBFBFF] border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-600 flex items-center justify-between" dir="ltr">
+                                <span>{store?.storefront_config?.theme_color || '#00D084'}</span>
+                                <div className="w-6 h-6 rounded-md shadow-sm border border-black/10" style={{ backgroundColor: store?.storefront_config?.theme_color || '#00D084' }} />
+                            </div>
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-2">هذا اللون سيستخدم في الأزرار، والروابط، والعناصر البارزة في متجرك.</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* ═══════════════════ Storefront: Banner ═══════════════════ */}
+            <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+                <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-emerald-50 text-emerald-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
+                            <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 className="text-lg lg:text-xl font-bold text-slate-800">البانر الترويجي</h3>
+                            <p className="text-slate-400 text-[10px] lg:text-xs font-medium">عنوان ونص البانر الذي يظهر في الصفحة الرئيسية</p>
+                        </div>
+                    </div>
+                    <SectionSaveButton saving={savingStorefront} onClick={handleSaveStorefront} />
+                </div>
+                <div className="p-6 lg:p-10 space-y-6">
+                    {/* Banner Images */}
+                    <div className="space-y-3">
+                        <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">صور البانر (سلايدر)</label>
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                            {(store?.storefront_config?.banner?.images || []).map((img, i) => (
+                                <div key={i} className="relative group aspect-[16/9] rounded-xl overflow-hidden border border-slate-100">
+                                    <img src={img} alt={`بانر ${i + 1}`} className="w-full h-full object-cover" />
+                                    <button
+                                        onClick={() => handleBannerDelete(img)}
+                                        className="absolute top-2 left-2 w-7 h-7 bg-rose-500 text-white rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                    <div className="absolute bottom-1 right-1 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded-md font-bold">{i + 1}</div>
+                                </div>
+                            ))}
+                            {/* Upload Button */}
+                            <label className="aspect-[16/9] rounded-xl border-2 border-dashed border-emerald-200 bg-emerald-50/30 flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-50 hover:border-emerald-400 transition-all">
+                                <svg className="w-8 h-8 text-emerald-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                </svg>
+                                <span className="text-[10px] font-bold text-emerald-500">إضافة صورة</span>
+                                <input type="file" accept="image/*" onChange={handleBannerUpload} className="hidden" />
+                            </label>
+                        </div>
+                        <p className="text-[10px] text-slate-400">يُفضل استخدام صور بأبعاد 16:9 (مثلاً 1200×675). الصور ستعرض كسلايدر تلقائي.</p>
+                    </div>
+
+                    <div className="border-t border-slate-100 pt-6">
+                        <p className="text-xs text-slate-400 mb-4 flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            إذا لم تُرفع صور، سيظهر بانر نصي بالتصميم الافتراضي. إذا رُفعت صور، يختفي البانر النصي ويظهر السلايدر.
+                        </p>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">الشارة</label>
+                                <input type="text" value={store?.storefront_config?.banner?.badge || ''} onChange={(e) => setStore(prev => prev ? { ...prev, storefront_config: { ...prev.storefront_config, banner: { ...prev.storefront_config?.banner, badge: e.target.value } } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all" placeholder="جديد" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">العنوان</label>
+                                <input type="text" value={store?.storefront_config?.banner?.title || ''} onChange={(e) => setStore(prev => prev ? { ...prev, storefront_config: { ...prev.storefront_config, banner: { ...prev.storefront_config?.banner, title: e.target.value } } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all" placeholder="مرحباً بكم في متجرنا" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">النص الفرعي</label>
+                                <input type="text" value={store?.storefront_config?.banner?.subtitle || ''} onChange={(e) => setStore(prev => prev ? { ...prev, storefront_config: { ...prev.storefront_config, banner: { ...prev.storefront_config?.banner, subtitle: e.target.value } } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all" placeholder="تصفح أفضل المنتجات بأسعار مميزة" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ═══════════════════ Storefront: About Us ═══════════════════ */}
+            <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+                <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-cyan-50 text-cyan-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
+                            <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 className="text-lg lg:text-xl font-bold text-slate-800">صفحة من نحن</h3>
+                            <p className="text-slate-400 text-[10px] lg:text-xs font-medium">وصف تفصيلي عن المتجر يظهر في صفحة &quot;من نحن&quot;</p>
+                        </div>
+                    </div>
+                    <SectionSaveButton saving={savingStorefront} onClick={handleSaveStorefront} />
+                </div>
+                <div className="p-6 lg:p-10 space-y-6">
+                    <div className="space-y-3">
+                        <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">محتوى صفحة من نحن</label>
+                        <textarea
+                            rows={6}
+                            value={store?.storefront_config?.about?.content || ''}
+                            onChange={(e) => setStore(prev => prev ? { ...prev, storefront_config: { ...prev.storefront_config, about: { ...prev.storefront_config?.about, content: e.target.value } } } : null)}
+                            className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-2xl px-5 lg:px-6 py-3.5 lg:py-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-cyan-100 transition-all resize-none"
+                            placeholder="نحن متجر إلكتروني رائد نسعى لتقديم أفضل المنتجات التي تلبي احتياجاتكم اليومية بجودة عالية وأسعار منافسة..."
+                        />
+                    </div>
+                    <div className="bg-slate-50 rounded-2xl p-4 flex items-start gap-3">
+                        <svg className="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-xs text-slate-500 leading-relaxed">هذا النص يظهر في صفحة &quot;من نحن&quot; في المتجر. إذا تركته فارغاً، سيعرض نص افتراضي. يمكنك أيضاً استخدام وصف المتجر في المعلومات العامة.</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* ═══════════════════ Storefront: Contact Info Reminder ═══════════════════ */}
+            <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+                <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center gap-4">
+                    <div className="w-10 h-10 lg:w-12 lg:h-12 bg-violet-50 text-violet-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
+                        <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 className="text-lg lg:text-xl font-bold text-slate-800">صفحة تواصل معنا</h3>
+                        <p className="text-slate-400 text-[10px] lg:text-xs font-medium">بيانات التواصل تُسحب تلقائياً من الأقسام أعلاه</p>
+                    </div>
+                </div>
+                <div className="p-6 lg:p-10">
+                    <div className="bg-violet-50 border border-violet-100 rounded-2xl p-5 space-y-4">
+                        <p className="text-sm font-bold text-violet-800">📋 صفحة &quot;تواصل معنا&quot; تعرض تلقائياً:</p>
+                        <ul className="space-y-2 text-xs text-violet-700 leading-relaxed">
+                            <li className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-violet-400"></span>
+                                <strong>رقم الهاتف</strong> — من قسم معلومات التواصل {store?.phone ? <span className="text-emerald-600">✓ مُعبأ</span> : <span className="text-rose-500">✗ فارغ</span>}
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-violet-400"></span>
+                                <strong>البريد الإلكتروني</strong> — من قسم معلومات التواصل {store?.email ? <span className="text-emerald-600">✓ مُعبأ</span> : <span className="text-rose-500">✗ فارغ</span>}
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-violet-400"></span>
+                                <strong>واتساب</strong> — من قسم التواصل الاجتماعي {store?.social_links?.whatsapp ? <span className="text-emerald-600">✓ مُعبأ</span> : <span className="text-rose-500">✗ فارغ</span>}
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-violet-400"></span>
+                                <strong>روابط التواصل الاجتماعي</strong> — فيسبوك، انستغرام، تيك توك
+                            </li>
+                        </ul>
+                        <p className="text-xs text-violet-600 pt-1">💡 املأ الحقول في الأقسام أعلاه لتظهر تلقائياً في صفحة &quot;تواصل معنا&quot;</p>
                     </div>
                 </div>
             </div>
