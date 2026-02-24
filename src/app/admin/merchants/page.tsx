@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getAdminStores } from './actions';
+import { getAdminStores, updateStorePlanAction } from './actions';
+import { toast } from 'react-hot-toast';
 
 // Types
 interface Store {
@@ -10,6 +11,7 @@ interface Store {
     name: string;
     merchant_id: string;
     slug: string;
+    plan_id: string;
     created_at: string;
     phone?: string;
     profiles: {
@@ -31,6 +33,20 @@ export default function AdminMerchantsPage() {
         const data = await getAdminStores();
         setStores(data as any as Store[]);
         setLoading(false);
+    };
+
+    const handlePlanChange = async (storeId: string, newPlanId: string) => {
+        const loadingToast = toast.loading('جاري تحديث الباقة...');
+        const result = await updateStorePlanAction(storeId, newPlanId);
+
+        if (result.success) {
+            toast.success('تم ترقية/تغيير الباقة بنجاح ✅', { id: loadingToast });
+            setStores(prevStores => prevStores.map(store =>
+                store.id === storeId ? { ...store, plan_id: newPlanId } : store
+            ));
+        } else {
+            toast.error(result.error || 'فشل في تحديث الباقة', { id: loadingToast });
+        }
     };
 
     const handleSuspendToggle = async (storeId: string, currentStatus: boolean) => {
@@ -87,7 +103,7 @@ export default function AdminMerchantsPage() {
                                 <th className="px-6 py-4 rounded-tr-2xl">المتجر والرابط</th>
                                 <th className="px-6 py-4">المالك (التاجر)</th>
                                 <th className="px-6 py-4">معلومات الاتصال</th>
-                                <th className="px-6 py-4 text-center">الحالة والإجراءات</th>
+                                <th className="px-6 py-4 text-center">الباقة والحالة</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -125,15 +141,29 @@ export default function AdminMerchantsPage() {
                                         )}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="flex items-center justify-center gap-3 w-full">
-                                            <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-lg border border-emerald-100">نشط</span>
-
-                                            <button
-                                                onClick={() => handleSuspendToggle(store.id, true)}
-                                                className="px-4 py-1.5 bg-rose-50 text-rose-600 text-xs font-bold rounded-lg hover:bg-rose-100 transition-colors opacity-0 group-hover:opacity-100"
+                                        <div className="flex flex-col items-center justify-center gap-3 w-full">
+                                            <select
+                                                value={store.plan_id || 'free'}
+                                                onChange={(e) => handlePlanChange(store.id, e.target.value)}
+                                                className={`px-3 py-1.5 text-xs font-bold rounded-lg border appearance-none text-center cursor-pointer transition-colors ${store.plan_id === 'gold' ? 'bg-amber-50 text-amber-700 border-amber-200 focus:ring-amber-500' :
+                                                        store.plan_id === 'silver' ? 'bg-slate-100 text-slate-700 border-slate-200 focus:ring-slate-500' :
+                                                            'bg-emerald-50 text-emerald-700 border-emerald-200 focus:ring-emerald-500'
+                                                    }`}
                                             >
-                                                إيقاف
-                                            </button>
+                                                <option value="free">باقة مجانية (Free)</option>
+                                                <option value="silver">باقة فضية (Silver)</option>
+                                                <option value="gold">باقة ذهبية (Gold)</option>
+                                            </select>
+
+                                            <div className="flex gap-2">
+                                                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-lg border border-emerald-100">نشط</span>
+                                                <button
+                                                    onClick={() => handleSuspendToggle(store.id, true)}
+                                                    className="px-3 py-1 bg-rose-50 text-rose-600 text-[10px] font-bold rounded-lg hover:bg-rose-100 transition-colors opacity-0 group-hover:opacity-100"
+                                                >
+                                                    إيقاف
+                                                </button>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>

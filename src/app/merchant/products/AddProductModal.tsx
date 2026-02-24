@@ -46,9 +46,10 @@ interface AddProductModalProps {
     storeId: string;
     sections: Section[];
     initialData?: Product | null;
+    storeSubscription?: any;
 }
 
-export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, sections, initialData }: AddProductModalProps) {
+export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, sections, initialData, storeSubscription }: AddProductModalProps) {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -179,7 +180,10 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
     };
 
     // --- Media Upload ---
-    const MAX_IMAGES = 5; // 1 primary + 4 additional
+    // If we have a subscription object, we check the plan ID or max_products as an indicator if it's free.
+    // Assuming `free` plan has `id === 'free'` or missing subscription.
+    const isFreePlan = !storeSubscription || storeSubscription.id === 'free';
+    const MAX_IMAGES = isFreePlan ? 1 : 5;
     const allImages = [imageUrl, ...additionalImages].filter(Boolean);
     const canAddMore = allImages.length < MAX_IMAGES;
 
@@ -303,7 +307,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
             <div className="w-full lg:w-[800px] bg-[#F8FAFC] h-full shadow-2xl flex flex-col animate-in slide-in-from-left duration-300 border-l border-slate-200/60 object-contain">
 
                 {/* Header */}
-                <div className="px-8 py-5 bg-white border-b border-slate-200 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+                <div className="px-4 lg:px-8 py-4 lg:py-5 bg-white border-b border-slate-200 flex items-center justify-between sticky top-0 z-30 shadow-sm">
                     <div>
                         <h2 className="text-lg font-black text-slate-900">
                             {initialData ? 'تعديل المنتج' : 'إضافة منتج جديد'}
@@ -320,7 +324,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                 </div>
 
                 {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto p-6 lg:p-8 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar">
                     {error && (
                         <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-600 rounded-2xl text-xs font-bold flex items-center gap-3">
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -333,7 +337,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                         <div className="flex-1 space-y-6">
 
                             {/* Basic Details Card */}
-                            <div className="bg-white rounded-[2rem] p-6 lg:p-8 border border-slate-200/60 shadow-sm space-y-6">
+                            <div className="bg-white rounded-[2rem] p-5 lg:p-8 border border-slate-200/60 shadow-sm space-y-6">
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <label className="text-xs font-black text-slate-700">صور المنتج</label>
@@ -363,8 +367,14 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                                                 <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="absolute inset-0 opacity-0 cursor-pointer" title="أضف صورة" />
                                             </div>
                                         )}
+                                        {!canAddMore && isFreePlan && (
+                                            <div className="relative aspect-square rounded-xl bg-rose-50 border-2 border-dashed border-rose-200 flex flex-col items-center justify-center text-center p-2 opacity-80" title="الترقية مطلوبة لتخطي الحد المسموح">
+                                                <svg className="w-5 h-5 text-rose-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                                <span className="text-[9px] font-bold text-rose-600 uppercase tracking-widest">تجاوزت الحد (رقي باقتك)</span>
+                                            </div>
+                                        )}
                                     </div>
-                                    <p className="text-[10px] text-slate-400 font-medium">الصورة الأولى هي الرئيسية. أضف حتى {MAX_IMAGES} صور (PNG, JPG — حتى 2MB).</p>
+                                    <p className="text-[10px] text-slate-400 font-medium">الصورة الأولى هي الرئيسية. أضف حتى {MAX_IMAGES} {MAX_IMAGES === 1 ? 'صورة' : 'صور'} (PNG, JPG — حتى 2MB).</p>
                                 </div>
 
                                 <div className="space-y-2">
@@ -379,7 +389,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                             </div>
 
                             {/* Pricing Card */}
-                            <div className="bg-white rounded-[2rem] p-6 lg:p-8 border border-slate-200/60 shadow-sm space-y-6">
+                            <div className="bg-white rounded-[2rem] p-5 lg:p-8 border border-slate-200/60 shadow-sm space-y-6">
                                 <div className="flex items-center gap-3 mb-2">
                                     <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -397,7 +407,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
 
                             {/* Variants Matrix Card */}
                             <div className="bg-white rounded-[2rem] border border-slate-200/60 shadow-sm overflow-hidden">
-                                <div className="p-6 lg:p-8 border-b border-slate-100 flex items-start justify-between">
+                                <div className="p-5 lg:p-8 border-b border-slate-100 flex items-start justify-between">
                                     <div>
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
@@ -417,7 +427,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                                 </div>
 
                                 {hasVariants && (
-                                    <div className="p-6 lg:p-8 space-y-8 bg-slate-50/50">
+                                    <div className="p-4 lg:p-8 space-y-8 bg-slate-50/50">
 
                                         {/* Options Builder */}
                                         <div className="space-y-6">
@@ -547,7 +557,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
 
 
                             {/* Organization Card */}
-                            <div className="bg-white rounded-[2rem] p-6 border border-slate-200/60 shadow-sm space-y-5">
+                            <div className="bg-white rounded-[2rem] p-5 lg:p-6 border border-slate-200/60 shadow-sm space-y-5">
                                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">التنظيم</h3>
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-700">القسم (Category)</label>
@@ -565,9 +575,9 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                 </div>
 
                 {/* Footer Action */}
-                <div className="p-6 bg-white border-t border-slate-200 flex items-center justify-between shadow-[0_-10px_40px_rgba(0,0,0,0.03)] z-30">
-                    <button onClick={onClose} className="px-6 py-3 text-slate-500 font-bold hover:text-slate-800 text-xs transition-colors">إلغاء</button>
-                    <button onClick={handleSubmit} disabled={loading || uploading} className="px-10 py-3.5 bg-slate-900 text-white rounded-xl font-black text-xs shadow-xl hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2">
+                <div className="p-4 lg:p-6 bg-white border-t border-slate-200 flex items-center justify-between shadow-[0_-10px_40px_rgba(0,0,0,0.03)] z-30">
+                    <button onClick={onClose} className="px-4 lg:px-6 py-2.5 lg:py-3 text-slate-500 font-bold hover:text-slate-800 text-xs transition-colors">إلغاء</button>
+                    <button onClick={handleSubmit} disabled={loading || uploading} className="px-6 lg:px-10 py-3 lg:py-3.5 bg-slate-900 text-white rounded-xl font-black text-xs shadow-xl hover:bg-indigo-600 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2">
                         {loading ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <span>{initialData ? 'حفظ التعديلات' : 'إضافة المنتج'}</span>}
                     </button>
                 </div>

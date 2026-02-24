@@ -57,15 +57,39 @@ export async function placeOrderAction(orderData: OrderData) {
             throw new Error('فشل التحقق من المنتجات في قاعدة البيانات.');
         }
 
-        // 2b. Fetch Store Delivery Fees
+        // 2b. Fetch Store Details & Delivery Fees
         const { data: store, error: storeError } = await supabaseAdmin
             .from('stores')
-            .select('delivery_fees')
+            .select(`
+                delivery_fees,
+                subscription_plans!inner(
+                    max_monthly_orders,
+                    free_delivery_all_zones
+                )
+            `)
             .eq('id', storeId)
             .single();
 
         if (storeError) {
             console.error('[SERVER] Store fetch error:', storeError);
+        }
+
+        // 2c. Check Order Limits
+        const maxOrders = (store?.subscription_plans as any)?.max_monthly_orders ?? 50;
+        if (maxOrders !== -1) {
+            const startOfMonth = new Date();
+            startOfMonth.setDate(1);
+            startOfMonth.setHours(0, 0, 0, 0);
+
+            const { count, error: countError } = await supabaseAdmin
+                .from('orders')
+                .select('*', { count: 'exact', head: true })
+                .eq('store_id', storeId)
+                .gte('created_at', startOfMonth.toISOString());
+
+            if (!countError && count !== null && count >= maxOrders) {
+                return { success: false, error: 'عذراً، المتجر غير قادر على استقبال طلبات جديدة حالياً.' };
+            }
         }
 
         const IRAQ_CITIES = ['بغداد', 'البصرة', 'الموصل', 'أربيل', 'السليمانية', 'دهوك', 'كركوك', 'النجف', 'كربلاء', 'الحلة', 'الأنبار', 'الديوانية', 'الكوت', 'العمارة', 'الناصرية', 'السماوة', 'ديالى', 'صلاح الدين'];
@@ -95,9 +119,14 @@ export async function placeOrderAction(orderData: OrderData) {
             });
         }
 
-        const fee = cityToFeeMap[customerInfo.city];
+        let fee = cityToFeeMap[customerInfo.city];
         if (fee === undefined) {
             return { success: false, error: 'نعتذر، التوصيل غير متاح إلى هذه المحافظة حالياً.' };
+        }
+
+        // Apply Free Delivery if the store has it enabled globally AND the plan supports it
+        if (rawFees?.isFreeDelivery && (store?.subscription_plans as any)?.free_delivery_all_zones) {
+            fee = 0;
         }
 
         // 3. Logic & Price Calculation (with variant support)

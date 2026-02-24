@@ -52,9 +52,13 @@ interface Store {
         provinces: number;
     };
     storefront_config?: {
-        banner?: { title?: string; subtitle?: string; badge?: string; show?: boolean };
+        banner?: { title?: string; subtitle?: string; badge?: string; show?: boolean; images?: string[] };
         about?: { content?: string };
         theme_color?: string;
+    };
+    subscription_plans?: {
+        custom_theme: boolean;
+        remove_branding: boolean;
     };
 }
 
@@ -297,13 +301,21 @@ export default function StorefrontContent({ store, products, sections }: { store
                         onMenuOpen={() => setIsMenuOpen(true)}
                         onCartOpen={() => setView('cart')}
                         totalItems={totalItems}
-                        storefrontConfig={store.storefront_config}
+                        storefrontConfig={{
+                            ...store.storefront_config,
+                            banner: {
+                                ...store.storefront_config?.banner,
+                                // Force disable slider images if plan doesn't support it
+                                images: store.subscription_plans?.custom_theme ? store.storefront_config?.banner?.images : []
+                            }
+                        }}
                     />
                 );
         }
     };
 
-    const themeColor = store.storefront_config?.theme_color || '#00D084';
+    const isCustomThemeAllowed = store.subscription_plans?.custom_theme ?? false;
+    const themeColor = isCustomThemeAllowed ? (store.storefront_config?.theme_color || '#00D084') : '#00D084';
 
     return (
         <div className="min-h-screen bg-[#F8F9FB] font-sans" style={{ '--theme-primary': themeColor } as any}>

@@ -29,6 +29,11 @@ interface Store {
         about?: { content?: string };
         theme_color?: string;
     };
+    subscription_plans?: {
+        custom_theme: boolean;
+        remove_branding: boolean;
+        allow_custom_slug: boolean;
+    };
 }
 
 function SectionSaveButton({ saving, onClick, label = 'حفظ' }: { saving: boolean; onClick: () => void; label?: string }) {
@@ -58,7 +63,12 @@ export default function MerchantSettingsPage() {
     const [newSlug, setNewSlug] = useState('');
     const [slugSaving, setSlugSaving] = useState(false);
     const [showSlugConfirm, setShowSlugConfirm] = useState(false);
-    const [savingStorefront, setSavingStorefront] = useState(false);
+
+    // Independent saving states for storefront config sections
+    const [savingAppearance, setSavingAppearance] = useState(false);
+    const [savingBanner, setSavingBanner] = useState(false);
+    const [savingAbout, setSavingAbout] = useState(false);
+
     const router = useRouter();
 
     useEffect(() => {
@@ -71,7 +81,7 @@ export default function MerchantSettingsPage() {
 
         const { data } = await supabase
             .from('stores')
-            .select('*')
+            .select('*, subscription_plans (custom_theme, remove_branding, allow_custom_slug)')
             .eq('merchant_id', user.id)
             .single();
 
@@ -138,13 +148,25 @@ export default function MerchantSettingsPage() {
         setSavingSocial(false);
     };
 
-    const handleSaveStorefront = async () => {
+    const handleSaveStorefront = async (section: 'appearance' | 'banner' | 'about') => {
         if (!store) return;
-        setSavingStorefront(true);
+
+        switch (section) {
+            case 'appearance': setSavingAppearance(true); break;
+            case 'banner': setSavingBanner(true); break;
+            case 'about': setSavingAbout(true); break;
+        }
+
         const result = await saveStorefrontConfigAction(store.id, store.storefront_config || {});
-        if (result.success) toast.success('تم حفظ إعدادات واجهة المتجر ✅');
+
+        if (result.success) toast.success('تم الحفظ بنجاح ✅');
         else toast.error(result.error || 'فشل في الحفظ');
-        setSavingStorefront(false);
+
+        switch (section) {
+            case 'appearance': setSavingAppearance(false); break;
+            case 'banner': setSavingBanner(false); break;
+            case 'about': setSavingAbout(false); break;
+        }
     };
 
     const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -308,6 +330,13 @@ export default function MerchantSettingsPage() {
                                     </svg>
                                     <p className="text-xs font-bold text-slate-400">تم تغيير الرابط مسبقاً. لا يمكن تغييره مرة أخرى.</p>
                                 </div>
+                            ) : store?.subscription_plans && !store.subscription_plans.allow_custom_slug ? (
+                                <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                                    <svg className="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    <p className="text-xs font-bold text-amber-700">ميزة تخصيص الرابط (Slug) متاحة للباقات المتقدمة. يرجى الاشتراك للتمتع بها.</p>
+                                </div>
                             ) : slugEditing ? (
                                 <div className="space-y-4">
                                     <div className="relative" dir="ltr">
@@ -467,7 +496,18 @@ export default function MerchantSettingsPage() {
             </div>
 
             {/* ═══════════════════ Storefront: Appearance ═══════════════════ */}
-            <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden mb-6 lg:mb-8">
+            <div className={`bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden mb-6 lg:mb-8 relative ${!store?.subscription_plans?.custom_theme ? 'opacity-80' : ''}`}>
+                {!store?.subscription_plans?.custom_theme && (
+                    <div className="absolute inset-x-0 bottom-0 top-[88px] z-10 backdrop-blur-[2px] bg-slate-50/50 flex items-center justify-center">
+                        <div className="bg-white px-6 py-4 rounded-2xl shadow-xl flex flex-col items-center gap-2 border border-slate-100 max-w-sm text-center animate-in zoom-in duration-300">
+                            <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-1">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            </div>
+                            <h4 className="font-bold text-slate-800 text-lg">ميزة احترافية</h4>
+                            <p className="text-xs text-slate-500 font-medium">تغيير ألوان المتجر متاح للباقات المتقدمة (الفضية والذهبية). يرجى الترقية.</p>
+                        </div>
+                    </div>
+                )}
                 <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 lg:w-12 lg:h-12 bg-pink-50 text-pink-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
@@ -480,9 +520,11 @@ export default function MerchantSettingsPage() {
                             <p className="text-slate-400 text-[10px] lg:text-xs font-medium">تخصيص الألوان والمظهر العام للمتجر</p>
                         </div>
                     </div>
-                    <SectionSaveButton saving={savingStorefront} onClick={handleSaveStorefront} />
+                    {store?.subscription_plans?.custom_theme && (
+                        <SectionSaveButton saving={savingAppearance} onClick={() => handleSaveStorefront('appearance')} />
+                    )}
                 </div>
-                <div className="p-6 lg:p-10">
+                <div className={`p-6 lg:p-10 ${!store?.subscription_plans?.custom_theme ? 'pointer-events-none' : ''}`}>
                     <div className="space-y-3">
                         <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1 flex items-center gap-2">
                             اللون الأساسي
@@ -505,7 +547,18 @@ export default function MerchantSettingsPage() {
             </div>
 
             {/* ═══════════════════ Storefront: Banner ═══════════════════ */}
-            <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+            <div className={`bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden relative ${!store?.subscription_plans?.custom_theme ? 'opacity-80' : ''}`}>
+                {!store?.subscription_plans?.custom_theme && (
+                    <div className="absolute inset-x-0 bottom-0 top-[88px] z-10 backdrop-blur-[2px] bg-slate-50/50 flex items-center justify-center">
+                        <div className="bg-white px-6 py-4 rounded-2xl shadow-xl flex flex-col items-center gap-2 border border-slate-100 max-w-sm text-center animate-in zoom-in duration-300">
+                            <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-1">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            </div>
+                            <h4 className="font-bold text-slate-800 text-lg">ميزة احترافية</h4>
+                            <p className="text-xs text-slate-500 font-medium">سلايدر الصور وتغيير البانر متاح للباقات المتقدمة (الفضية والذهبية). يرجى الترقية لتفعيل هذه الميزة.</p>
+                        </div>
+                    </div>
+                )}
                 <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 lg:w-12 lg:h-12 bg-emerald-50 text-emerald-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
@@ -518,9 +571,11 @@ export default function MerchantSettingsPage() {
                             <p className="text-slate-400 text-[10px] lg:text-xs font-medium">عنوان ونص البانر الذي يظهر في الصفحة الرئيسية</p>
                         </div>
                     </div>
-                    <SectionSaveButton saving={savingStorefront} onClick={handleSaveStorefront} />
+                    {store?.subscription_plans?.custom_theme && (
+                        <SectionSaveButton saving={savingBanner} onClick={() => handleSaveStorefront('banner')} />
+                    )}
                 </div>
-                <div className="p-6 lg:p-10 space-y-6">
+                <div className={`p-6 lg:p-10 space-y-6 ${!store?.subscription_plans?.custom_theme ? 'pointer-events-none' : ''}`}>
                     {/* Banner Images */}
                     <div className="space-y-3">
                         <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">صور البانر (سلايدر)</label>
@@ -572,10 +627,10 @@ export default function MerchantSettingsPage() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* ═══════════════════ Storefront: About Us ═══════════════════ */}
-            <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+            < div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden" >
                 <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 lg:w-12 lg:h-12 bg-cyan-50 text-cyan-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
@@ -588,7 +643,7 @@ export default function MerchantSettingsPage() {
                             <p className="text-slate-400 text-[10px] lg:text-xs font-medium">وصف تفصيلي عن المتجر يظهر في صفحة &quot;من نحن&quot;</p>
                         </div>
                     </div>
-                    <SectionSaveButton saving={savingStorefront} onClick={handleSaveStorefront} />
+                    <SectionSaveButton saving={savingAbout} onClick={() => handleSaveStorefront('about')} />
                 </div>
                 <div className="p-6 lg:p-10 space-y-6">
                     <div className="space-y-3">
@@ -608,10 +663,10 @@ export default function MerchantSettingsPage() {
                         <p className="text-xs text-slate-500 leading-relaxed">هذا النص يظهر في صفحة &quot;من نحن&quot; في المتجر. إذا تركته فارغاً، سيعرض نص افتراضي. يمكنك أيضاً استخدام وصف المتجر في المعلومات العامة.</p>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* ═══════════════════ Storefront: Contact Info Reminder ═══════════════════ */}
-            <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+            < div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden" >
                 <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center gap-4">
                     <div className="w-10 h-10 lg:w-12 lg:h-12 bg-violet-50 text-violet-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
                         <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -647,53 +702,55 @@ export default function MerchantSettingsPage() {
                         <p className="text-xs text-violet-600 pt-1">💡 املأ الحقول في الأقسام أعلاه لتظهر تلقائياً في صفحة &quot;تواصل معنا&quot;</p>
                     </div>
                 </div>
-            </div>
+            </div >
 
             <footer className="text-center pt-10 lg:pt-20 border-t border-slate-100">
                 <p className="text-[9px] lg:text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] mt-8 lg:mt-12 bg-slate-50 py-3 lg:py-4 rounded-full inline-block px-6 lg:px-10 border border-slate-100">&copy; {new Date().getFullYear()} SaaSPlus. جميع الحقوق محفوظة.</p>
             </footer>
 
             {/* Slug Confirmation Modal */}
-            {showSlugConfirm && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" dir="rtl">
-                    <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowSlugConfirm(false)} />
-                    <div className="relative bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full animate-in zoom-in-95 duration-300">
-                        <div className="text-center space-y-4">
-                            <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto">
-                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+            {
+                showSlugConfirm && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" dir="rtl">
+                        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowSlugConfirm(false)} />
+                        <div className="relative bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full animate-in zoom-in-95 duration-300">
+                            <div className="text-center space-y-4">
+                                <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto">
+                                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+                                </div>
+                                <h3 className="text-xl font-black text-slate-800">تأكيد تغيير الرابط</h3>
+                                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-right space-y-2">
+                                    <p className="text-sm font-bold text-amber-800">⚠️ تنبيه مهم:</p>
+                                    <p className="text-xs text-amber-700 leading-relaxed">تغيير رابط المتجر سيؤثر على جميع الروابط السابقة. <strong>لا يمكنك التراجع.</strong></p>
+                                </div>
+                                <div className="bg-slate-50 rounded-2xl p-4 text-center" dir="ltr">
+                                    <p className="text-xs text-slate-400 mb-1">الرابط الجديد:</p>
+                                    <p className="text-lg font-bold text-indigo-600">saasplus.com/shop/{newSlug}</p>
+                                </div>
                             </div>
-                            <h3 className="text-xl font-black text-slate-800">تأكيد تغيير الرابط</h3>
-                            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-right space-y-2">
-                                <p className="text-sm font-bold text-amber-800">⚠️ تنبيه مهم:</p>
-                                <p className="text-xs text-amber-700 leading-relaxed">تغيير رابط المتجر سيؤثر على جميع الروابط السابقة. <strong>لا يمكنك التراجع.</strong></p>
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    disabled={slugSaving}
+                                    onClick={async () => {
+                                        if (!store) return;
+                                        setSlugSaving(true);
+                                        const result = await updateSlugAction(store.id, store.merchant_id, newSlug);
+                                        if (result.success) {
+                                            toast.success('تم تغيير الرابط بنجاح! 🎉');
+                                            setShowSlugConfirm(false);
+                                            setSlugEditing(false);
+                                            setStore(prev => prev ? { ...prev, slug: newSlug, slug_changed: true } : null);
+                                        } else toast.error(result.error || 'حدث خطأ.');
+                                        setSlugSaving(false);
+                                    }}
+                                    className="flex-1 py-4 bg-amber-500 text-white font-bold rounded-2xl hover:bg-amber-600 transition-all active:scale-95 disabled:opacity-50 text-sm"
+                                >{slugSaving ? 'جاري التحديث...' : 'نعم، غيّر الرابط'}</button>
+                                <button onClick={() => setShowSlugConfirm(false)} className="px-6 py-4 bg-slate-100 text-slate-500 font-bold rounded-2xl hover:bg-slate-200 transition-all text-sm">تراجع</button>
                             </div>
-                            <div className="bg-slate-50 rounded-2xl p-4 text-center" dir="ltr">
-                                <p className="text-xs text-slate-400 mb-1">الرابط الجديد:</p>
-                                <p className="text-lg font-bold text-indigo-600">saasplus.com/shop/{newSlug}</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-3 mt-6">
-                            <button
-                                disabled={slugSaving}
-                                onClick={async () => {
-                                    if (!store) return;
-                                    setSlugSaving(true);
-                                    const result = await updateSlugAction(store.id, store.merchant_id, newSlug);
-                                    if (result.success) {
-                                        toast.success('تم تغيير الرابط بنجاح! 🎉');
-                                        setShowSlugConfirm(false);
-                                        setSlugEditing(false);
-                                        setStore(prev => prev ? { ...prev, slug: newSlug, slug_changed: true } : null);
-                                    } else toast.error(result.error || 'حدث خطأ.');
-                                    setSlugSaving(false);
-                                }}
-                                className="flex-1 py-4 bg-amber-500 text-white font-bold rounded-2xl hover:bg-amber-600 transition-all active:scale-95 disabled:opacity-50 text-sm"
-                            >{slugSaving ? 'جاري التحديث...' : 'نعم، غيّر الرابط'}</button>
-                            <button onClick={() => setShowSlugConfirm(false)} className="px-6 py-4 bg-slate-100 text-slate-500 font-bold rounded-2xl hover:bg-slate-200 transition-all text-sm">تراجع</button>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }

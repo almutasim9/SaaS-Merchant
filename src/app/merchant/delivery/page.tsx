@@ -15,6 +15,10 @@ interface DeliveryZone {
 
 interface Store {
     id: string;
+    subscription_plans?: {
+        max_delivery_zones: number;
+        free_delivery_all_zones: boolean;
+    };
 }
 
 const IRAQ_CITIES = [
@@ -49,12 +53,15 @@ export default function MerchantDeliveryPage() {
 
         const { data: storeData } = await supabase
             .from('stores')
-            .select('id, delivery_fees')
+            .select('id, delivery_fees, subscription_plans(max_delivery_zones, free_delivery_all_zones)')
             .eq('merchant_id', user.id)
             .single();
 
         if (storeData) {
-            setStore({ id: storeData.id });
+            setStore({
+                id: storeData.id,
+                subscription_plans: storeData.subscription_plans as any
+            });
 
             // Auto Migrate Database Formats to Zones
             const rawFees = storeData.delivery_fees;
@@ -129,6 +136,11 @@ export default function MerchantDeliveryPage() {
     };
 
     const openModal = (zone?: DeliveryZone) => {
+        if (!zone && store?.subscription_plans && store.subscription_plans.max_delivery_zones !== -1 && zones.length >= store.subscription_plans.max_delivery_zones) {
+            toast.error(`لقد وصلت للحد الأقصى لعدد مناطق التوصيل المسموحة في باقتك (${store.subscription_plans.max_delivery_zones} مناطق).`);
+            return;
+        }
+
         if (zone) {
             setEditingZone({ ...zone, cities: [...zone.cities] }); // deep copy cities
         } else {
@@ -225,8 +237,13 @@ export default function MerchantDeliveryPage() {
             </div>
 
             {/* Free Delivery Global Toggle */}
-            <div className={`p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] border shadow-sm transition-all flex items-center justify-between ${isFreeDelivery ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-100'}`}>
-                <div className="flex items-center gap-4">
+            <div className={`relative p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] border shadow-sm transition-all flex items-center justify-between ${isFreeDelivery ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-100'} ${!store?.subscription_plans?.free_delivery_all_zones ? 'opacity-80 pointer-events-none grayscale' : ''}`}>
+                {!store?.subscription_plans?.free_delivery_all_zones && (
+                    <div className="absolute inset-x-0 bottom-0 top-0 z-10 flex items-center justify-center pointer-events-auto backdrop-blur-[1px] bg-slate-50/20 rounded-[2.5rem]">
+                        <button onClick={() => toast.error('ميزة التوصيل المجاني الشامل متاحة في الباقات المتقدمة. يرجى الترقية.')} className="absolute inset-0 w-full h-full cursor-not-allowed outline-none"></button>
+                    </div>
+                )}
+                <div className="flex items-center gap-4 relative z-0">
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${isFreeDelivery ? 'bg-emerald-500 text-white shadow-emerald-500/30' : 'bg-slate-50 text-slate-400'}`}>
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -235,12 +252,12 @@ export default function MerchantDeliveryPage() {
                     <div>
                         <h3 className={`text-lg font-bold ${isFreeDelivery ? 'text-emerald-900' : 'text-slate-800'}`}>تفعيل الشحن المجاني</h3>
                         <p className={`text-xs font-medium mt-1 ${isFreeDelivery ? 'text-emerald-700' : 'text-slate-400'}`}>
-                            عند التفعيل، سيتم تصفير أجور التوصيل لجميع المحافظات المشمولة في الكروبات. (يستخدم للعروض الخاصة)
+                            عند التفعيل، سيتم تصفير أجور التوصيل لجميع المحافظات المشمولة في الكروبات. (يستخدم للعروض الخاصة) {!store?.subscription_plans?.free_delivery_all_zones && <span className="text-amber-600 block mt-1">(يتطلب الترقية)</span>}
                         </p>
                     </div>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" checked={isFreeDelivery} onChange={() => setIsFreeDelivery(!isFreeDelivery)} />
+                <label className="relative inline-flex items-center cursor-pointer z-0">
+                    <input type="checkbox" className="sr-only peer" checked={isFreeDelivery} onChange={() => setIsFreeDelivery(!isFreeDelivery)} disabled={!store?.subscription_plans?.free_delivery_all_zones} />
                     <div className="w-14 h-8 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:right-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div>
                 </label>
             </div>

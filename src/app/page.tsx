@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { getPublicSubscriptionPlans, PublicSubscriptionPlan } from '@/app/landingActions';
+
 
 const translations: any = {
   ar: {
@@ -88,6 +90,9 @@ export default function LandingPage() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [plans, setPlans] = useState<PublicSubscriptionPlan[]>([]);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(true);
 
   const t = translations[language];
 
@@ -100,6 +105,16 @@ export default function LandingPage() {
 
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
+
+    const fetchPlans = async () => {
+      const res = await getPublicSubscriptionPlans();
+      if (res.success && res.data) {
+        setPlans(res.data);
+      }
+      setIsLoadingPlans(false);
+    };
+    fetchPlans();
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -332,6 +347,121 @@ export default function LandingPage() {
               color="emerald"
               theme={theme}
             />
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className={`py-24 md:py-32 relative ${theme === 'dark' ? 'bg-[#020617]/50' : 'bg-slate-50/50'}`}>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-12 md:mb-16 space-y-4">
+            <h2 className={`text-4xl md:text-5xl font-black transition-colors ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+              اختر الباقة المناسبة لمتجرك
+            </h2>
+            <p className={`font-medium text-lg leading-relaxed transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+              خطط مرنة تناسب طموحاتك وحجم مبيعاتك
+            </p>
+          </div>
+
+          <div className="flex justify-center mb-12 md:mb-16">
+            <div className={`inline-flex items-center p-1 rounded-2xl ${theme === 'dark' ? 'bg-white/5 border border-white/10' : 'bg-white border border-slate-200 shadow-sm'}`}>
+              <button
+                onClick={() => setBillingCycle('monthly')}
+                className={`px-8 py-3 rounded-xl font-bold text-sm transition-all ${billingCycle === 'monthly' ? (theme === 'dark' ? 'bg-indigo-600 text-white' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20') : (theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900')}`}
+              >
+                الدفع الشهري
+              </button>
+              <button
+                onClick={() => setBillingCycle('yearly')}
+                className={`px-8 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${billingCycle === 'yearly' ? (theme === 'dark' ? 'bg-indigo-600 text-white' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20') : (theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900')}`}
+              >
+                الدفع السنوي
+                <span className={`px-2 py-0.5 rounded-md text-[10px] font-black ${billingCycle === 'yearly' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
+                  وفر 15%
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mt-10">
+            {isLoadingPlans ? (
+              <div className="col-span-3 text-center py-20">
+                <div className="w-10 h-10 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto"></div>
+                <p className={`mt-4 font-bold ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>جاري تحميل الباقات...</p>
+              </div>
+            ) : (
+              plans.map((plan, index) => {
+                // Determine styles based on index mapping (0=Free, 1=Silver, 2=Gold in typical sorted setup)
+                const isSilver = index === 1;
+                const isGold = index === 2;
+
+                let cardClasses = `rounded-3xl p-8 border flex flex-col pt-10 `;
+                let titleClasses = `text-2xl font-black mb-2 `;
+                let priceClasses = `text-4xl font-black `;
+                let iconColorClass = '';
+                let buttonClasses = `w-full py-3.5 text-center font-bold rounded-xl transition-all `;
+                let featuresClasses = `space-y-4 mb-8 flex-1 text-sm font-bold mt-4 `;
+
+                if (isGold) {
+                  cardClasses += theme === 'dark' ? 'bg-amber-500/10 border-amber-500/20 ' : 'bg-gradient-to-br from-amber-50 to-white border-amber-200 shadow-xl shadow-amber-200/20 ';
+                  titleClasses += theme === 'dark' ? 'text-amber-400' : 'text-amber-800';
+                  priceClasses += theme === 'dark' ? 'text-amber-400' : 'text-amber-600';
+                  iconColorClass = 'text-amber-500';
+                  buttonClasses += theme === 'dark' ? 'bg-amber-500 hover:bg-amber-600 text-slate-900 shadow-lg shadow-amber-500/20' : 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/30';
+                  featuresClasses += theme === 'dark' ? 'text-amber-200/80' : 'text-amber-900/80';
+                } else if (isSilver) {
+                  cardClasses = `relative rounded-3xl p-8 border-2 shadow-2xl scale-105 flex flex-col ${theme === 'dark' ? 'bg-indigo-900/40 border-indigo-500 shadow-indigo-500/10' : 'bg-indigo-50 border-indigo-500 shadow-indigo-500/20'}`;
+                  titleClasses += theme === 'dark' ? 'text-white pt-4' : 'text-indigo-950 pt-4';
+                  priceClasses += theme === 'dark' ? 'text-white' : 'text-indigo-950';
+                  iconColorClass = 'text-indigo-500';
+                  buttonClasses += 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/30';
+                  featuresClasses += theme === 'dark' ? 'text-indigo-200' : 'text-indigo-900/80';
+                } else {
+                  cardClasses += theme === 'dark' ? 'bg-white/5 border-white/10 ' : 'bg-white border-slate-200 shadow-xl shadow-slate-200/20 ';
+                  titleClasses += theme === 'dark' ? 'text-white' : 'text-slate-900';
+                  priceClasses += theme === 'dark' ? 'text-white' : 'text-slate-900';
+                  iconColorClass = 'text-emerald-500';
+                  buttonClasses += theme === 'dark' ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-800';
+                  featuresClasses += theme === 'dark' ? 'text-slate-300' : 'text-slate-600';
+                }
+
+                const displayName = language === 'ar' ? plan.name_ar : language === 'en' ? plan.name_en : plan.name_ku || plan.name_ar;
+                const featuresList = language === 'ar' ? plan.features_ar : language === 'en' ? plan.features_en : plan.features_ku || plan.features_ar;
+                const displayPrice = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
+
+                return (
+                  <div key={plan.id} className={cardClasses}>
+                    {isSilver && (
+                      <div className="absolute top-0 inset-x-0 transform -translate-y-1/2 flex justify-center">
+                        <span className="bg-indigo-500 text-white text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg">الأكثر شعبية</span>
+                      </div>
+                    )}
+                    <h3 className={titleClasses}>{displayName}</h3>
+                    <div className="flex items-baseline gap-2 mb-6 mt-4">
+                      <span className={priceClasses} dir="ltr">
+                        {displayPrice > 0 ? `${displayPrice.toLocaleString()} د.ع` : 'مجانًا'}
+                      </span>
+                      <span className={`text-sm font-bold ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                        {displayPrice > 0 ? (billingCycle === 'yearly' ? '/ سنوياً' : '/ شهرياً') : ''}
+                      </span>
+                    </div>
+                    <ul className={featuresClasses}>
+                      {(featuresList || []).map((feature, fIdx) => (
+                        <li key={fIdx} className="flex items-center gap-3">
+                          <svg className={`w-5 h-5 flex-shrink-0 ${iconColorClass}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer" className={buttonClasses}>
+                      {displayPrice === 0 ? 'ابدأ مجاناً' : 'اشترك الآن'}
+                    </a>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </section>

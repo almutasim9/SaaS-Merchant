@@ -61,6 +61,7 @@ export default function MerchantProductsPage() {
     });
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [storeSubscription, setStoreSubscription] = useState<any>(null);
 
     const router = useRouter();
 
@@ -72,15 +73,23 @@ export default function MerchantProductsPage() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Fetch store ID first
+        // Fetch store ID and plan first
         const { data: storeData } = await supabase
             .from('stores')
-            .select('id')
+            .select(`
+                id,
+                subscription_plans (
+                    id, max_products, max_categories, custom_theme, remove_branding, advanced_reports
+                )
+            `)
             .eq('merchant_id', user.id)
             .single();
 
         if (storeData) {
             setStoreId(storeData.id);
+            if (storeData.subscription_plans) {
+                setStoreSubscription(storeData.subscription_plans);
+            }
 
             // Parallel fetching of sections and products
             const [sectionsData, { data: productsData, error: productsError }] = await Promise.all([
@@ -197,7 +206,13 @@ export default function MerchantProductsPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-3 lg:gap-4">
                     <button
-                        onClick={() => setIsSectionsModalOpen(true)}
+                        onClick={() => {
+                            if (storeSubscription && storeSubscription.max_categories !== -1 && sections.length >= storeSubscription.max_categories) {
+                                alert(`لقد وصلت للحد الأقصى للأقسام (${storeSubscription.max_categories}). يرجى الترقية لإضافة المزيد.`);
+                                return;
+                            }
+                            setIsSectionsModalOpen(true);
+                        }}
                         className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 lg:px-8 py-3 lg:py-4 bg-indigo-50 text-indigo-600 border-2 border-indigo-100 rounded-2xl font-black text-sm shadow-sm hover:bg-indigo-600 hover:text-white transition-all"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -206,7 +221,14 @@ export default function MerchantProductsPage() {
                         إضافة قسم جديد
                     </button>
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => {
+                            if (storeSubscription && storeSubscription.max_products !== -1 && products.length >= storeSubscription.max_products) {
+                                alert(`لقد وصلت للحد الأقصى لعدد المنتجات (${storeSubscription.max_products}). يرجى التواصل مع الإدارة للترقية.`);
+                                return;
+                            }
+                            setEditingProduct(null);
+                            setIsModalOpen(true);
+                        }}
                         className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 lg:px-8 py-3 lg:py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-600/20 hover:bg-slate-900 transition-all active:scale-95"
                     >
                         <svg className="w-5 h-5 font-bold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -442,6 +464,7 @@ export default function MerchantProductsPage() {
                     storeId={storeId}
                     sections={sections}
                     initialData={editingProduct}
+                    storeSubscription={storeSubscription}
                 />
             )}
 

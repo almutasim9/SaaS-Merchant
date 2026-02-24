@@ -12,6 +12,7 @@ export async function getAdminStores() {
             created_at,
             phone,
             merchant_id,
+            plan_id,
             profiles (full_name, phone_number)
         `)
         .order('created_at', { ascending: false });
@@ -22,7 +23,6 @@ export async function getAdminStores() {
     }
 
     // Deep merge to ensure serialization compatibility from Supabase class to plain JSON
-    // We also normalize "phone_number" to "phone" so the frontend Typescript structure matches
     const mappedData = (data || []).map((bStore: any) => ({
         ...bStore,
         profiles: {
@@ -32,4 +32,17 @@ export async function getAdminStores() {
     }));
 
     return JSON.parse(JSON.stringify(mappedData));
+}
+
+export async function updateStorePlanAction(storeId: string, planId: string) {
+    const { error } = await supabaseAdmin
+        .from('stores')
+        .update({ plan_id: planId })
+        .eq('id', storeId);
+
+    if (error) {
+        console.error('[ADMIN] Error updating plan:', error);
+        return { success: false, error: error.message };
+    }
+    return { success: true };
 }
