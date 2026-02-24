@@ -376,9 +376,14 @@ export default function LandingPage() {
                 className={`px-8 py-3 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${billingCycle === 'yearly' ? (theme === 'dark' ? 'bg-indigo-600 text-white' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20') : (theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900')}`}
               >
                 الدفع السنوي
-                <span className={`px-2 py-0.5 rounded-md text-[10px] font-black ${billingCycle === 'yearly' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
-                  وفر 15%
-                </span>
+                {(() => {
+                  const maxDiscount = plans.length > 0 ? Math.max(...plans.map(p => p.yearly_discount_percent || 0)) : 15;
+                  return maxDiscount > 0 ? (
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-black ${billingCycle === 'yearly' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'}`}>
+                      وفر {maxDiscount}%
+                    </span>
+                  ) : null;
+                })()}
               </button>
             </div>
           </div>
@@ -437,6 +442,9 @@ export default function LandingPage() {
                       </div>
                     )}
                     <h3 className={titleClasses}>{displayName}</h3>
+                    <p className={`mt-1 text-sm font-bold min-h-[40px] leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                      {language === 'ar' ? plan.description_ar : language === 'en' ? plan.description_en : plan.description_ku || plan.description_ar}
+                    </p>
                     <div className="flex items-baseline gap-2 mb-6 mt-4">
                       <span className={priceClasses} dir="ltr">
                         {displayPrice > 0 ? `${displayPrice.toLocaleString()} د.ع` : 'مجانًا'}

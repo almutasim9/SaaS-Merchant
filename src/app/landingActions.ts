@@ -7,6 +7,10 @@ export interface PublicSubscriptionPlan {
     name_ar: string;
     name_en: string;
     name_ku?: string;
+    description_ar?: string;
+    description_en?: string;
+    description_ku?: string;
+    yearly_discount_percent?: number;
     price_monthly: number;
     price_yearly: number;
     features_ar: string[];
@@ -27,7 +31,7 @@ export async function getPublicSubscriptionPlans() {
         const { data, error } = await supabaseAdmin
             .from('subscription_plans')
             .select('*')
-            .order('max_products', { ascending: true });
+            .order('price_monthly', { ascending: true });
 
         if (error) {
             console.error('Error fetching public subscription plans:', error);

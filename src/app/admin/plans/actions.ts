@@ -20,6 +20,10 @@ export interface SubscriptionPlan {
     features_ar: string[];
     features_en: string[];
     features_ku: string[];
+    description_ar: string;
+    description_en: string;
+    description_ku: string;
+    yearly_discount_percent: number;
 }
 
 export async function fetchPlansAction() {

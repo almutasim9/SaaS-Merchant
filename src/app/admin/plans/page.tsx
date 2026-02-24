@@ -51,6 +51,10 @@ export default function AdminPlansPage() {
             free_delivery_all_zones: plan.free_delivery_all_zones,
             allow_custom_slug: plan.allow_custom_slug,
             price_yearly: plan.price_yearly || 0,
+            yearly_discount_percent: plan.yearly_discount_percent || 0,
+            description_ar: plan.description_ar || '',
+            description_en: plan.description_en || '',
+            description_ku: plan.description_ku || '',
             features_ar: plan.features_ar || [],
             features_en: plan.features_en || [],
             features_ku: plan.features_ku || []
@@ -157,6 +161,22 @@ export default function AdminPlansPage() {
                                     </div>
 
                                     <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-700">نسبة الخصم السنوي (%)</label>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                value={plan.yearly_discount_percent || 0}
+                                                onChange={(e) => handleUpdateChange(plan.id, 'yearly_discount_percent', parseInt(e.target.value) || 0)}
+                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-center"
+                                                dir="ltr"
+                                                max={100}
+                                                min={0}
+                                            />
+                                            <span className="text-xs text-slate-500 w-24 text-center bg-slate-100 py-2.5 rounded-xl font-medium">للواجهة فقط</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
                                         <label className="text-xs font-bold text-slate-700">الحد الأقصى للطلبات الشهرية</label>
                                         <div className="flex items-center gap-2">
                                             <input
@@ -188,6 +208,42 @@ export default function AdminPlansPage() {
                                 <hr className="border-slate-100" />
 
                                 {/* Descriptions & Features Lists */}
+                                <div className="space-y-4">
+                                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">نص الباقة (Descriptions)</h3>
+
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-700">شرح الباقة (عربي)</label>
+                                        <input
+                                            type="text"
+                                            value={plan.description_ar || ''}
+                                            onChange={(e) => handleUpdateChange(plan.id, 'description_ar', e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold"
+                                            placeholder="شرح مختصر يظهر تحت اسم الباقة"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-700">شرح الباقة (انكليزي)</label>
+                                        <input
+                                            type="text"
+                                            value={plan.description_en || ''}
+                                            onChange={(e) => handleUpdateChange(plan.id, 'description_en', e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-left"
+                                            dir="ltr"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-700">شرح الباقة (كردي)</label>
+                                        <input
+                                            type="text"
+                                            value={plan.description_ku || ''}
+                                            onChange={(e) => handleUpdateChange(plan.id, 'description_ku', e.target.value)}
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold"
+                                        />
+                                    </div>
+                                </div>
+
+                                <hr className="border-slate-100" />
+
                                 <div className="space-y-4">
                                     <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">الميزات المكتوبة (Landing Page Features)</h3>
                                     <p className="text-[10px] text-slate-500 font-bold px-1">اكتب كل ميزة في سطر جديد لكي تظهر في صفحة الباقات.</p>
