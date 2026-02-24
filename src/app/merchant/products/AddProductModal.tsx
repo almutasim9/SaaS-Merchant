@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
+import imageCompression from 'browser-image-compression';
 
 // --- Types & Interfaces ---
 interface VariantOption {
@@ -191,25 +192,36 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (file.size > 2 * 1024 * 1024) {
-            setError('حجم الصورة كبير جداً (الحد الأقصى 2MB).');
+        // Allow up to 10MB initial size since we compress it down anyway
+        if (file.size > 10 * 1024 * 1024) {
+            setError('حجم الصورة كبير جداً (الحد الأقصى 10MB).');
             return;
         }
 
         setUploading(true);
         setError(null);
         try {
-            const fileExt = file.name.split('.').pop();
+            // Compress image
+            const options = {
+                maxSizeMB: 0.8, // Maximum 800KB
+                maxWidthOrHeight: 1200,
+                useWebWorker: true,
+                fileType: 'image/webp', // Convert to WebP for better performance
+            };
+            const compressedFile = await imageCompression(file, options);
+
+            // Use webp extension since we requested webp
+            const fileExt = compressedFile.type.split('/')[1] || 'webp';
             const fileName = `${storeId}/${Date.now()}.${fileExt}`;
             const filePath = `products/${fileName}`;
 
             let bucket = 'product_images';
-            const { error: uploadError } = await supabase.storage.from(bucket).upload(filePath, file);
+            const { error: uploadError } = await supabase.storage.from(bucket).upload(filePath, compressedFile);
 
             if (uploadError) {
                 console.warn('Fallback to store-assets bucket');
                 bucket = 'store-assets';
-                const { error: fallbackError } = await supabase.storage.from(bucket).upload(filePath, file);
+                const { error: fallbackError } = await supabase.storage.from(bucket).upload(filePath, compressedFile);
                 if (fallbackError) throw fallbackError;
             }
 

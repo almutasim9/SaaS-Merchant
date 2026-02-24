@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { updateOrderStatusAction } from './actions';
 
@@ -26,7 +27,6 @@ interface Order {
 
 export default function MerchantOrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
-    const [loading, setLoading] = useState(true);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [statusFilter, setStatusFilter] = useState('all');
 
@@ -40,14 +40,13 @@ export default function MerchantOrdersPage() {
 
     const router = useRouter();
 
-    useEffect(() => {
-        let cleanup: (() => void) | undefined;
-
-        const init = async () => {
+    const { data: qData, isLoading: loading } = useQuery({
+        queryKey: ['merchant-orders'],
+        queryFn: async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 router.push('/login');
-                return;
+                throw new Error('Not authenticated');
             }
 
             const { data: storeData } = await supabase
@@ -56,33 +55,80 @@ export default function MerchantOrdersPage() {
                 .eq('merchant_id', user.id)
                 .single();
 
-            if (storeData) {
-                fetchOrders(storeData.id);
-                cleanup = subscribeToOrders(storeData.id);
-            } else {
-                setLoading(false);
+            if (!storeData) throw new Error('Store not found');
+
+            const { data: ordersData, error } = await supabase
+                .from('orders')
+                .select('id, store_id, customer_info, items, total_price, delivery_fee, governorate, status, created_at')
+                .eq('store_id', storeData.id)
+                .is('deleted_at', null)
+                .in('status', ['pending', 'processing'])
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            return {
+                storeId: storeData.id,
+                orders: ordersData || []
+            };
+        }
+    });
+
+    useEffect(() => {
+        if (qData) {
+            setOrders(qData.orders);
+            calculateStats(qData.orders);
+        }
+    }, [qData]);
+
+    const channelRef = useRef<any>(null);
+
+    useEffect(() => {
+        if (!qData?.storeId) return;
+
+        const setupSubscription = () => {
+            if (channelRef.current) return;
+            channelRef.current = supabase
+                .channel('orders-realtime-premium')
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'orders',
+                }, (payload) => {
+                    if (payload.new && payload.new.store_id === qData.storeId) {
+                        toast.success('طلب جديد!', { description: 'لقد استلمت طلباً جديداً للتو من متجرك.' });
+                        const newOrder = payload.new as Order;
+                        setOrders(prev => [newOrder, ...prev]);
+                        setStats(prev => ({ ...prev, total: prev.total + 1, pending: prev.pending + 1 }));
+                    }
+                })
+                .subscribe();
+        };
+
+        const removeSubscription = () => {
+            if (channelRef.current) {
+                supabase.removeChannel(channelRef.current);
+                channelRef.current = null;
             }
         };
 
-        init();
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') {
+                removeSubscription(); // Pause realtime to save resources
+            } else if (document.visibilityState === 'visible') {
+                setupSubscription(); // Resume realtime
+            }
+        };
 
-        return () => { cleanup?.(); };
-    }, []);
+        // Initial setup
+        setupSubscription();
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    const fetchOrders = async (storeId: string) => {
-        const { data, error } = await supabase
-            .from('orders')
-            .select('id, store_id, customer_info, items, total_price, delivery_fee, governorate, status, created_at')
-            .eq('store_id', storeId)
-            .in('status', ['pending', 'processing'])
-            .order('created_at', { ascending: false });
-
-        if (!error && data) {
-            setOrders(data);
-            calculateStats(data);
-        }
-        setLoading(false);
-    };
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            removeSubscription();
+        };
+    }, [qData?.storeId]);
 
     const calculateStats = (orderList: Order[]) => {
         const total = orderList.length;
@@ -90,36 +136,11 @@ export default function MerchantOrdersPage() {
         const processing = orderList.filter(o => o.status === 'processing').length;
         const completed = orderList.filter(o => o.status === 'completed' || o.status === 'delivered').length;
 
-        // Only count completed/delivered orders in total sales revenue from the *active* view if somehow they are here,
-        // but since we filter them out of the list, this active view might not have them.
-        // Wait, if an order is completed, we should probably fetch the total completed from DB if we really wanted accurate stats,
-        // but keeping it simple for now based on what's visible.
         const completedOrders = orderList.filter(o => o.status === 'completed' || o.status === 'delivered');
         const sum = completedOrders.reduce((acc, curr) => acc + (curr.total_price - (curr.delivery_fee || 0)), 0);
         const avg = completedOrders.length > 0 ? sum / completedOrders.length : 0;
 
         setStats({ total, pending, processing, completed, avgValue: avg });
-    };
-
-    const subscribeToOrders = (storeId: string) => {
-        const subscription = supabase
-            .channel('orders-realtime-premium')
-            .on('postgres_changes', {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'orders',
-            }, (payload) => {
-                if (payload.new && payload.new.store_id === storeId) {
-                    toast.success('طلب جديد!', { description: 'لقد استلمت طلباً جديداً للتو من متجرك.' });
-                    // Append new order locally instead of full refetch
-                    const newOrder = payload.new as Order;
-                    setOrders(prev => [newOrder, ...prev]);
-                    setStats(prev => ({ ...prev, total: prev.total + 1, pending: prev.pending + 1 }));
-                }
-            })
-            .subscribe();
-
-        return () => supabase.removeChannel(subscription);
     };
 
     const updateStatus = async (orderId: string, newStatus: string) => {
@@ -181,8 +202,39 @@ export default function MerchantOrdersPage() {
 
     if (loading) {
         return (
-            <div className="p-10 flex items-center justify-center">
-                <div className="w-12 h-12 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
+            <div dir="rtl" className="px-4 lg:px-10 pb-20 space-y-8 lg:space-y-10 pt-6 lg:pt-0 animate-pulse">
+                {/* Header Skeleton */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-0">
+                    <div className="space-y-3">
+                        <div className="h-8 w-48 bg-slate-200 rounded-lg"></div>
+                        <div className="h-4 w-72 bg-slate-100 rounded-md"></div>
+                    </div>
+                    <div className="flex gap-3">
+                        <div className="h-12 w-32 lg:w-48 bg-slate-200 rounded-2xl"></div>
+                        <div className="h-12 w-24 bg-slate-200 rounded-2xl hidden lg:block"></div>
+                    </div>
+                </div>
+
+                {/* Stats Skeleton */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+                    {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="bg-white rounded-[2rem] p-6 lg:p-8 border border-slate-100 flex items-center justify-between">
+                            <div className="space-y-3">
+                                <div className="h-3 w-20 bg-slate-100 rounded-md"></div>
+                                <div className="h-8 w-16 bg-slate-200 rounded-lg"></div>
+                            </div>
+                            <div className="w-12 h-12 lg:w-14 lg:h-14 bg-slate-100 rounded-xl lg:rounded-2xl"></div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Table Skeleton */}
+                <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 p-6 space-y-6">
+                    <div className="h-10 w-full bg-slate-100 rounded-xl"></div>
+                    {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="h-16 w-full bg-slate-50 rounded-xl"></div>
+                    ))}
+                </div>
             </div>
         );
     }

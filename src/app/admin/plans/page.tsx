@@ -114,7 +114,7 @@ export default function AdminPlansPage() {
                                                 type="number"
                                                 value={plan.max_products}
                                                 onChange={(e) => handleUpdateChange(plan.id, 'max_products', parseInt(e.target.value) || 0)}
-                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-center"
+                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-black text-center"
                                                 dir="ltr"
                                             />
                                             <span className="text-xs text-slate-500 w-24 text-center bg-slate-100 py-2.5 rounded-xl font-medium">(-1 مفتوح)</span>
@@ -128,7 +128,7 @@ export default function AdminPlansPage() {
                                                 type="number"
                                                 value={plan.max_categories}
                                                 onChange={(e) => handleUpdateChange(plan.id, 'max_categories', parseInt(e.target.value) || 0)}
-                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-center"
+                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-black text-center"
                                                 dir="ltr"
                                             />
                                             <span className="text-xs text-slate-500 w-24 text-center bg-slate-100 py-2.5 rounded-xl font-medium">(-1 مفتوح)</span>
@@ -141,7 +141,7 @@ export default function AdminPlansPage() {
                                                 type="number"
                                                 value={plan.price_monthly}
                                                 onChange={(e) => handleUpdateChange(plan.id, 'price_monthly', parseInt(e.target.value) || 0)}
-                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-center"
+                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-black text-center"
                                                 dir="ltr"
                                             />
                                         </div>
@@ -154,7 +154,7 @@ export default function AdminPlansPage() {
                                                 type="number"
                                                 value={plan.price_yearly || 0}
                                                 onChange={(e) => handleUpdateChange(plan.id, 'price_yearly', parseInt(e.target.value) || 0)}
-                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-center"
+                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-black text-center"
                                                 dir="ltr"
                                             />
                                         </div>
@@ -167,7 +167,7 @@ export default function AdminPlansPage() {
                                                 type="number"
                                                 value={plan.yearly_discount_percent || 0}
                                                 onChange={(e) => handleUpdateChange(plan.id, 'yearly_discount_percent', parseInt(e.target.value) || 0)}
-                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-center"
+                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-black text-center"
                                                 dir="ltr"
                                                 max={100}
                                                 min={0}
@@ -183,7 +183,7 @@ export default function AdminPlansPage() {
                                                 type="number"
                                                 value={plan.max_monthly_orders}
                                                 onChange={(e) => handleUpdateChange(plan.id, 'max_monthly_orders', parseInt(e.target.value) || 0)}
-                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-center"
+                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-black text-center"
                                                 dir="ltr"
                                             />
                                             <span className="text-xs text-slate-500 w-24 text-center bg-slate-100 py-2.5 rounded-xl font-medium">(-1 مفتوح)</span>
@@ -197,7 +197,7 @@ export default function AdminPlansPage() {
                                                 type="number"
                                                 value={plan.max_delivery_zones}
                                                 onChange={(e) => handleUpdateChange(plan.id, 'max_delivery_zones', parseInt(e.target.value) || 0)}
-                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-center"
+                                                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-black text-center"
                                                 dir="ltr"
                                             />
                                             <span className="text-xs text-slate-500 w-24 text-center bg-slate-100 py-2.5 rounded-xl font-medium">(-1 مفتوح)</span>
@@ -217,7 +217,7 @@ export default function AdminPlansPage() {
                                             type="text"
                                             value={plan.description_ar || ''}
                                             onChange={(e) => handleUpdateChange(plan.id, 'description_ar', e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-black"
                                             placeholder="شرح مختصر يظهر تحت اسم الباقة"
                                         />
                                     </div>
@@ -227,7 +227,7 @@ export default function AdminPlansPage() {
                                             type="text"
                                             value={plan.description_en || ''}
                                             onChange={(e) => handleUpdateChange(plan.id, 'description_en', e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-left"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-black text-left"
                                             dir="ltr"
                                         />
                                     </div>
@@ -237,7 +237,7 @@ export default function AdminPlansPage() {
                                             type="text"
                                             value={plan.description_ku || ''}
                                             onChange={(e) => handleUpdateChange(plan.id, 'description_ku', e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-black"
                                         />
                                     </div>
                                 </div>
@@ -254,7 +254,7 @@ export default function AdminPlansPage() {
                                             rows={4}
                                             value={(plan.features_ar || []).join('\n')}
                                             onChange={(e) => handleFeaturesChange(plan.id, 'ar', e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold resize-none"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-black resize-none"
                                             placeholder="ميزة 1&#10;ميزة 2"
                                         />
                                     </div>
@@ -264,7 +264,7 @@ export default function AdminPlansPage() {
                                             rows={2}
                                             value={(plan.features_en || []).join('\n')}
                                             onChange={(e) => handleFeaturesChange(plan.id, 'en', e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold resize-none text-left"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-black resize-none text-left"
                                             dir="ltr"
                                         />
                                     </div>
@@ -274,7 +274,7 @@ export default function AdminPlansPage() {
                                             rows={2}
                                             value={(plan.features_ku || []).join('\n')}
                                             onChange={(e) => handleFeaturesChange(plan.id, 'ku', e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold resize-none"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-black resize-none"
                                         />
                                     </div>
                                 </div>

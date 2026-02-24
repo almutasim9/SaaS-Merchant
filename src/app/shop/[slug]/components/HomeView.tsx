@@ -280,7 +280,7 @@ export default function HomeView({
                             <div className="w-full h-full flex overflow-x-auto snap-x snap-mandatory no-scrollbar" dir="ltr">
                                 {storefrontConfig.banner.images.map((img: string, idx: number) => (
                                     <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
-                                        <img src={img} alt={`Banner ${idx + 1}`} className="w-full h-full object-cover" />
+                                        <Image src={img} alt={`Banner ${idx + 1}`} fill className="object-cover" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
                                     </div>
                                 ))}

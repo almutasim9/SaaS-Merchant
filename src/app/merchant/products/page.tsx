@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import AddProductModal from './AddProductModal';
 import SectionsModal from './SectionsModal';
@@ -49,7 +50,6 @@ interface Product {
 
 export default function MerchantProductsPage() {
     const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSectionsModalOpen, setIsSectionsModalOpen] = useState(false);
     const [storeId, setStoreId] = useState<string>('');
@@ -65,70 +65,75 @@ export default function MerchantProductsPage() {
 
     const router = useRouter();
 
-    useEffect(() => {
-        fetchProducts();
-    }, []);
+    const { data: pageData, isLoading: loading, refetch: fetchProducts } = useQuery({
+        queryKey: ['merchant-products'],
+        queryFn: async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
 
-    const fetchProducts = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+            const { data: storeData } = await supabase
+                .from('stores')
+                .select(`
+                    id,
+                    subscription_plans (
+                        id, max_products, max_categories, custom_theme, remove_branding, advanced_reports
+                    )
+                `)
+                .eq('merchant_id', user.id)
+                .single();
 
-        // Fetch store ID and plan first
-        const { data: storeData } = await supabase
-            .from('stores')
-            .select(`
-                id,
-                subscription_plans (
-                    id, max_products, max_categories, custom_theme, remove_branding, advanced_reports
-                )
-            `)
-            .eq('merchant_id', user.id)
-            .single();
+            if (!storeData) throw new Error('Store not found');
 
-        if (storeData) {
-            setStoreId(storeData.id);
-            if (storeData.subscription_plans) {
-                setStoreSubscription(storeData.subscription_plans);
-            }
-
-            // Parallel fetching of sections and products
             const [sectionsData, { data: productsData, error: productsError }] = await Promise.all([
                 getSections(storeData.id),
                 supabase
                     .from('products')
-                    .select('id, name, description, category, price, image_url, created_at, attributes')
+                    .select('id, name, description, category, price, image_url, created_at, attributes, stock_quantity')
                     .eq('store_id', storeData.id)
+                    .is('deleted_at', null)
                     .order('created_at', { ascending: false })
             ]);
 
-            setSections(sectionsData);
+            if (productsError) throw productsError;
 
-            if (!productsError) {
-                // Mapping status for UI demonstration
-                const mappedProducts: Product[] = (productsData || []).map((p: any) => ({
-                    ...p,
-                    sku: `SKU-${Math.floor(Math.random() * 9000) + 1000}`,
-                    status: (p.stock_quantity === 0 ? 'inactive' : p.stock_quantity < 10 ? 'low_stock' : 'active') as 'active' | 'low_stock' | 'inactive'
-                }));
-                setProducts(mappedProducts);
+            const mappedProducts: Product[] = (productsData || []).map((p: any) => ({
+                ...p,
+                sku: `SKU-${Math.floor(Math.random() * 9000) + 1000}`,
+                status: (p.stock_quantity === 0 ? 'inactive' : p.stock_quantity < 10 ? 'low_stock' : 'active') as 'active' | 'low_stock' | 'inactive'
+            }));
 
-                // Real-world stats would be calculated here
-                setStats({
-                    total: mappedProducts.length,
-                    active: mappedProducts.filter(p => p.attributes?.isAvailable !== false).length,
-                    inactive: mappedProducts.filter(p => p.attributes?.isAvailable === false).length
-                });
-            }
+            const calculatedStats = {
+                total: mappedProducts.length,
+                active: mappedProducts.filter(p => p.attributes?.isAvailable !== false).length,
+                inactive: mappedProducts.filter(p => p.attributes?.isAvailable === false).length
+            };
+
+            return {
+                storeId: storeData.id,
+                subscription: storeData.subscription_plans,
+                sections: sectionsData,
+                products: mappedProducts,
+                stats: calculatedStats
+            };
         }
-        setLoading(false);
-    };
+    });
+
+    useEffect(() => {
+        if (pageData) {
+            setStoreId(pageData.storeId);
+            setStoreSubscription(pageData.subscription);
+            setSections(pageData.sections);
+            setProducts(pageData.products);
+            setStats(pageData.stats);
+        }
+    }, [pageData]);
 
     const handleDelete = async (id: string, name: string) => {
         if (!confirm(`هل أنت متأكد من حذف المنتج "${name}"؟`)) return;
 
         const { error } = await supabase
             .from('products')
-            .delete()
+            .update({ deleted_at: new Date().toISOString() })
             .eq('id', id);
 
         if (error) {
@@ -186,8 +191,36 @@ export default function MerchantProductsPage() {
 
     if (loading) {
         return (
-            <div className="p-10 flex items-center justify-center">
-                <div className="w-12 h-12 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
+            <div className="px-4 lg:px-10 pb-10 space-y-8 lg:space-y-10 pt-6 lg:pt-0 animate-pulse" dir="rtl">
+                {/* Header Skeleton */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-0">
+                    <div className="space-y-3">
+                        <div className="h-8 w-48 bg-slate-200 rounded-lg"></div>
+                        <div className="h-4 w-72 bg-slate-100 rounded-md"></div>
+                    </div>
+                    <div className="h-12 w-32 lg:w-40 bg-slate-200 rounded-2xl"></div>
+                </div>
+
+                {/* Categories Skeleton */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                        <div key={i} className={`h-10 rounded-xl flex-shrink-0 ${i === 1 ? 'w-24 bg-slate-200' : 'w-20 bg-slate-100'}`}></div>
+                    ))}
+                </div>
+
+                {/* Products Grid Skeleton */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="bg-white rounded-[2rem] border border-slate-100 p-4 space-y-4">
+                            <div className="w-full aspect-square bg-slate-100 rounded-2xl"></div>
+                            <div className="space-y-3 px-2">
+                                <div className="h-5 w-3/4 bg-slate-200 rounded-md"></div>
+                                <div className="h-4 w-1/2 bg-slate-100 rounded-md"></div>
+                            </div>
+                            <div className="h-10 w-full bg-slate-50 rounded-xl mt-4"></div>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }
