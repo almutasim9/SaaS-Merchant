@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import AddProductModal from './AddProductModal';
 import SectionsModal from './SectionsModal';
+import ExcelImportModal from './ExcelImportModal';
 import { getSections } from '../sections/actions';
 
 interface Section {
@@ -65,6 +66,7 @@ export default function MerchantProductsPage() {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
 
     const router = useRouter();
 
@@ -302,6 +304,16 @@ export default function MerchantProductsPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
                         </svg>
                         إضافة منتج
+                    </button>
+                    {/* Excel Import Button */}
+                    <button
+                        onClick={() => setIsExcelModalOpen(true)}
+                        className="flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-3 lg:py-4 bg-emerald-50 text-emerald-700 rounded-2xl font-bold text-sm border border-emerald-100 hover:bg-emerald-100 transition-all active:scale-95"
+                    >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="hidden lg:inline">استيراد Excel</span>
                     </button>
                 </div>
             </div>
@@ -620,6 +632,14 @@ export default function MerchantProductsPage() {
                     onSuccess={() => fetchProducts()}
                 />
             )}
+
+            <ExcelImportModal
+                isOpen={isExcelModalOpen}
+                onClose={() => setIsExcelModalOpen(false)}
+                onSuccess={() => { fetchProducts(); setIsExcelModalOpen(false); }}
+                storeId={storeId}
+                sections={sections}
+            />
         </div>
     );
 }
