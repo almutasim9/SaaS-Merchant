@@ -2,7 +2,7 @@
 
 import { createClient as createServerClient } from '@/lib/supabase-server';
 
-export async function updateOrderStatusAction(orderId: string, newStatus: string) {
+export async function updateOrderStatusAction(orderId: string, newStatus: string, cancellationReason?: string) {
     const supabase = await createServerClient();
 
     // 1. Validate status first (no DB needed)
@@ -33,10 +33,16 @@ export async function updateOrderStatusAction(orderId: string, newStatus: string
         return { success: false, error: 'هذا الطلب لا يخص متجرك.' };
     }
 
-    // 3. Update
+    // 3. Build update payload
+    const updatePayload: Record<string, any> = { status: newStatus };
+    if (cancellationReason) {
+        updatePayload.cancellation_reason = cancellationReason;
+    }
+
+    // 4. Update
     const { error: updateError } = await supabase
         .from('orders')
-        .update({ status: newStatus })
+        .update(updatePayload)
         .eq('id', orderId);
 
     if (updateError) {

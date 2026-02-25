@@ -31,6 +31,11 @@ export default function MerchantOrdersPage() {
     const [statusFilter, setStatusFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
 
+    // Cancellation modal state
+    const [cancelModal, setCancelModal] = useState<{ orderId: string; orderName: string } | null>(null);
+    const [cancelReason, setCancelReason] = useState<'returned' | 'cancelled'>('cancelled');
+    const [cancelNote, setCancelNote] = useState('');
+
     const [stats, setStats] = useState({
         total: 0,
         pending: 0,
@@ -63,7 +68,7 @@ export default function MerchantOrdersPage() {
                 .select('id, store_id, customer_info, items, total_price, delivery_fee, governorate, status, created_at')
                 .eq('store_id', storeData.id)
                 .is('deleted_at', null)
-                .in('status', ['pending', 'processing'])
+                .in('status', ['pending', 'processing', 'shipped'])
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -144,11 +149,12 @@ export default function MerchantOrdersPage() {
         setStats({ total, pending, processing, completed, avgValue: avg });
     };
 
-    const updateStatus = async (orderId: string, newStatus: string) => {
+    const updateStatus = async (orderId: string, newStatus: string, cancellationReason?: string) => {
         // Optimistic update
         const previousOrders = [...orders];
+        const isFinalStatus = ['completed', 'returned', 'cancelled'].includes(newStatus);
 
-        if (newStatus === 'completed' || newStatus === 'cancelled') {
+        if (isFinalStatus) {
             setOrders(prev => prev.filter(o => o.id !== orderId));
         } else {
             setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
@@ -156,23 +162,108 @@ export default function MerchantOrdersPage() {
 
         // If updating the selected order, also update it locally
         if (selectedOrder?.id === orderId) {
-            setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
+            if (isFinalStatus) setSelectedOrder(null);
+            else setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
         }
 
-        const result = await updateOrderStatusAction(orderId, newStatus);
+        const result = await updateOrderStatusAction(orderId, newStatus, cancellationReason);
 
         if (!result.success) {
             toast.error(result.error || 'حدث خطأ أثناء تحديث حالة الطلب');
             setOrders(previousOrders); // Revert on error
         } else {
-            toast.success('تم تحديث حالة الطلب بنجاح');
-            if (newStatus === 'completed' || newStatus === 'cancelled') {
+            const statusLabels: Record<string, string> = {
+                processing: 'قيد التجهيز ✅',
+                shipped: 'تم التسليم للمندوب 🚚',
+                completed: 'مكتمل بنجاح ✅',
+                returned: 'تم تسجيل الإرجاع 🔁',
+                cancelled: 'تم إلغاء الطلب ❌',
+            };
+            toast.success(statusLabels[newStatus] || 'تم تحديث حالة الطلب');
+            if (isFinalStatus) {
                 calculateStats(orders.filter(o => o.id !== orderId));
             } else {
                 calculateStats(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
             }
             window.dispatchEvent(new Event('orderStatusUpdated'));
         }
+    };
+
+    const handleCancelConfirm = () => {
+        if (!cancelModal) return;
+        updateStatus(cancelModal.orderId, cancelReason, cancelNote || undefined);
+        setCancelModal(null);
+        setCancelNote('');
+        setCancelReason('cancelled');
+    };
+
+    const openCancelModal = (orderId: string, orderName: string) => {
+        setCancelModal({ orderId, orderName });
+        setCancelReason('cancelled');
+        setCancelNote('');
+    };
+
+    // Render contextual action buttons based on current order status
+    const OrderActionButtons = ({ order }: { order: Order }) => {
+        const status = order.status;
+        return (
+            <div className="flex items-center gap-2 flex-wrap">
+                {status === 'pending' && (
+                    <>
+                        <button
+                            onClick={() => updateStatus(order.id, 'processing')}
+                            className="flex-1 h-9 bg-indigo-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-indigo-700 transition-all active:scale-95 shadow-sm shadow-indigo-600/20"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                            موافقة
+                        </button>
+                        <button
+                            onClick={() => openCancelModal(order.id, order.customer_info.name)}
+                            className="w-9 h-9 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center hover:bg-rose-100 transition-all active:scale-95"
+                            title="إلغاء الطلب"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </>
+                )}
+                {status === 'processing' && (
+                    <>
+                        <button
+                            onClick={() => updateStatus(order.id, 'shipped')}
+                            className="flex-1 h-9 bg-blue-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-700 transition-all active:scale-95 shadow-sm shadow-blue-600/20"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                            تسليم للمندوب
+                        </button>
+                        <button
+                            onClick={() => openCancelModal(order.id, order.customer_info.name)}
+                            className="w-9 h-9 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center hover:bg-rose-100 transition-all active:scale-95"
+                            title="إلغاء الطلب"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </>
+                )}
+                {status === 'shipped' && (
+                    <>
+                        <button
+                            onClick={() => updateStatus(order.id, 'completed')}
+                            className="flex-1 h-9 bg-emerald-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-emerald-700 transition-all active:scale-95 shadow-sm shadow-emerald-600/20"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                            مكتمل
+                        </button>
+                        <button
+                            onClick={() => openCancelModal(order.id, order.customer_info.name)}
+                            className="flex-1 h-9 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-rose-50 hover:text-rose-500 transition-all active:scale-95"
+                        >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                            راجع / ملغي
+                        </button>
+                    </>
+                )}
+            </div>
+        );
     };
 
     const StatusBadge = ({ status }: { status: string }) => {
@@ -400,19 +491,9 @@ export default function MerchantOrdersPage() {
                                 )}
                             </div>
                             <div className="flex items-center gap-2 px-4 py-3">
-                                <select
-                                    value={order.status}
-                                    onChange={e => updateStatus(order.id, e.target.value)}
-                                    className="flex-1 bg-slate-50 border-none rounded-xl px-3 py-2.5 text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-                                >
-                                    <option value="pending">معلق</option>
-                                    <option value="processing">قيد التجهيز</option>
-                                    <option value="shipped">سلم للمندوب</option>
-                                    <option value="completed">مكتمل ✓</option>
-                                    <option value="postponed">مؤجل</option>
-                                    <option value="returned">راجع</option>
-                                    <option value="cancelled">ملغي</option>
-                                </select>
+                                <div className="flex-1">
+                                    <OrderActionButtons order={order} />
+                                </div>
                                 <button onClick={() => setSelectedOrder(order)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all">
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                 </button>
@@ -642,6 +723,73 @@ export default function MerchantOrdersPage() {
                         <div className="flex justify-between font-bold text-sm mt-3 pt-2 border-t border-black border-dashed">
                             <span>المجموع (مع التوصيل):</span>
                             <span>{selectedOrder.total_price.toLocaleString()} د.ع</span>
+                        </div>
+                    </div>
+                )}
+                {/* Cancellation Reason Modal */}
+                {cancelModal && (
+                    <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-4" dir="rtl">
+                        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setCancelModal(null)} />
+                        <div className="relative w-full max-w-sm bg-white rounded-[2rem] shadow-2xl animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
+                            <div className="p-6 border-b border-slate-50">
+                                <h3 className="text-lg font-bold text-slate-800">سبب إنهاء الطلب</h3>
+                                <p className="text-xs text-slate-400 mt-1">طلب <span className="font-bold text-slate-600">{cancelModal.orderName}</span></p>
+                            </div>
+                            <div className="p-6 space-y-4">
+                                {/* Reason Selection */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => setCancelReason('returned')}
+                                        className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${cancelReason === 'returned'
+                                            ? 'border-amber-400 bg-amber-50'
+                                            : 'border-slate-100 bg-slate-50 hover:border-amber-200'
+                                            }`}
+                                    >
+                                        <span className="text-2xl">🔁</span>
+                                        <span className="text-xs font-black text-slate-700">راجع / مرفوض</span>
+                                        <span className="text-[10px] text-slate-400 text-center">العميل رفض الاستلام</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setCancelReason('cancelled')}
+                                        className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${cancelReason === 'cancelled'
+                                            ? 'border-rose-400 bg-rose-50'
+                                            : 'border-slate-100 bg-slate-50 hover:border-rose-200'
+                                            }`}
+                                    >
+                                        <span className="text-2xl">❌</span>
+                                        <span className="text-xs font-black text-slate-700">ملغية</span>
+                                        <span className="text-[10px] text-slate-400 text-center">طلب العميل الإلغاء</span>
+                                    </button>
+                                </div>
+                                {/* Optional Note */}
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">ملاحظة (اختياري)</label>
+                                    <input
+                                        type="text"
+                                        value={cancelNote}
+                                        onChange={e => setCancelNote(e.target.value)}
+                                        placeholder="سبب إضافي أو تفصيل..."
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-100 transition-all"
+                                    />
+                                </div>
+                            </div>
+                            <div className="p-4 border-t border-slate-50 flex gap-3">
+                                <button
+                                    onClick={() => setCancelModal(null)}
+                                    className="flex-1 py-3 bg-slate-50 text-slate-500 font-bold rounded-xl text-sm hover:bg-slate-100 transition-all"
+                                >
+                                    تراجع
+                                </button>
+                                <button
+                                    onClick={handleCancelConfirm}
+                                    className={`flex-[2] py-3 text-white font-bold rounded-xl text-sm transition-all active:scale-95 shadow-lg ${cancelReason === 'returned'
+                                        ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20'
+                                        : 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/20'
+                                        }`}
+                                >
+                                    {cancelReason === 'returned' ? '🔁 تأكيد الإرجاع' : '❌ تأكيد الإلغاء'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}

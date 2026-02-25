@@ -23,11 +23,20 @@ const RegisterMerchantSchema = z.object({
     slug: z.string().min(2).regex(/^[a-z0-9-]+$/, 'الرابط يجب أن يحتوي على أحرف إنجليزية وأرقام فقط'),
     category: z.string().min(1, 'يرجى اختيار التصنيف'),
     subscriptionType: z.enum(['Free', 'Pro', 'Premium']).default('Free'),
+    subscriptionDuration: z.enum(['3', '6', '12']).default('12'),
+    planStartDate: z.string().min(1, 'تاريخ بداية الاشتراك مطلوب'),
     ownerName: z.string().min(2, 'اسم المالك مطلوب'),
     phone: z.string().min(9, 'رقم الهاتف غير صحيح'),
     email: z.string().email('البريد الإلكتروني غير صحيح'),
     password: z.string().min(6, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'),
 });
+
+// Helper: add N months to a date string and return ISO string
+function addMonths(dateStr: string, months: number): string {
+    const d = new Date(dateStr);
+    d.setMonth(d.getMonth() + months);
+    return d.toISOString();
+}
 
 export async function registerMerchantAction(formData: any) {
     // 0. Server-side Authorization Check
@@ -39,19 +48,24 @@ export async function registerMerchantAction(formData: any) {
     // 0b. Input Validation
     const validation = RegisterMerchantSchema.safeParse(formData);
     if (!validation.success) {
-        const errorMessage = validation.error.issues.map(e => e.message).join(', ');
+        const errorMessage = validation.error.issues.map((e: any) => e.message).join(', ');
         return { success: false, error: errorMessage };
     }
     const validData = validation.data;
 
+    // Compute expiry date
+    const durationMonths = parseInt(validData.subscriptionDuration);
+    const planStartedAt = new Date(validData.planStartDate).toISOString();
+    const planExpiresAt = addMonths(validData.planStartDate, durationMonths);
+
     let userId: string | null = null;
 
     try {
-        // 1. Create User via Admin API (Atomic Step 1)
+        // 1. Create User via Admin API
         const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
             email: formData.email,
             password: formData.password,
-            email_confirm: true, // Auto-confirm email
+            email_confirm: true,
             user_metadata: { full_name: formData.ownerName }
         });
 
@@ -60,7 +74,7 @@ export async function registerMerchantAction(formData: any) {
 
         userId = authData.user.id;
 
-        // 2. Insert into Profiles (Atomic Step 2)
+        // 2. Insert into Profiles
         const { error: profileError } = await supabaseAdmin
             .from('profiles')
             .upsert({
@@ -72,7 +86,7 @@ export async function registerMerchantAction(formData: any) {
 
         if (profileError) throw profileError;
 
-        // 3. Insert into Stores (Atomic Step 3)
+        // 3. Insert into Stores with subscription dates
         const { error: storeError } = await supabaseAdmin
             .from('stores')
             .insert({
@@ -81,7 +95,9 @@ export async function registerMerchantAction(formData: any) {
                 category: validData.category,
                 subscription_type: validData.subscriptionType,
                 merchant_id: userId,
-                is_active: true
+                is_active: true,
+                plan_started_at: planStartedAt,
+                plan_expires_at: planExpiresAt,
             });
 
         if (storeError) {
@@ -96,7 +112,7 @@ export async function registerMerchantAction(formData: any) {
     } catch (error: any) {
         console.error('Registration Error:', error);
 
-        // ROLLBACK: If any step failed after user creation, delete the user
+        // ROLLBACK: delete user if store creation failed
         if (userId) {
             await supabaseAdmin.auth.admin.deleteUser(userId);
         }

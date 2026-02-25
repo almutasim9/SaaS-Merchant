@@ -13,6 +13,9 @@ export async function getAdminStores() {
             phone,
             merchant_id,
             plan_id,
+            subscription_type,
+            plan_started_at,
+            plan_expires_at,
             profiles (full_name, phone_number)
         `)
         .order('created_at', { ascending: false });
@@ -22,7 +25,6 @@ export async function getAdminStores() {
         return [];
     }
 
-    // Deep merge to ensure serialization compatibility from Supabase class to plain JSON
     const mappedData = (data || []).map((bStore: any) => ({
         ...bStore,
         profiles: {
@@ -34,10 +36,31 @@ export async function getAdminStores() {
     return JSON.parse(JSON.stringify(mappedData));
 }
 
-export async function updateStorePlanAction(storeId: string, planId: string) {
+// Helper: add N months to a date string
+function addMonths(dateStr: string, months: number): string {
+    const d = new Date(dateStr);
+    d.setMonth(d.getMonth() + months);
+    return d.toISOString();
+}
+
+export async function updateStorePlanAction(
+    storeId: string,
+    planId: string,
+    subscriptionType: string,
+    startDate: string,
+    durationMonths: number
+) {
+    const planStartedAt = new Date(startDate).toISOString();
+    const planExpiresAt = addMonths(startDate, durationMonths);
+
     const { error } = await supabaseAdmin
         .from('stores')
-        .update({ plan_id: planId })
+        .update({
+            plan_id: planId,
+            subscription_type: subscriptionType,
+            plan_started_at: planStartedAt,
+            plan_expires_at: planExpiresAt,
+        })
         .eq('id', storeId);
 
     if (error) {
