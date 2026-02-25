@@ -62,6 +62,9 @@ export default function MerchantProductsPage() {
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [storeSubscription, setStoreSubscription] = useState<any>(null);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
 
     const router = useRouter();
 
@@ -125,8 +128,39 @@ export default function MerchantProductsPage() {
             setSections(pageData.sections);
             setProducts(pageData.products);
             setStats(pageData.stats);
+            setHasMore(pageData.products.length === 20);
+            setPage(1);
         }
     }, [pageData]);
+
+    const loadMoreProducts = async () => {
+        if (!storeId || loadingMore || !hasMore) return;
+        setLoadingMore(true);
+        const nextPage = page + 1;
+        const limit = 20;
+        const from = (nextPage - 1) * limit;
+        const to = from + limit - 1;
+
+        const { data, error } = await supabase
+            .from('products')
+            .select('id, name, description, section_id, price, image_url, created_at, attributes, stock_quantity')
+            .eq('store_id', storeId)
+            .order('created_at', { ascending: false })
+            .range(from, to);
+
+        if (!error && data) {
+            const mappedProducts: Product[] = data.map((p: any) => ({
+                ...p,
+                sku: `SKU-${Math.floor(Math.random() * 9000) + 1000}`,
+                status: (p.stock_quantity === 0 ? 'inactive' : p.stock_quantity < 10 ? 'low_stock' : 'active') as 'active' | 'low_stock' | 'inactive'
+            }));
+
+            setProducts(prev => [...prev, ...mappedProducts]);
+            setHasMore(data.length === limit);
+            setPage(nextPage);
+        }
+        setLoadingMore(false);
+    };
 
     const handleDelete = async (id: string, name: string) => {
         if (!confirm(`هل أنت متأكد من حذف المنتج "${name}"؟`)) return;
@@ -527,6 +561,20 @@ export default function MerchantProductsPage() {
                 </div>
 
             </div>
+
+            {/* Pagination Load More */}
+            {hasMore && products.length > 0 && (
+                <div className="flex justify-center mt-6 lg:mt-8 pb-10">
+                    <button
+                        onClick={loadMoreProducts}
+                        disabled={loadingMore}
+                        className="px-6 lg:px-8 py-3 bg-white border border-slate-200 text-indigo-600 rounded-2xl font-bold text-xs lg:text-sm shadow-sm hover:shadow-md hover:border-indigo-200 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                        {loadingMore && <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>}
+                        {loadingMore ? 'جاري التحميل...' : 'عرض المزيد'}
+                    </button>
+                </div>
+            )}
 
             {/* Floating Add Button (mobile only) */}
             <button
