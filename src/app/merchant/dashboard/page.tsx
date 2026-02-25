@@ -137,13 +137,14 @@ export default function MerchantDashboard() {
                 completedOrders.forEach(order => {
                     if (Array.isArray(order.items)) {
                         order.items.forEach((item: any) => {
-                            if (item.product_id) {
-                                const existing = productSalesMap.get(item.product_id);
+                            const productId = item.id || item.product_id;
+                            if (productId) {
+                                const existing = productSalesMap.get(productId);
                                 if (existing) {
                                     existing.orders_count += (item.quantity || 1);
                                 } else {
-                                    productSalesMap.set(item.product_id, {
-                                        id: item.product_id,
+                                    productSalesMap.set(productId, {
+                                        id: productId,
                                         name: item.product_name || item.name || 'منتج محذوف',
                                         price: item.price || 0,
                                         image_url: item.image_url || '/placeholder-product.png',
