@@ -192,8 +192,8 @@ export default function MerchantOrdersPage() {
                             key={opt.value}
                             onClick={() => setStatusFilter(opt.value)}
                             className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ${statusFilter === opt.value
-                                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
-                                    : 'bg-white border border-slate-100 text-slate-500'
+                                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                                : 'bg-white border border-slate-100 text-slate-500'
                                 }`}
                         >
                             {opt.label} ({opt.value === 'all' ? orders.length : orders.filter(o => o.status === opt.value).length})
@@ -229,7 +229,7 @@ export default function MerchantOrdersPage() {
                                 </div>
                                 <div className="text-left">
                                     <p className="text-lg font-black text-indigo-600">{(order.total_price - (order.delivery_fee || 0)).toLocaleString()}</p>
-                                    <p className="text-[10px] text-slate-400 text-left">د.ع — {order.items.length} منتج</p>
+                                    <p className="text-[10px] text-slate-400 text-left">د.ع — {order.items.reduce((acc, item) => acc + (item.quantity || 1), 0)} منتج</p>
                                 </div>
                             </div>
                         </div>
@@ -270,7 +270,7 @@ export default function MerchantOrdersPage() {
                                         <div className="text-[10px] text-slate-400 font-bold mt-0.5">{order.customer_info.phone}</div>
                                     </td>
                                     <td className="px-6 lg:px-10 py-6 text-center">
-                                        <span className="text-sm font-bold text-slate-800">{order.items.length} منتجات</span>
+                                        <span className="text-sm font-bold text-slate-800">{order.items.reduce((acc, item) => acc + (item.quantity || 1), 0)} منتجات</span>
                                     </td>
                                     <td className="px-6 lg:px-10 py-6 text-center">
                                         <div className="font-bold text-indigo-600 text-base lg:text-lg tracking-tight">{(order.total_price - (order.delivery_fee || 0)).toLocaleString()} د.ع</div>
@@ -344,7 +344,7 @@ export default function MerchantOrdersPage() {
 
                             {/* Items Section */}
                             <div className="space-y-4 lg:space-y-6">
-                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pr-2">محتويات السلة ({selectedOrder.items.length})</h4>
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pr-2">محتويات السلة ({selectedOrder.items.reduce((acc, item) => acc + (item.quantity || 1), 0)})</h4>
                                 <div className="space-y-3 lg:space-y-4">
                                     {selectedOrder.items.map((item, idx) => (
                                         <div key={idx} className="flex items-center gap-4 lg:gap-6 p-3 lg:p-4 rounded-2xl lg:rounded-3xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">

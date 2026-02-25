@@ -483,7 +483,7 @@ export default function MerchantOrdersPage() {
                                     </div>
                                     <div className="text-left">
                                         <p className="text-lg font-black text-indigo-600">{order.total_price.toLocaleString()}</p>
-                                        <p className="text-[10px] text-slate-400 text-left">د.ع — {order.items.length} منتج</p>
+                                        <p className="text-[10px] text-slate-400 text-left">د.ع — {order.items.reduce((acc, item) => acc + (item.quantity || 1), 0)} منتج</p>
                                     </div>
                                 </div>
                                 {order.customer_info.notes && (
@@ -534,7 +534,7 @@ export default function MerchantOrdersPage() {
                                         </td>
                                         <td className="px-6 lg:px-10 py-6 text-center">
                                             <div className="flex flex-col items-center">
-                                                <span className="text-sm font-bold text-slate-800">{order.items.length} منتجات</span>
+                                                <span className="text-sm font-bold text-slate-800">{order.items.reduce((acc, item) => acc + (item.quantity || 1), 0)} منتجات</span>
                                                 <span className="text-[10px] text-slate-400 font-medium line-clamp-1 max-w-[150px]">
                                                     {order.items.map(i => i.name).join(', ')}
                                                 </span>
@@ -636,7 +636,7 @@ export default function MerchantOrdersPage() {
 
                                 {/* Items Section */}
                                 <div className="space-y-4 lg:space-y-6">
-                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pr-2">محتويات السلة ({selectedOrder.items.length})</h4>
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pr-2">محتويات السلة ({selectedOrder.items.reduce((acc, item) => acc + (item.quantity || 1), 0)})</h4>
                                     <div className="space-y-3 lg:space-y-4">
                                         {selectedOrder.items.map((item, idx) => (
                                             <div key={idx} className="flex items-center gap-4 lg:gap-6 p-3 lg:p-4 rounded-2xl lg:rounded-3xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
