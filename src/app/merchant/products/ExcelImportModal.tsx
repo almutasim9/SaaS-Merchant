@@ -15,7 +15,6 @@ interface ParsedProduct {
     sectionName: string;
     sectionId?: string;
     description?: string;
-    discountPrice?: number;
     valid: boolean;
     errors: string[];
 }
@@ -42,19 +41,19 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
     const downloadTemplate = () => {
         const templateData = [
             // Header row (Arabic)
-            ['اسم المنتج *', 'السعر (د.ع) *', 'القسم *', 'الوصف (اختياري)', 'سعر الخصم (اختياري)'],
+            ['اسم المنتج *', 'السعر (د.ع) *', 'القسم *', 'الوصف (اختياري)'],
             // Example row
-            ['قميص قطني أبيض', '15000', 'ملابس', 'قميص قطني عالي الجودة', '12000'],
-            ['حذاء رياضي', '25000', 'أحذية', '', ''],
+            ['قميص قطني أبيض', '15000', 'ملابس', 'قميص قطني عالي الجودة'],
+            ['حذاء رياضي', '25000', 'أحذية', ''],
         ];
 
         const ws = XLSX.utils.aoa_to_sheet(templateData);
 
         // Set column widths
-        ws['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 30 }, { wch: 20 }];
+        ws['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 30 }];
 
         // Style header row
-        const headerRange = XLSX.utils.decode_range('A1:E1');
+        const headerRange = XLSX.utils.decode_range('A1:D1');
         for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
             const cellRef = XLSX.utils.encode_cell({ r: 0, c: col });
             if (!ws[cellRef]) continue;
@@ -104,7 +103,6 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
                     const priceRaw = String(row[1] || '').replace(/[,،]/g, '').trim();
                     const sectionName = String(row[2] || '').trim();
                     const description = String(row[3] || '').trim();
-                    const discountRaw = String(row[4] || '').replace(/[,،]/g, '').trim();
 
                     if (!name) errors.push('اسم المنتج مطلوب');
                     const price = parseFloat(priceRaw);
@@ -116,15 +114,12 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
                     );
                     if (sectionName && !matchedSection) errors.push(`القسم "${sectionName}" غير موجود`);
 
-                    const discountPrice = discountRaw ? parseFloat(discountRaw) : undefined;
-
                     return {
                         name,
                         price: isNaN(price) ? 0 : price,
                         sectionName,
                         sectionId: matchedSection?.id,
                         description: description || undefined,
-                        discountPrice: discountPrice && !isNaN(discountPrice) ? discountPrice : undefined,
                         valid: errors.length === 0,
                         errors
                     };
@@ -169,7 +164,7 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
                     price: p.price,
                     section_id: p.sectionId,
                     description: p.description || null,
-                    discount_price: p.discountPrice || null,
+
                     stock_quantity: 999,
                     attributes: { isAvailable: true, hasVariants: false, variantOptions: [], variantCombinations: [] }
                 });
@@ -284,7 +279,6 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
                                     { col: 'B', label: 'السعر (د.ع)', required: true },
                                     { col: 'C', label: 'القسم', required: true },
                                     { col: 'D', label: 'الوصف', required: false },
-                                    { col: 'E', label: 'سعر الخصم', required: false },
                                 ].map(c => (
                                     <div key={c.col} className="flex items-center gap-3">
                                         <span className="w-7 h-7 bg-white border border-slate-200 rounded-lg text-xs font-black text-slate-500 flex items-center justify-center">{c.col}</span>
