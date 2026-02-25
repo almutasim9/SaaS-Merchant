@@ -413,7 +413,7 @@ export default function HomeView({
                             <div className="flex items-center justify-between px-4 mb-3">
                                 <button
                                     onClick={() => setSelectedSection('أخرى')}
-                                    className="text-sm font-medium text-[#00D084] hover:underline"
+                                    className="text-sm font-medium text-[var(--theme-primary)] hover:underline"
                                 >
                                     عرض الكل
                                 </button>
@@ -481,7 +481,7 @@ export default function HomeView({
                                                 if (product.attributes?.hasVariants) { onProductClick?.(product); return; }
                                                 onAddToCart({ ...product, quantity: 1 } as any);
                                             }}
-                                            className="absolute bottom-2 left-2 w-8 h-8 rounded-full bg-[#00D084] text-white flex items-center justify-center shadow-md hover:bg-[#00B870] active:scale-90 transition-all"
+                                            className="absolute bottom-2 left-2 w-8 h-8 rounded-full bg-[var(--theme-primary)] text-white flex items-center justify-center shadow-md hover:brightness-95 active:scale-90 transition-all"
                                         >
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -491,7 +491,7 @@ export default function HomeView({
                                     <div className="p-3 text-right">
                                         <h3 className="text-sm font-semibold text-slate-800 line-clamp-2 leading-tight mb-1.5">{product.name}</h3>
                                         <div className="flex items-center justify-end gap-1">
-                                            <span className="text-[15px] font-bold text-[#00D084]">{product.price.toLocaleString()} د.ع</span>
+                                            <span className="text-[15px] font-bold text-[var(--theme-primary)]">{product.price.toLocaleString()} د.ع</span>
                                             <span className="text-[11px] text-slate-400">د.ع</span>
                                         </div>
                                     </div>

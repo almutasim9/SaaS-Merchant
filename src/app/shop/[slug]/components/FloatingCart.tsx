@@ -13,7 +13,7 @@ export default function FloatingCart({ totalItems, onClick }: FloatingCartProps)
     return (
         <button
             onClick={onClick}
-            className="fixed bottom-8 left-8 z-[150] w-16 h-16 bg-[#00D084] text-white rounded-full flex items-center justify-center shadow-2xl shadow-emerald-500/40 hover:scale-110 active:scale-95 transition-all animate-in zoom-in slide-in-from-bottom-10 duration-500 group"
+            className="fixed bottom-8 left-8 z-[150] w-16 h-16 bg-[var(--theme-primary)] text-white rounded-full flex items-center justify-center shadow-2xl shadow-sm hover:scale-110 active:scale-95 transition-all animate-in zoom-in slide-in-from-bottom-10 duration-500 group"
         >
             <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />

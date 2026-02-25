@@ -74,7 +74,7 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
             <div className="px-10 py-6">
                 <div className="flex items-center justify-between relative">
                     <div className="absolute top-5 left-[15%] right-[15%] h-0.5 bg-slate-200 -z-10" />
-                    <div className="absolute top-5 left-[50%] right-[15%] h-0.5 bg-[#2D8CFF] -z-10" />
+                    <div className="absolute top-5 left-[50%] right-[15%] h-0.5 bg-[var(--theme-primary)] -z-10" />
 
                     {/* Step 3: الدفع */}
                     <div className="flex flex-col items-center gap-1.5">
@@ -86,20 +86,20 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
 
                     {/* Step 2: الشحن (active) */}
                     <div className="flex flex-col items-center gap-1.5">
-                        <div className="w-10 h-10 bg-[#2D8CFF] text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg shadow-blue-500/20">
+                        <div className="w-10 h-10 bg-[var(--theme-primary)] text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg ">
                             2
                         </div>
-                        <span className="text-[11px] text-[#2D8CFF] font-bold">الشحن</span>
+                        <span className="text-[11px] text-[var(--theme-primary)] font-bold">الشحن</span>
                     </div>
 
                     {/* Step 1: السلة (done) */}
                     <div className="flex flex-col items-center gap-1.5">
-                        <div className="w-10 h-10 bg-[#2D8CFF] text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-500/20">
+                        <div className="w-10 h-10 bg-[var(--theme-primary)] text-white rounded-full flex items-center justify-center shadow-lg ">
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
-                        <span className="text-[11px] text-[#2D8CFF] font-bold">السلة</span>
+                        <span className="text-[11px] text-[var(--theme-primary)] font-bold">السلة</span>
                     </div>
                 </div>
             </div>
@@ -121,7 +121,7 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                                 placeholder="أدخل اسمك الثلاثي"
                                 value={info.name}
                                 onChange={e => setInfo({ ...info, name: e.target.value })}
-                                className="w-full h-12 pr-11 pl-4 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2D8CFF]/30 focus:border-[#2D8CFF] transition-all text-right"
+                                className="w-full h-12 pr-11 pl-4 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:border-[var(--theme-primary)] transition-all text-right"
                                 required
                             />
                             <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400">
@@ -146,7 +146,7 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                                     const val = normalizeNumbers(e.target.value).replace(/\D/g, '').slice(0, 11);
                                     setInfo({ ...info, phone: val });
                                 }}
-                                className={`w-full h-12 pr-11 pl-4 bg-slate-50 rounded-xl border ${info.phone && (!info.phone.startsWith('07') || info.phone.length !== 11) ? 'border-rose-400 focus:ring-rose-400/30' : 'border-slate-200 focus:ring-[#2D8CFF]/30 focus:border-[#2D8CFF]'} text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all text-right`}
+                                className={`w-full h-12 pr-11 pl-4 bg-slate-50 rounded-xl border ${info.phone && (!info.phone.startsWith('07') || info.phone.length !== 11) ? 'border-rose-400 focus:ring-rose-400/30' : 'border-slate-200 focus:ring-slate-200 focus:border-[var(--theme-primary)]'} text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all text-right`}
                                 dir="ltr"
                                 required
                             />
@@ -168,7 +168,7 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                             <select
                                 value={info.city}
                                 onChange={e => setInfo({ ...info, city: e.target.value })}
-                                className="w-full h-12 pr-11 pl-8 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#2D8CFF]/30 focus:border-[#2D8CFF] transition-all text-right appearance-none"
+                                className="w-full h-12 pr-11 pl-8 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:border-[var(--theme-primary)] transition-all text-right appearance-none"
                                 required
                             >
                                 <option value="">اختر مدينتك</option>
@@ -197,7 +197,7 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                             value={info.landmark}
                             onChange={e => setInfo({ ...info, landmark: normalizeNumbers(e.target.value) })}
                             rows={3}
-                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2D8CFF]/30 focus:border-[#2D8CFF] transition-all text-right resize-none"
+                            className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:border-[var(--theme-primary)] transition-all text-right resize-none"
                             required
                         />
                     </div>
@@ -210,7 +210,7 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                             placeholder="ملاحظات إضافية للتوصيل..."
                             value={info.notes}
                             onChange={e => setInfo({ ...info, notes: e.target.value })}
-                            className="w-full h-12 px-4 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2D8CFF]/30 focus:border-[#2D8CFF] transition-all text-right"
+                            className="w-full h-12 px-4 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:border-[var(--theme-primary)] transition-all text-right"
                         />
                     </div>
                 </div>
@@ -223,7 +223,7 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                     </div>
                     <div className="flex items-center justify-between">
                         <span className="text-sm text-slate-500">سعر التوصيل</span>
-                        <span className="text-sm font-bold text-[#2D8CFF]">
+                        <span className="text-sm font-bold text-[var(--theme-primary)]">
                             {isFreeDelivery ? 'مجاني' : info.city ? `${deliveryFee.toLocaleString()} د.ع` : 'اختر المدينة'}
                         </span>
                     </div>
@@ -241,7 +241,7 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                     disabled={!isValid || isOrdering}
                     className={`w-full h-13 py-3.5 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 ${!isValid || isOrdering
                         ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                        : 'bg-[#2D8CFF] text-white shadow-lg shadow-blue-500/20 hover:bg-[#1A6FE0] active:scale-[0.98]'
+                        : 'bg-[var(--theme-primary)] text-white shadow-lg  hover:brightness-110 active:scale-[0.98]'
                         }`}
                 >
                     {isOrdering ? (

@@ -165,7 +165,7 @@ export default function StorefrontContent({ store, products, sections }: { store
                 <div className="min-h-screen bg-[#F8F9FB]" dir="rtl">
                     {/* Green Header */}
                     <div className="bg-gradient-to-b from-[#E8FFF4] to-[#F8F9FB] pt-16 pb-10 flex flex-col items-center text-center px-6">
-                        <div className="w-24 h-24 bg-[#00D084] rounded-full flex items-center justify-center shadow-xl shadow-emerald-500/20 mb-6">
+                        <div className="w-24 h-24 bg-[var(--theme-primary)] rounded-full flex items-center justify-center shadow-xl shadow-sm mb-6">
                             <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
@@ -197,7 +197,7 @@ export default function StorefrontContent({ store, products, sections }: { store
                     </div>
 
                     {/* Delivery Banner */}
-                    <div className="mx-5 mt-4 bg-gradient-to-l from-[#00D084] to-[#006B42] rounded-2xl overflow-hidden p-6 text-center relative">
+                    <div className="mx-5 mt-4 bg-gradient-to-l from-[var(--theme-primary)] to-[color-mix(in_srgb,var(--theme-primary)_70%,black)] rounded-2xl overflow-hidden p-6 text-center relative">
                         <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
                         <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/10" />
                         <p className="text-white font-bold text-lg relative z-10">نصلك منتجاتنا أينما كنت 📦</p>
@@ -207,7 +207,7 @@ export default function StorefrontContent({ store, products, sections }: { store
                     <div className="mx-5 mt-6 space-y-3 pb-10">
                         <button
                             onClick={handleBackFromSuccess}
-                            className="w-full py-3.5 bg-[#00D084] text-white font-bold rounded-xl hover:bg-[#00B870] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+                            className="w-full py-3.5 bg-[var(--theme-primary)] text-white font-bold rounded-xl hover:brightness-95 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-sm"
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />

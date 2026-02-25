@@ -114,8 +114,8 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                                                 </button>
                                             </div>
                                             <div className="flex items-center gap-1">
-                                                <span className="text-base font-bold text-[#2D8CFF]">{(item.price * item.quantity).toLocaleString()} د.ع</span>
-                                                <span className="text-xs text-[#2D8CFF]">د.ع</span>
+                                                <span className="text-base font-bold text-[var(--theme-primary)]">{(item.price * item.quantity).toLocaleString()} د.ع</span>
+                                                <span className="text-xs text-[var(--theme-primary)]">د.ع</span>
                                             </div>
                                         </div>
                                     </div>
@@ -130,15 +130,15 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-base font-bold text-slate-800">الإجمالي</h3>
                             <div className="flex items-center gap-1.5">
-                                <span className="text-xl font-black text-[#2D8CFF]">{totalPrice.toLocaleString()} د.ع</span>
-                                <span className="text-sm text-[#2D8CFF]">د.ع</span>
+                                <span className="text-xl font-black text-[var(--theme-primary)]">{totalPrice.toLocaleString()} د.ع</span>
+                                <span className="text-sm text-[var(--theme-primary)]">د.ع</span>
                             </div>
                         </div>
 
                         {/* Continue Button */}
                         <button
                             onClick={onContinue}
-                            className="w-full h-13 py-3.5 bg-[#2D8CFF] text-white rounded-xl font-bold text-base shadow-lg shadow-blue-500/20 hover:bg-[#1A6FE0] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                            className="w-full h-13 py-3.5 bg-[var(--theme-primary)] text-white rounded-xl font-bold text-base shadow-lg shadow-sm hover:brightness-95 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                         >
                             إتمام الطلب
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
