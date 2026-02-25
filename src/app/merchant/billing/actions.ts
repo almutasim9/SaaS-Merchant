@@ -10,7 +10,6 @@ export async function getStoreSubscriptionAction(storeId: string) {
                 plan_id,
                 plan_expires_at,
                 plan_started_at,
-                subscription_type,
                 subscription_plans (
                     id, name_en, name_ar, price_monthly, max_products, max_categories, custom_theme, remove_branding, advanced_reports
                 )
@@ -33,7 +32,7 @@ export async function getStoreSubscriptionAction(storeId: string) {
             currentPlan: storeData.subscription_plans as any,
             planExpiresAt: storeData.plan_expires_at,
             planStartedAt: storeData.plan_started_at,
-            subscriptionType: storeData.subscription_type,
+            subscriptionType: (storeData.subscription_plans as any)?.name_en || 'Free',
             allPlans: allPlans as any[]
         };
     } catch (err: any) {

@@ -38,7 +38,7 @@ interface Product {
     id: string;
     name: string;
     description?: string;
-    category: string;
+    section_id: string;
     price: number;
     stock_quantity: number;
     image_url: string;
@@ -88,7 +88,7 @@ export default function MerchantProductsPage() {
                 getSections(storeData.id),
                 supabase
                     .from('products')
-                    .select('id, name, description, category, price, image_url, created_at, attributes, stock_quantity')
+                    .select('id, name, description, section_id, price, image_url, created_at, attributes, stock_quantity')
                     .eq('store_id', storeData.id)
                     .order('created_at', { ascending: false })
             ]);
@@ -226,7 +226,7 @@ export default function MerchantProductsPage() {
 
     const filteredProducts = selectedCategory === 'all'
         ? products
-        : products.filter(p => p.category === selectedCategory);
+        : products.filter(p => p.section_id === selectedCategory);
 
     return (
         <div className="px-4 lg:px-10 pb-10 space-y-8 lg:space-y-10 pt-6 lg:pt-0" dir="rtl">
@@ -322,13 +322,13 @@ export default function MerchantProductsPage() {
                 {sections.map(section => (
                     <button
                         key={section.id}
-                        onClick={() => setSelectedCategory(section.name)}
-                        className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ${selectedCategory === section.name
+                        onClick={() => setSelectedCategory(section.id)}
+                        className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ${selectedCategory === section.id
                             ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
                             : 'bg-white border border-slate-100 text-slate-500'
                             }`}
                     >
-                        {section.name} ({products.filter(p => p.category === section.name).length})
+                        {section.name} ({products.filter(p => p.section_id === section.id).length})
                     </button>
                 ))}
             </div>
@@ -373,7 +373,7 @@ export default function MerchantProductsPage() {
                                             <span className="text-base font-black text-indigo-600">{product.price.toLocaleString()}</span>
                                             <span className="text-[10px] text-slate-400 font-bold">د.ع</span>
                                         </div>
-                                        {product.category && <span className="inline-block mt-1.5 px-2 py-0.5 bg-slate-50 rounded-full text-[10px] font-bold text-slateate-500">{product.category}</span>}
+                                        {product.section_id && <span className="inline-block mt-1.5 px-2 py-0.5 bg-slate-50 rounded-full text-[10px] font-bold text-slateate-500">{sections.find(s => s.id === product.section_id)?.name || 'غير مصنف'}</span>}
                                         <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-50">
                                             <button onClick={() => toggleAvailability(product)} className={`flex-1 h-8 rounded-xl text-[10px] font-bold transition-all ${isAvailable ? 'bg-slate-50 text-slate-400' : 'bg-amber-50 text-amber-600'
                                                 }`}>{isAvailable ? 'متوفر ✓' : 'نفذ'}</button>
@@ -434,7 +434,7 @@ export default function MerchantProductsPage() {
                                     </td>
                                     <td className="px-6 lg:px-8 py-6 text-center">
                                         <span className="px-3 lg:px-4 py-1.5 bg-slate-50 rounded-full text-[10px] font-bold text-slate-500">
-                                            {product.category}
+                                            {sections.find(s => s.id === product.section_id)?.name || 'غير مصنف'}
                                         </span>
                                     </td>
                                     <td className="px-6 lg:px-8 py-6 text-center">

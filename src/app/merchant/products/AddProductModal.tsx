@@ -34,7 +34,7 @@ interface Product {
     name: string;
     description?: string;
     price: number;
-    category: string;
+    section_id: string;
     image_url?: string;
     attributes?: ProductAttributes;
     stock_quantity: number;
@@ -59,7 +59,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
-    const [category, setCategory] = useState('');
+    const [sectionId, setSectionId] = useState('');
     const [imageUrl, setImageUrl] = useState('');
     const [additionalImages, setAdditionalImages] = useState<string[]>([]);
     const [isAvailable, setIsAvailable] = useState(true);
@@ -75,7 +75,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                 setName(initialData.name || '');
                 setDescription(initialData.description || '');
                 setPrice(initialData.price?.toString() || '');
-                setCategory(initialData.category || (sections.length > 0 ? sections[0].name : ''));
+                setSectionId(initialData.section_id || (sections.length > 0 ? sections[0].id : ''));
                 setImageUrl(initialData.image_url || '');
                 setAdditionalImages((initialData.attributes as any)?.images || []);
 
@@ -259,7 +259,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
         setName('');
         setDescription('');
         setPrice('');
-        setCategory(sections.length > 0 ? sections[0].name : '');
+        setSectionId(sections.length > 0 ? sections[0].id : '');
         setImageUrl('');
         setAdditionalImages([]);
         setIsAvailable(true);
@@ -276,7 +276,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
         try {
             if (!name.trim()) throw new Error('يرجى إدخال اسم المنتج.');
             if (!price || parseFloat(price) <= 0) throw new Error('يرجى إدخال السعر الأساسي للمنتج.');
-            if (!category) throw new Error('يرجى اختيار قسم للمنتج.');
+            if (!sectionId) throw new Error('يرجى اختيار قسم للمنتج.');
 
             const attributes: any = {
                 hasVariants,
@@ -291,7 +291,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                 name,
                 description,
                 price: parseFloat(price || '0'),
-                category,
+                section_id: sectionId,
                 stock_quantity: isAvailable ? 999 : 0, // Mock stock as requested
                 image_url: imageUrl,
                 attributes
@@ -573,10 +573,10 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">التنظيم</h3>
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-700">القسم (Category)</label>
-                                    <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 outline-none focus:bg-white focus:border-indigo-500 transition-colors appearance-none cursor-pointer">
+                                    <select value={sectionId} onChange={(e) => setSectionId(e.target.value)} className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 outline-none focus:bg-white focus:border-indigo-500 transition-colors appearance-none cursor-pointer">
                                         <option value="" disabled>اختر القسم المناسب</option>
                                         {sections.map(sec => (
-                                            <option key={sec.id} value={sec.name}>{sec.name}</option>
+                                            <option key={sec.id} value={sec.id}>{sec.name}</option>
                                         ))}
                                     </select>
                                 </div>

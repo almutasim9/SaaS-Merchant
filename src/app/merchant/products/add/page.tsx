@@ -19,7 +19,7 @@ export default function AddProductPage() {
         name: '',
         description: '',
         price: '', // Base price
-        category: '',
+        section_id: '',
         isAvailable: true, // Catalog-only: Available or Out of Stock
         outOfStockBehavior: 'hide' as 'hide' | 'show_badge',
         image_url: '',
@@ -69,7 +69,7 @@ export default function AddProductPage() {
             const sectionsData = await getSections(storeData.id);
             setSections(sectionsData);
             if (sectionsData.length > 0) {
-                setFormData(prev => ({ ...prev, category: sectionsData[0].name }));
+                setFormData(prev => ({ ...prev, section_id: sectionsData[0].id }));
             }
         } else {
             setError('لم يتم العثور على متجر لهذا الحساب.');
@@ -191,7 +191,7 @@ export default function AddProductPage() {
             name: '',
             description: '',
             price: '',
-            category: prev.category, // Preserve section
+            section_id: prev.section_id, // Preserve section
             isAvailable: true,
             outOfStockBehavior: 'hide',
             image_url: '',
@@ -224,7 +224,7 @@ export default function AddProductPage() {
             if (!formData.price || parseFloat(formData.price) <= 0) {
                 throw new Error('يرجى إدخال سعر صحيح للمنتج.');
             }
-            if (!formData.category) {
+            if (!formData.section_id) {
                 throw new Error('يرجى اختيار قسم للمنتج.');
             }
 
@@ -235,7 +235,7 @@ export default function AddProductPage() {
                     name: formData.name,
                     description: formData.description,
                     price: parseFloat(formData.price || '0'),
-                    category: formData.category,
+                    section_id: formData.section_id,
                     stock_quantity: formData.isAvailable ? 999 : 0, // Mock for backward compatibility
                     image_url: formData.image_url,
                     attributes: {
@@ -692,13 +692,13 @@ export default function AddProductPage() {
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">القسم <span className="text-rose-500">*</span></label>
                                 <div className="relative">
                                     <select
-                                        value={formData.category}
-                                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                        value={formData.section_id}
+                                        onChange={(e) => setFormData({ ...formData, section_id: e.target.value })}
                                         className="w-full bg-slate-50/50 border border-slate-100 rounded-xl lg:rounded-2xl px-5 lg:px-6 py-4 lg:py-5 text-sm lg:text-base text-slate-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold appearance-none"
                                     >
                                         <option value="">اختر القسم</option>
                                         {sections.map(section => (
-                                            <option key={section.id} value={section.name}>{section.name}</option>
+                                            <option key={section.id} value={section.id}>{section.name}</option>
                                         ))}
                                     </select>
                                     <svg className="w-5 h-5 text-slate-300 absolute left-5 lg:left-6 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>

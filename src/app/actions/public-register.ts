@@ -87,7 +87,6 @@ export async function publicRegisterMerchantAction(formData: any) {
                 name: data.storeName,
                 slug: data.slug,
                 category: data.category,
-                subscription_type: data.subscriptionType,
                 merchant_id: userId,
                 plan_id: planId,
                 is_active: true

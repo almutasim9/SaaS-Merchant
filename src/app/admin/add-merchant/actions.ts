@@ -104,7 +104,6 @@ export async function registerMerchantAction(formData: any) {
                 name: validData.storeName,
                 slug: validData.slug,
                 category: validData.category,
-                subscription_type: validData.subscriptionType,
                 merchant_id: userId,
                 plan_id: planId,
                 is_active: true,

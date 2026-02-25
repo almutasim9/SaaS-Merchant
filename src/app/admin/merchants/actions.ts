@@ -13,9 +13,9 @@ export async function getAdminStores() {
             phone,
             merchant_id,
             plan_id,
-            subscription_type,
             plan_started_at,
             plan_expires_at,
+            subscription_plans (name_en),
             profiles (full_name, phone_number)
         `)
         .order('created_at', { ascending: false });
@@ -27,6 +27,7 @@ export async function getAdminStores() {
 
     const mappedData = (data || []).map((bStore: any) => ({
         ...bStore,
+        subscription_type: bStore.subscription_plans?.name_en || 'Free',
         profiles: {
             full_name: bStore.profiles?.full_name,
             phone: bStore.profiles?.phone_number
@@ -70,7 +71,6 @@ export async function updateStorePlanAction(
         .from('stores')
         .update({
             plan_id: actualPlanId,
-            subscription_type: subscriptionType,
             plan_started_at: planStartedAt,
             plan_expires_at: planExpiresAt,
         })
