@@ -15,6 +15,7 @@ interface Plan {
     custom_theme: boolean;
     remove_branding: boolean;
     advanced_reports: boolean;
+    features_ar?: string[];
 }
 
 export default function MerchantBillingPage() {
@@ -60,7 +61,7 @@ export default function MerchantBillingPage() {
 
     const handleUpgradeContact = (planName: string) => {
         const message = encodeURIComponent(`مرحباً، أود الاستفسار عن ترقية باقة متجري إلى باقة ${planName}.`);
-        window.open(`https://wa.me/966500000000?text=${message}`, '_blank');
+        window.open(`https://wa.me/9647703854913?text=${message}`, '_blank');
     };
 
     if (loading) {
@@ -162,58 +163,14 @@ export default function MerchantBillingPage() {
                         </div>
 
                         <ul className="space-y-4 mb-8 flex-1">
-                            <li className="flex items-center gap-3">
-                                <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                                <span className="text-sm font-bold text-slate-600">
-                                    {plan.max_products === -1 ? 'عدد غير محدود من المنتجات' : `حتى ${plan.max_products} منتج`}
-                                </span>
-                            </li>
-                            <li className="flex items-center gap-3">
-                                <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                                <span className="text-sm font-bold text-slate-600">
-                                    {plan.max_categories === -1 ? 'أقسام غير محدودة' : `حتى ${plan.max_categories} أقسام`}
-                                </span>
-                            </li>
-                            <li className="flex items-center gap-3">
-                                {plan.custom_theme ? (
-                                    <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                                ) : (
-                                    <svg className="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
-                                )}
-                                <span className={`text-sm font-bold ${plan.custom_theme ? 'text-slate-600' : 'text-slate-400 line-through'}`}>
-                                    تخصيص ألوان المتجر
-                                </span>
-                            </li>
-                            <li className="flex items-center gap-3">
-                                {plan.custom_theme ? ( // Banner uses same gate
-                                    <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                                ) : (
-                                    <svg className="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
-                                )}
-                                <span className={`text-sm font-bold ${plan.custom_theme ? 'text-slate-600' : 'text-slate-400 line-through'}`}>
-                                    سلايدر بانر مخصص
-                                </span>
-                            </li>
-                            <li className="flex items-center gap-3">
-                                {plan.remove_branding ? (
-                                    <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                                ) : (
-                                    <svg className="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
-                                )}
-                                <span className={`text-sm font-bold ${plan.remove_branding ? 'text-slate-600' : 'text-slate-400 line-through'}`}>
-                                    إزالة حقوق المنصة
-                                </span>
-                            </li>
-                            <li className="flex items-center gap-3">
-                                {plan.advanced_reports ? (
-                                    <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                                ) : (
-                                    <svg className="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
-                                )}
-                                <span className={`text-sm font-bold ${plan.advanced_reports ? 'text-slate-600' : 'text-slate-400 line-through'}`}>
-                                    تقارير مبيعات متقدمة
-                                </span>
-                            </li>
+                            {plan.features_ar?.map((feature: string, idx: number) => (
+                                <li key={idx} className="flex items-start gap-3">
+                                    <svg className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                                    <span className="text-sm font-bold text-slate-600 leading-relaxed">
+                                        {feature}
+                                    </span>
+                                </li>
+                            ))}
                         </ul>
 
                         <button
