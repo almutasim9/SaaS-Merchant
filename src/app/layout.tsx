@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import { Toaster } from "sonner";
+import NumeralNormalizer from "@/components/NumeralNormalizer";
 import "./globals.css";
 
 const ibmPlexArabic = IBM_Plex_Sans_Arabic({
@@ -22,6 +23,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <body className={`${ibmPlexArabic.variable} antialiased font-sans flex flex-col min-h-screen`}>
+        <NumeralNormalizer />
         {children}
         <Toaster position="top-center" richColors />
       </body>

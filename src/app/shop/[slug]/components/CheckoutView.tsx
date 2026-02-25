@@ -12,6 +12,11 @@ interface CheckoutViewProps {
 
 const IRAQ_CITIES = ['بغداد', 'البصرة', 'الموصل', 'أربيل', 'السليمانية', 'دهوك', 'كركوك', 'النجف', 'كربلاء', 'الحلة', 'الأنبار', 'الديوانية', 'الكوت', 'العمارة', 'الناصرية', 'السماوة', 'ديالى', 'صلاح الدين'];
 
+const normalizeNumbers = (str: string) => {
+    if (!str) return '';
+    return str.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
+};
+
 export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrdering, deliveryFees }: CheckoutViewProps) {
     const [info, setInfo] = useState({
         name: '',
@@ -47,7 +52,7 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
     const deliveryFee = !info.city ? 0 : (isFreeDelivery ? 0 : (processedFees[info.city]?.fee || 0));
     const finalTotal = totalPrice + deliveryFee;
 
-    const isValid = info.name.trim() && info.phone.trim() && info.city;
+    const isValid = !!(info.name.trim() && info.phone.trim() && info.city && info.landmark.trim());
 
     return (
         <div className="min-h-screen bg-white" dir="rtl">
@@ -134,7 +139,7 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                                 type="tel"
                                 placeholder="07xxxxxxxxx"
                                 value={info.phone}
-                                onChange={e => setInfo({ ...info, phone: e.target.value })}
+                                onChange={e => setInfo({ ...info, phone: normalizeNumbers(e.target.value) })}
                                 className="w-full h-12 pr-11 pl-4 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2D8CFF]/30 focus:border-[#2D8CFF] transition-all text-right"
                                 dir="ltr"
                                 required
@@ -181,9 +186,10 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                         <textarea
                             placeholder="اسم الحي، اسم الشارع، رقم المنزل..."
                             value={info.landmark}
-                            onChange={e => setInfo({ ...info, landmark: e.target.value })}
+                            onChange={e => setInfo({ ...info, landmark: normalizeNumbers(e.target.value) })}
                             rows={3}
                             className="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2D8CFF]/30 focus:border-[#2D8CFF] transition-all text-right resize-none"
+                            required
                         />
                     </div>
 
@@ -225,8 +231,8 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                     onClick={() => { if (isValid) onPlaceOrder(info); }}
                     disabled={!isValid || isOrdering}
                     className={`w-full h-13 py-3.5 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 ${!isValid || isOrdering
-                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                            : 'bg-[#2D8CFF] text-white shadow-lg shadow-blue-500/20 hover:bg-[#1A6FE0] active:scale-[0.98]'
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        : 'bg-[#2D8CFF] text-white shadow-lg shadow-blue-500/20 hover:bg-[#1A6FE0] active:scale-[0.98]'
                         }`}
                 >
                     {isOrdering ? (
