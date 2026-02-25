@@ -8,7 +8,8 @@ interface Product {
     discount_price?: number;
     rating?: number;
     is_featured?: boolean;
-    category: string;
+    category?: string;
+    section_id?: string;
     image_url: string;
     description: string;
     attributes?: {
@@ -189,12 +190,13 @@ export default function HomeView({
     const productsBySection = useMemo(() => {
         const map: Record<string, Product[]> = {};
         products.forEach(p => {
-            const cat = (p.category || 'أخرى').trim();
+            const section = sections.find(s => s.id === p.section_id);
+            const cat = section ? section.name : 'أخرى';
             if (!map[cat]) map[cat] = [];
             map[cat].push(p);
         });
         return map;
-    }, [products]);
+    }, [products, sections]);
 
     // All products for search mode
     const isSearching = searchQuery.trim().length > 0;

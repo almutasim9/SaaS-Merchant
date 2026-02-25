@@ -20,8 +20,8 @@ interface Product {
     price: number;
     discount_price?: number;
     rating?: number;
-    is_featured?: boolean;
-    category: string;
+    category?: string;
+    section_id?: string;
     image_url: string;
     description: string;
     stock_quantity?: number;
@@ -84,9 +84,12 @@ export default function StorefrontContent({ store, products, sections }: { store
     // Unified filtering logic
     const visibleProducts = products.filter(p => {
         if (selectedSection) {
-            const productCat = (p.category || '').trim().toLowerCase();
-            const selectedCat = selectedSection.trim().toLowerCase();
-            if (productCat !== selectedCat) return false;
+            const section = sections.find(s => s.name === selectedSection);
+            if (section) {
+                if (p.section_id !== section.id) return false;
+            } else {
+                return false;
+            }
         }
 
         const query = searchQuery.toLowerCase().trim();

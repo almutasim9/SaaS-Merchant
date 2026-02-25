@@ -59,7 +59,7 @@ export default async function ShopPage({ params }: Props) {
             .order('created_at', { ascending: true }),
         supabase
             .from('products')
-            .select('id, name, description, price, category, image_url, attributes, stock_quantity')
+            .select('id, name, description, price, section_id, image_url, attributes, stock_quantity')
             .eq('store_id', store.id)
             .order('created_at', { ascending: false })
             .limit(40)

@@ -19,7 +19,8 @@ interface Product {
     price: number;
     discount_price?: number;
     rating?: number;
-    category: string;
+    category?: string;
+    section_id?: string;
     image_url: string;
     description: string;
     attributes?: {
