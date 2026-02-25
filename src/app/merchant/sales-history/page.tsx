@@ -155,13 +155,14 @@ export default function MerchantOrdersPage() {
     return (
         <div className="px-4 lg:px-10 pb-20 space-y-8 lg:space-y-10 pt-6 lg:pt-0" dir="rtl">
             {/* Header */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-0">
+            <div className="flex flex-col gap-4">
                 <div>
                     <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">سجل المبيعات</h1>
                     <p className="text-slate-400 font-medium mt-1 text-sm">استعرض جميع الطلبات المكتملة والملغية وتتبع مبيعاتك السابقة.</p>
                 </div>
-                <div className="flex flex-col sm:flex-row flex-wrap items-center gap-3 lg:gap-4 w-full lg:w-auto">
-                    <div className="relative w-full sm:w-64">
+                {/* Search + Date */}
+                <div className="flex items-center gap-3">
+                    <div className="relative flex-1">
                         <input
                             type="text"
                             placeholder="ابحث برقم الهاتف أو الطلب..."
@@ -177,22 +178,76 @@ export default function MerchantOrdersPage() {
                         type="date"
                         value={dateFilter}
                         onChange={(e) => setDateFilter(e.target.value)}
-                        className="w-full sm:w-auto px-4 py-3 bg-white border border-slate-100 rounded-2xl text-slate-600 font-medium text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer"
+                        className="px-3 py-3 bg-white border border-slate-100 rounded-2xl text-slate-600 font-medium text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer"
                     />
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="w-full sm:w-auto flex-1 lg:flex-none px-4 lg:px-6 py-3 bg-white border border-slate-100 rounded-2xl text-slate-600 font-bold text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 cursor-pointer appearance-none text-right"
-                    >
-                        <option value="all">كل الطلبات (تصفية)</option>
-                        <option value="completed">طلبات مكتملة</option>
-                        <option value="cancelled">طلبات ملغية</option>
-                    </select>
+                </div>
+                {/* Status Pills */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                    {[
+                        { value: 'all', label: 'الكل' },
+                        { value: 'completed', label: 'مكتملة' },
+                        { value: 'cancelled', label: 'ملغية' },
+                    ].map(opt => (
+                        <button
+                            key={opt.value}
+                            onClick={() => setStatusFilter(opt.value)}
+                            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ${statusFilter === opt.value
+                                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                                    : 'bg-white border border-slate-100 text-slate-500'
+                                }`}
+                        >
+                            {opt.label} ({opt.value === 'all' ? orders.length : orders.filter(o => o.status === opt.value).length})
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            {/* Orders Table */}
-            <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+            {/* Mobile Card List */}
+            <div className="md:hidden space-y-3">
+                {filteredOrders.length === 0 ? (
+                    <div className="bg-white rounded-3xl border border-slate-100 p-12 flex flex-col items-center gap-3 text-center">
+                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
+                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                        </div>
+                        <h3 className="font-black text-slate-800">لا توجد طلبات</h3>
+                        <p className="text-xs text-slate-400">ستظهر الطلبات المكتملة والملغية هنا</p>
+                    </div>
+                ) : filteredOrders.map(order => (
+                    <div key={order.id} className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div className="flex items-center justify-between px-4 pt-4 pb-3">
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-black text-slate-400 uppercase">#{order.id.slice(0, 6).toUpperCase()}</span>
+                                <StatusBadge status={order.status} />
+                            </div>
+                            <span className="text-xs text-slate-400">{new Date(order.created_at).toLocaleDateString('ar-IQ', { day: 'numeric', month: 'short' })}</span>
+                        </div>
+                        <div className="px-4 pb-3 border-b border-slate-50">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="font-bold text-slate-800 text-sm">{order.customer_info.name}</p>
+                                    <a href={`tel:${order.customer_info.phone}`} className="text-xs text-indigo-600 font-bold">{order.customer_info.phone}</a>
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-lg font-black text-indigo-600">{(order.total_price - (order.delivery_fee || 0)).toLocaleString()}</p>
+                                    <p className="text-[10px] text-slate-400 text-left">د.ع — {order.items.length} منتج</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-3">
+                            <button
+                                onClick={() => setSelectedOrder(order)}
+                                className="flex-1 h-9 bg-slate-50 text-slate-600 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-indigo-50 hover:text-indigo-600 transition-all"
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                عرض التفاصيل
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden md:block bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-right border-collapse min-w-[900px]">
                         <thead className="bg-[#FBFBFF] border-b border-slate-50">
@@ -209,45 +264,26 @@ export default function MerchantOrdersPage() {
                         <tbody className="divide-y divide-slate-50">
                             {filteredOrders.length > 0 ? filteredOrders.map((order, idx) => (
                                 <tr key={order.id} className="hover:bg-slate-50/50 transition-all group">
-                                    <td className="px-6 lg:px-10 py-6">
-                                        <span className="text-sm font-bold text-slate-800 uppercase">#{order.id.slice(0, 6).toUpperCase()}</span>
-                                    </td>
+                                    <td className="px-6 lg:px-10 py-6"><span className="text-sm font-bold text-slate-800 uppercase">#{order.id.slice(0, 6).toUpperCase()}</span></td>
                                     <td className="px-6 lg:px-10 py-6 text-right">
-                                        <div>
-                                            <div className="font-bold text-slate-800 text-sm lg:text-base">{order.customer_info.name}</div>
-                                            <div className="text-[10px] text-slate-400 font-bold mt-0.5 uppercase tracking-widest">{order.customer_info.phone}</div>
-                                        </div>
+                                        <div className="font-bold text-slate-800 text-sm lg:text-base">{order.customer_info.name}</div>
+                                        <div className="text-[10px] text-slate-400 font-bold mt-0.5">{order.customer_info.phone}</div>
                                     </td>
                                     <td className="px-6 lg:px-10 py-6 text-center">
-                                        <div className="flex flex-col items-center">
-                                            <span className="text-sm font-bold text-slate-800">{order.items.length} منتجات</span>
-                                            <span className="text-[10px] text-slate-400 font-medium line-clamp-1 max-w-[150px]">
-                                                {order.items.map(i => i.name).join(', ')}
-                                            </span>
-                                        </div>
+                                        <span className="text-sm font-bold text-slate-800">{order.items.length} منتجات</span>
                                     </td>
                                     <td className="px-6 lg:px-10 py-6 text-center">
                                         <div className="font-bold text-indigo-600 text-base lg:text-lg tracking-tight">{(order.total_price - (order.delivery_fee || 0)).toLocaleString()} د.ع</div>
                                     </td>
-                                    <td className="px-6 lg:px-10 py-6 text-center">
-                                        <StatusBadge status={order.status} />
-                                    </td>
+                                    <td className="px-6 lg:px-10 py-6 text-center"><StatusBadge status={order.status} /></td>
                                     <td className="px-6 lg:px-10 py-6 text-center text-[11px] lg:text-sm font-medium text-slate-400">
                                         {new Date(order.created_at).toLocaleDateString('ar-IQ', { day: 'numeric', month: 'long' })}
                                     </td>
                                     <td className="px-6 lg:px-10 py-6 text-center">
-                                        <div className="flex items-center justify-center gap-2 lg:gap-3">
-                                            <button
-                                                onClick={() => setSelectedOrder(order)}
-                                                className="px-4 py-2 bg-slate-50 text-slate-600 font-bold text-xs rounded-xl hover:bg-slate-100 hover:text-indigo-600 transition-all flex items-center gap-2"
-                                            >
-                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                                التفاصيل
-                                            </button>
-                                        </div>
+                                        <button onClick={() => setSelectedOrder(order)} className="px-4 py-2 bg-slate-50 text-slate-600 font-bold text-xs rounded-xl hover:bg-slate-100 hover:text-indigo-600 transition-all flex items-center gap-2 mx-auto">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                            التفاصيل
+                                        </button>
                                     </td>
                                 </tr>
                             )) : (
@@ -255,9 +291,7 @@ export default function MerchantOrdersPage() {
                                     <td colSpan={7} className="px-6 lg:px-10 py-24 text-center">
                                         <div className="flex flex-col items-center gap-4">
                                             <div className="w-16 h-16 lg:w-20 lg:h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
-                                                <svg className="w-8 h-8 lg:w-10 lg:h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                                </svg>
+                                                <svg className="w-8 h-8 lg:w-10 lg:h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
                                             </div>
                                             <h3 className="text-lg lg:text-xl font-bold text-slate-800">لا توجد طلبات حالياً</h3>
                                             <p className="text-xs lg:text-sm font-medium text-slate-400">ستظهر هنا الطلبات الواردة فوراً عند قيام العملاء بالشراء.</p>

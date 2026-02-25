@@ -114,7 +114,7 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                                                 </button>
                                             </div>
                                             <div className="flex items-center gap-1">
-                                                <span className="text-base font-bold text-[#2D8CFF]">{(item.price * item.quantity).toLocaleString()}</span>
+                                                <span className="text-base font-bold text-[#2D8CFF]">{(item.price * item.quantity).toLocaleString()} د.ع</span>
                                                 <span className="text-xs text-[#2D8CFF]">د.ع</span>
                                             </div>
                                         </div>
@@ -130,7 +130,7 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-base font-bold text-slate-800">الإجمالي</h3>
                             <div className="flex items-center gap-1.5">
-                                <span className="text-xl font-black text-[#2D8CFF]">{totalPrice.toLocaleString()}</span>
+                                <span className="text-xl font-black text-[#2D8CFF]">{totalPrice.toLocaleString()} د.ع</span>
                                 <span className="text-sm text-[#2D8CFF]">د.ع</span>
                             </div>
                         </div>

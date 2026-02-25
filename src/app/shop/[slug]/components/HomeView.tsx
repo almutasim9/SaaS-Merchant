@@ -118,13 +118,15 @@ function ProductCard({ product, onAddToCart, onClick }: ProductCardProps) {
                 <div className="flex items-center justify-end gap-1.5">
                     {product.discount_price && product.discount_price < product.price ? (
                         <>
-                            <span className="text-[11px] text-slate-400 line-through">{product.price.toLocaleString()}</span>
-                            <span className="text-[15px] font-bold" style={{ color: 'var(--theme-primary)' }}>{product.discount_price.toLocaleString()}</span>
+                            <span className="text-[11px] text-slate-400 line-through">{product.price.toLocaleString()} د.ع</span>
+                            <span className="text-[15px] font-bold" style={{ color: 'var(--theme-primary)' }}>{product.discount_price.toLocaleString()} د.ع</span>
                         </>
                     ) : (
-                        <span className="text-[15px] font-bold" style={{ color: 'var(--theme-primary)' }}>
-                            {hasVariants ? `${displayPrice.toLocaleString()}+` : displayPrice.toLocaleString()}
-                        </span>
+                        <div className="text-left" dir="ltr">
+                            <span className="text-[15px] font-bold" style={{ color: 'var(--theme-primary)' }}>
+                                {hasVariants ? `${displayPrice.toLocaleString()}+ د.ع` : `${displayPrice.toLocaleString()} د.ع`}
+                            </span>
+                        </div>
                     )}
                     <span className="text-[11px] text-slate-400">د.ع</span>
                 </div>
@@ -487,7 +489,7 @@ export default function HomeView({
                                     <div className="p-3 text-right">
                                         <h3 className="text-sm font-semibold text-slate-800 line-clamp-2 leading-tight mb-1.5">{product.name}</h3>
                                         <div className="flex items-center justify-end gap-1">
-                                            <span className="text-[15px] font-bold text-[#00D084]">{product.price.toLocaleString()}</span>
+                                            <span className="text-[15px] font-bold text-[#00D084]">{product.price.toLocaleString()} د.ع</span>
                                             <span className="text-[11px] text-slate-400">د.ع</span>
                                         </div>
                                     </div>

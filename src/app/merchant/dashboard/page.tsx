@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import OnboardingChecklist from './OnboardingChecklist';
 
 interface Product {
     id: string;
@@ -29,7 +30,7 @@ interface Store {
     id: string;
     name: string;
     slug: string;
-    currency?: 'USD' | 'IQD';
+    currency?: 'IQD' | string;
 }
 
 export default function MerchantDashboard() {
@@ -46,6 +47,7 @@ export default function MerchantDashboard() {
         dailyLabels: ['الساعة', 'أمس', 'اليوم'] as string[] // Placeholder
     });
     const [loading, setLoading] = useState(true);
+    const [hasSections, setHasSections] = useState(false);
 
     const router = useRouter();
 
@@ -92,12 +94,14 @@ export default function MerchantDashboard() {
             setActiveStoreIdx(0); // Set the first store as active
             const activeStore = storesData[0];
 
-            // Parallel fetch: stats, products, and recent orders
-            const [allOrdersResult, productsResult, ordersResult] = await Promise.all([
+            // Parallel fetch: stats, products, recent orders, and sections count
+            const [allOrdersResult, productsResult, ordersResult, sectionsResult] = await Promise.all([
                 supabase.from('orders').select('total_price, delivery_fee, status, created_at').eq('store_id', activeStore.id),
-                supabase.from('products').select('id, name, price, image_url').eq('store_id', activeStore.id).limit(3),
-                supabase.from('orders').select('id, customer_info, created_at, total_price, delivery_fee, status').eq('store_id', activeStore.id).order('created_at', { ascending: false }).limit(5)
+                supabase.from('products').select('id, name, price, image_url').eq('store_id', activeStore.id).is('deleted_at', null).limit(3),
+                supabase.from('orders').select('id, customer_info, created_at, total_price, delivery_fee, status').eq('store_id', activeStore.id).order('created_at', { ascending: false }).limit(5),
+                supabase.from('sections').select('id', { count: 'exact', head: true }).eq('store_id', activeStore.id)
             ]);
+            setHasSections((sectionsResult.count || 0) > 0);
 
             const allOrders = allOrdersResult.data;
             if (allOrdersResult.error) throw allOrdersResult.error;
@@ -235,6 +239,14 @@ export default function MerchantDashboard() {
                     </button>
                 </div>
             </div>
+
+            {/* Onboarding Checklist — shown to new merchants */}
+            <OnboardingChecklist
+                storeSlug={store?.slug || ''}
+                hasProducts={products.length > 0}
+                hasSections={hasSections}
+                storeConfigured={false}
+            />
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">

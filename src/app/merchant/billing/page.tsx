@@ -136,7 +136,7 @@ export default function MerchantBillingPage() {
                             <h3 className="text-xl font-black text-slate-800 mb-2">{plan.name_ar}</h3>
                             <div className="flex items-end justify-center gap-1">
                                 <span className="text-4xl font-black text-slate-900">{plan.price_monthly}</span>
-                                <span className="text-sm font-bold text-slate-400 mb-1">ريال / شهرياً</span>
+                                <span className="text-sm font-bold text-slate-400 mb-1">د.ع / شهرياً</span>
                             </div>
                         </div>
 

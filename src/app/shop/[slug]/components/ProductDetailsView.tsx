@@ -194,7 +194,7 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
 
                 {/* Price */}
                 <div className="flex items-center gap-2 mt-3 mb-5">
-                    <span className="text-3xl font-black text-slate-800">{displayPrice.toLocaleString()}</span>
+                    <span className="text-3xl font-black text-slate-800">{displayPrice.toLocaleString()} د.ع</span>
                     <span className="text-base text-slate-400">د.ع</span>
                     {product.discount_price && product.discount_price < product.price && displayPrice === product.price && (
                         <span className="text-sm text-slate-400 line-through mr-2">{product.discount_price.toLocaleString()} د.ع</span>
