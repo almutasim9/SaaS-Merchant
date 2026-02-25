@@ -25,7 +25,7 @@ export default function MerchantOrdersPage() {
     const [loading, setLoading] = useState(true);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [statusFilter, setStatusFilter] = useState('all');
-    const [dateFilter, setDateFilter] = useState('');
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
     const [timeRangeFilter, setTimeRangeFilter] = useState('1_month');
     const [storeId, setStoreId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -161,9 +161,15 @@ export default function MerchantOrdersPage() {
         const matchStatus = statusFilter === 'all' ? true : o.status === statusFilter;
 
         let matchDate = true;
-        if (dateFilter) {
+        if (dateRange.start || dateRange.end) {
             const orderDate = new Date(o.created_at).toISOString().split('T')[0];
-            matchDate = orderDate === dateFilter;
+            if (dateRange.start && dateRange.end) {
+                matchDate = orderDate >= dateRange.start && orderDate <= dateRange.end;
+            } else if (dateRange.start) {
+                matchDate = orderDate >= dateRange.start;
+            } else if (dateRange.end) {
+                matchDate = orderDate <= dateRange.end;
+            }
         }
 
         const searchLower = searchQuery.toLowerCase();
@@ -199,12 +205,26 @@ export default function MerchantOrdersPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
-                    <input
-                        type="date"
-                        value={dateFilter}
-                        onChange={(e) => setDateFilter(e.target.value)}
-                        className="px-3 py-3 bg-white border border-slate-100 rounded-2xl text-slate-600 font-medium text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer"
-                    />
+                    <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-3 py-1 text-slate-600 shadow-sm focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+                        <input
+                            type="date"
+                            value={dateRange.start}
+                            onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                            className="bg-transparent font-medium text-[11px] lg:text-xs focus:outline-none cursor-pointer py-2 max-w-[110px]"
+                        />
+                        <span className="text-slate-300 text-xs">إلى</span>
+                        <input
+                            type="date"
+                            value={dateRange.end}
+                            onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                            className="bg-transparent font-medium text-[11px] lg:text-xs focus:outline-none cursor-pointer py-2 max-w-[110px]"
+                        />
+                        {(dateRange.start || dateRange.end) && (
+                            <button onClick={() => setDateRange({ start: '', end: '' })} className="text-slate-300 hover:text-rose-500 mr-1 transition-colors">
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        )}
+                    </div>
                     <select
                         value={timeRangeFilter}
                         onChange={(e) => {
