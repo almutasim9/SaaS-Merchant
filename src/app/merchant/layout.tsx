@@ -49,23 +49,10 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
         let cleanup: (() => void) | undefined;
 
         const init = async () => {
+            // Middleware already verified auth + role. Just fetch store data.
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                router.push('/login');
-                return;
-            }
-
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('role')
-                .eq('id', user.id)
-                .single();
-
-            if (profile?.role !== 'merchant') {
-                router.push('/login');
-            } else {
-                cleanup = await fetchStore(user.id);
-            }
+            if (!user) { router.push('/login'); return; }
+            cleanup = await fetchStore(user.id);
         };
 
         init();

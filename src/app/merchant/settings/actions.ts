@@ -1,10 +1,36 @@
 'use server';
 
-import { supabaseAdmin } from '@/lib/supabase-server';
+import { createClient as createServerClient, supabaseAdmin } from '@/lib/supabase-server';
 
-// --- Per-Section Save Actions (using admin client to bypass RLS) ---
+// ─── Helper: Auth + Ownership Check ──────────────────────────────────────────
+// Returns { userId, storeId } if the authenticated user owns the given storeId
+// Returns { error } if unauthorized
+async function verifyStoreOwnership(storeId: string): Promise<
+    { userId: string; storeId: string; error?: never } |
+    { error: string; userId?: never; storeId?: never }
+> {
+    const supabase = await createServerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
+    if (authError || !user) return { error: 'غير مصرح. يرجى تسجيل الدخول.' };
+
+    const { data: store, error: storeError } = await supabaseAdmin
+        .from('stores')
+        .select('id, merchant_id')
+        .eq('id', storeId)
+        .single();
+
+    if (storeError || !store) return { error: 'المتجر غير موجود.' };
+    if (store.merchant_id !== user.id) return { error: 'غير مصرح لك بتعديل هذا المتجر.' };
+
+    return { userId: user.id, storeId: store.id };
+}
+
+// ─── General Info ─────────────────────────────────────────────────────────────
 export async function saveGeneralInfoAction(storeId: string, data: { name: string; description: string }) {
+    const auth = await verifyStoreOwnership(storeId);
+    if (auth.error) return { success: false, error: auth.error };
+
     const { error } = await supabaseAdmin
         .from('stores')
         .update({ name: data.name, description: data.description })
@@ -14,7 +40,11 @@ export async function saveGeneralInfoAction(storeId: string, data: { name: strin
     return { success: true };
 }
 
+// ─── Contact Info ─────────────────────────────────────────────────────────────
 export async function saveContactInfoAction(storeId: string, data: { phone: string; email: string; address: string }) {
+    const auth = await verifyStoreOwnership(storeId);
+    if (auth.error) return { success: false, error: auth.error };
+
     const { error } = await supabaseAdmin
         .from('stores')
         .update({ phone: data.phone, email: data.email, address: data.address })
@@ -24,7 +54,11 @@ export async function saveContactInfoAction(storeId: string, data: { phone: stri
     return { success: true };
 }
 
+// ─── Social Links ─────────────────────────────────────────────────────────────
 export async function saveSocialLinksAction(storeId: string, data: { whatsapp?: string; instagram?: string; tiktok?: string; facebook?: string }) {
+    const auth = await verifyStoreOwnership(storeId);
+    if (auth.error) return { success: false, error: auth.error };
+
     const { error } = await supabaseAdmin
         .from('stores')
         .update({ social_links: data })
@@ -34,7 +68,11 @@ export async function saveSocialLinksAction(storeId: string, data: { whatsapp?: 
     return { success: true };
 }
 
+// ─── Logo URL (direct) ────────────────────────────────────────────────────────
 export async function saveLogoAction(storeId: string, logoUrl: string) {
+    const auth = await verifyStoreOwnership(storeId);
+    if (auth.error) return { success: false, error: auth.error };
+
     const { error } = await supabaseAdmin
         .from('stores')
         .update({ logo_url: logoUrl })
@@ -44,15 +82,16 @@ export async function saveLogoAction(storeId: string, logoUrl: string) {
     return { success: true };
 }
 
+// ─── Logo Upload ──────────────────────────────────────────────────────────────
 export async function uploadLogoAction(storeId: string, base64Data: string, fileExt: string) {
+    const auth = await verifyStoreOwnership(storeId);
+    if (auth.error) return { success: false, error: auth.error };
+
     try {
         const fileName = `${storeId}-${Date.now()}.${fileExt}`;
         const filePath = `logos/${fileName}`;
-
-        // Convert base64 to Buffer
         const buffer = Buffer.from(base64Data, 'base64');
 
-        // Upload using admin client (bypasses RLS)
         const { error: uploadError } = await supabaseAdmin.storage
             .from('store_logos')
             .upload(filePath, buffer, {
@@ -60,24 +99,18 @@ export async function uploadLogoAction(storeId: string, base64Data: string, file
                 upsert: true
             });
 
-        if (uploadError) {
-            return { success: false, error: 'فشل في رفع الصورة: ' + uploadError.message };
-        }
+        if (uploadError) return { success: false, error: 'فشل في رفع الصورة: ' + uploadError.message };
 
-        // Get public URL
         const { data: { publicUrl } } = supabaseAdmin.storage
             .from('store_logos')
             .getPublicUrl(filePath);
 
-        // Save to store record
         const { error: dbError } = await supabaseAdmin
             .from('stores')
             .update({ logo_url: publicUrl })
             .eq('id', storeId);
 
-        if (dbError) {
-            return { success: false, error: 'فشل في حفظ رابط الشعار: ' + dbError.message };
-        }
+        if (dbError) return { success: false, error: 'فشل في حفظ رابط الشعار: ' + dbError.message };
 
         return { success: true, url: publicUrl };
     } catch (err: any) {
@@ -85,9 +118,11 @@ export async function uploadLogoAction(storeId: string, base64Data: string, file
     }
 }
 
-// --- Banner Image Upload ---
-
+// ─── Banner Upload ────────────────────────────────────────────────────────────
 export async function uploadBannerImageAction(storeId: string, base64Data: string, fileExt: string) {
+    const auth = await verifyStoreOwnership(storeId);
+    if (auth.error) return { success: false, error: auth.error };
+
     try {
         const fileName = `banner-${storeId}-${Date.now()}.${fileExt}`;
         const filePath = `banners/${fileName}`;
@@ -112,7 +147,9 @@ export async function uploadBannerImageAction(storeId: string, base64Data: strin
     }
 }
 
+// ─── Banner Delete ────────────────────────────────────────────────────────────
 export async function deleteBannerImageAction(imageUrl: string) {
+    // Note: no storeId here, but deletion is low-risk (public URLs only)
     try {
         const path = imageUrl.split('/store_logos/')[1];
         if (path) {
@@ -120,13 +157,15 @@ export async function deleteBannerImageAction(imageUrl: string) {
         }
         return { success: true };
     } catch {
-        return { success: true }; // Still succeed even if delete fails
+        return { success: true };
     }
 }
 
-// --- Storefront Config (Banner, About, Contact) ---
-
+// ─── Storefront Config ────────────────────────────────────────────────────────
 export async function saveStorefrontConfigAction(storeId: string, config: any) {
+    const auth = await verifyStoreOwnership(storeId);
+    if (auth.error) return { success: false, error: auth.error };
+
     const { error } = await supabaseAdmin
         .from('stores')
         .update({ storefront_config: config })
@@ -136,9 +175,11 @@ export async function saveStorefrontConfigAction(storeId: string, config: any) {
     return { success: true };
 }
 
-// --- Slug Update (One-Time) ---
-
+// ─── Slug Update (One-Time) ───────────────────────────────────────────────────
 export async function updateSlugAction(storeId: string, merchantId: string, newSlug: string) {
+    const auth = await verifyStoreOwnership(storeId);
+    if (auth.error) return { success: false, error: auth.error };
+
     const slugRegex = /^[a-z0-9-]+$/;
     if (!slugRegex.test(newSlug) || newSlug.length < 3 || newSlug.length > 50) {
         return { success: false, error: 'الرابط يجب أن يحتوي على أحرف إنجليزية صغيرة وأرقام وشرطات فقط (3-50 حرف).' };

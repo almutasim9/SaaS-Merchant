@@ -55,6 +55,7 @@ export default function AdminMerchantsPage() {
 
     // Plan change modal state
     const [planModal, setPlanModal] = useState<Store | null>(null);
+    const [modalMode, setModalMode] = useState<'renew' | 'change'>('renew');
     const [newSubType, setNewSubType] = useState('Pro');
     const [newDuration, setNewDuration] = useState(12);
     const [newStartDate, setNewStartDate] = useState('');
@@ -71,38 +72,79 @@ export default function AdminMerchantsPage() {
         setLoading(false);
     };
 
-    const openPlanModal = (store: Store) => {
+    const openPlanModal = (store: Store, mode: 'renew' | 'change') => {
         setPlanModal(store);
+        setModalMode(mode);
         setNewSubType(store.subscription_type || 'Free');
         setNewDuration(12);
-        setNewStartDate(today);
+
+        if (mode === 'renew') {
+            // Smart start date: if expired (or no date) → today; if still active → resume from expiry
+            const now = new Date();
+            const expiresAt = store.plan_expires_at ? new Date(store.plan_expires_at) : null;
+            const smartStart = (!expiresAt || expiresAt < now) ? today : expiresAt.toISOString().split('T')[0];
+            setNewStartDate(smartStart);
+        }
+        // For 'change' mode: no start date needed, we keep existing dates
     };
 
     const handlePlanUpdate = async () => {
         if (!planModal) return;
         setUpdatingPlan(true);
+
+        let startDate: string;
+        let durationMonths: number;
+        let subType = newSubType;
+
+        if (modalMode === 'change') {
+            // Keep existing dates — only change subscription_type
+            startDate = planModal.plan_started_at
+                ? new Date(planModal.plan_started_at).toISOString().split('T')[0]
+                : today;
+            // Compute duration from existing dates if available, otherwise default to 12
+            if (planModal.plan_started_at && planModal.plan_expires_at) {
+                const start = new Date(planModal.plan_started_at);
+                const end = new Date(planModal.plan_expires_at);
+                const diffMonths = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+                durationMonths = Math.max(1, diffMonths);
+            } else {
+                durationMonths = 12;
+            }
+        } else {
+            // Renew: use the smart start date + chosen duration
+            startDate = newStartDate;
+            durationMonths = newDuration;
+            subType = planModal.subscription_type || 'Free'; // keep existing type on renew
+        }
+
         const result = await updateStorePlanAction(
             planModal.id,
             planModal.plan_id || '',
-            newSubType,
-            newStartDate,
-            newDuration
+            subType,
+            startDate,
+            durationMonths
         );
 
         if (result.success) {
-            toast.success('تم تحديث الباقة والاشتراك بنجاح ✅');
-            const expiresAt = (() => {
-                const d = new Date(newStartDate);
-                d.setMonth(d.getMonth() + newDuration);
+            const label = modalMode === 'renew' ? 'تم تجديد الاشتراك ✅' : 'تم تحديث الباقة ✅';
+            toast.success(label);
+            const computedExpiry = (() => {
+                const d = new Date(startDate);
+                d.setMonth(d.getMonth() + durationMonths);
                 return d.toISOString();
             })();
             setStores(prev => prev.map(s => s.id === planModal.id
-                ? { ...s, subscription_type: newSubType, plan_started_at: new Date(newStartDate).toISOString(), plan_expires_at: expiresAt }
+                ? {
+                    ...s,
+                    subscription_type: subType,
+                    plan_started_at: new Date(startDate).toISOString(),
+                    plan_expires_at: computedExpiry
+                }
                 : s
             ));
             setPlanModal(null);
         } else {
-            toast.error(result.error || 'فشل في تحديث الباقة');
+            toast.error(result.error || 'فشل في التحديث');
         }
         setUpdatingPlan(false);
     };
@@ -175,8 +217,8 @@ export default function AdminMerchantsPage() {
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <span className={`px-3 py-1.5 text-xs font-bold rounded-full border ${store.subscription_type === 'Premium' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                                store.subscription_type === 'Pro' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
-                                                    'bg-slate-100 text-slate-600 border-slate-200'
+                                            store.subscription_type === 'Pro' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                                                'bg-slate-100 text-slate-600 border-slate-200'
                                             }`}>
                                             {store.subscription_type || 'Free'}
                                         </span>
@@ -185,12 +227,20 @@ export default function AdminMerchantsPage() {
                                         <ExpiryBadge expiresAt={store.plan_expires_at} />
                                     </td>
                                     <td className="px-6 py-4 text-center">
-                                        <button
-                                            onClick={() => openPlanModal(store)}
-                                            className="px-4 py-2 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-xl hover:bg-indigo-100 transition-all border border-indigo-100 active:scale-95"
-                                        >
-                                            تجديد / تغيير
-                                        </button>
+                                        <div className="flex items-center justify-center gap-2">
+                                            <button
+                                                onClick={() => openPlanModal(store, 'renew')}
+                                                className="px-3 py-2 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-xl hover:bg-emerald-100 transition-all border border-emerald-100 active:scale-95"
+                                            >
+                                                🔄 تجديد
+                                            </button>
+                                            <button
+                                                onClick={() => openPlanModal(store, 'change')}
+                                                className="px-3 py-2 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-xl hover:bg-indigo-100 transition-all border border-indigo-100 active:scale-95"
+                                            >
+                                                ✏️ تغيير
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -212,7 +262,9 @@ export default function AdminMerchantsPage() {
                     <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setPlanModal(null)} />
                     <div className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl">
                         <div className="p-6 border-b border-slate-50">
-                            <h3 className="text-lg font-bold text-slate-800">تجديد / تغيير الاشتراك</h3>
+                            <h3 className="text-lg font-bold text-slate-800">
+                                {modalMode === 'renew' ? '🔄 تجديد الاشتراك' : '✏️ تغيير الباقة'}
+                            </h3>
                             <p className="text-xs text-slate-400 mt-1">
                                 متجر: <span className="font-bold text-slate-600">{planModal.name}</span>
                             </p>
@@ -234,60 +286,77 @@ export default function AdminMerchantsPage() {
                                 </div>
                             )}
 
-                            {/* Sub type */}
-                            <div>
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">الباقة الجديدة</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {SUB_TYPES.map(t => (
-                                        <button key={t} type="button" onClick={() => setNewSubType(t)}
-                                            className={`py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${newSubType === t
+                            {/* Sub type — only shown when changing plan */}
+                            {modalMode === 'change' && (
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">الباقة الجديدة</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {SUB_TYPES.map(t => (
+                                            <button key={t} type="button" onClick={() => setNewSubType(t)}
+                                                className={`py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${newSubType === t
                                                     ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                                                     : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-indigo-200'
-                                                }`}
-                                        >
-                                            {t === 'Free' ? 'مجاني' : t === 'Pro' ? 'احترافي' : 'متميز'}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Duration */}
-                            <div>
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">مدة الاشتراك</label>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {DURATION_OPTIONS.map(opt => (
-                                        <button key={opt.value} type="button" onClick={() => setNewDuration(opt.value)}
-                                            className={`py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${newDuration === opt.value
-                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                                                    : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-emerald-200'
-                                                }`}
-                                        >
-                                            {opt.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Start date + expiry preview */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">تاريخ البداية</label>
-                                    <input
-                                        type="date" value={newStartDate}
-                                        onChange={e => setNewStartDate(e.target.value)}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">ينتهي في</label>
-                                    <div className="w-full bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5 flex items-center gap-1.5">
-                                        <svg className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <span className="text-emerald-700 font-bold text-xs">{expiryPreview}</span>
+                                                    }`}
+                                            >
+                                                {t === 'Free' ? 'مجاني' : t === 'Pro' ? 'احترافي' : 'متميز'}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* Duration + Date — only for renew */}
+                            {modalMode === 'renew' && (
+                                <>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">مدة التجديد</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {DURATION_OPTIONS.map(opt => (
+                                                <button key={opt.value} type="button" onClick={() => setNewDuration(opt.value)}
+                                                    className={`py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${newDuration === opt.value
+                                                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                        : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-emerald-200'
+                                                        }`}
+                                                >
+                                                    {opt.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">يبدأ من</label>
+                                            <input
+                                                type="date" value={newStartDate}
+                                                onChange={e => setNewStartDate(e.target.value)}
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">ينتهي في</label>
+                                            <div className="w-full bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5 flex items-center gap-1.5">
+                                                <svg className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span className="text-emerald-700 font-bold text-xs">{expiryPreview}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Change mode: confirm existing dates are preserved */}
+                            {modalMode === 'change' && planModal.plan_expires_at && (
+                                <div className="flex items-center gap-3 p-3 bg-indigo-50 rounded-2xl border border-indigo-100">
+                                    <svg className="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <p className="text-xs font-bold text-indigo-600">
+                                        سيتم الحفاظ على تاريخ الانتهاء الحالي: {new Date(planModal.plan_expires_at).toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         <div className="p-4 border-t border-slate-50 flex gap-3">

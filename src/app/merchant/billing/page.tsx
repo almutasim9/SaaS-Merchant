@@ -21,6 +21,8 @@ export default function MerchantBillingPage() {
     const [currentPlan, setCurrentPlan] = useState<Plan | null>(null);
     const [allPlans, setAllPlans] = useState<Plan[]>([]);
     const [planExpiresAt, setPlanExpiresAt] = useState<string | null>(null);
+    const [planStartedAt, setPlanStartedAt] = useState<string | null>(null);
+    const [subscriptionType, setSubscriptionType] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
@@ -44,6 +46,8 @@ export default function MerchantBillingPage() {
                     setCurrentPlan(result.currentPlan);
                     setAllPlans(result.allPlans || []);
                     setPlanExpiresAt(result.planExpiresAt);
+                    setPlanStartedAt(result.planStartedAt || null);
+                    setSubscriptionType(result.subscriptionType || null);
                 } else {
                     console.error('Failed to load subscription data:', result.error);
                 }
@@ -88,15 +92,32 @@ export default function MerchantBillingPage() {
                     <div>
                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">باقتك الحالية</h3>
                         <div className="flex items-center gap-3">
-                            <h2 className="text-2xl lg:text-3xl font-black text-slate-800 tracking-tighter">{currentPlan?.name_ar || 'غير محدد'}</h2>
-                            <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-lg border border-emerald-100">نشط</span>
+                            <h2 className="text-2xl lg:text-3xl font-black text-slate-800 tracking-tighter">
+                                {currentPlan?.name_ar || subscriptionType || 'غير محدد'}
+                            </h2>
+                            {(() => {
+                                if (!planExpiresAt) return <span className="px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-lg">غير محدد</span>;
+                                const diff = Math.ceil((new Date(planExpiresAt).getTime() - Date.now()) / 86400000);
+                                if (diff < 0) return <span className="px-3 py-1 bg-rose-50 text-rose-600 text-[10px] font-bold rounded-lg border border-rose-100">⚠️ منتهي</span>;
+                                if (diff <= 14) return <span className="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold rounded-lg border border-amber-100">⏳ ينتهي خلال {diff} يوم</span>;
+                                return <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-lg border border-emerald-100">✅ نشط</span>;
+                            })()}
                         </div>
-                        {planExpiresAt && (
-                            <p className="text-xs text-slate-500 font-medium mt-2">تاريخ التجديد/الانتهاء: <span className="text-slate-700 font-bold">{new Date(planExpiresAt).toLocaleDateString('ar-SA')}</span></p>
-                        )}
-                        {!planExpiresAt && (
-                            <p className="text-xs text-slate-500 font-medium mt-2">لا يوجد تاريخ انتهاء محدد لهذه الباقة.</p>
-                        )}
+                        <div className="flex flex-wrap gap-4 mt-3">
+                            {planStartedAt && (
+                                <p className="text-xs text-slate-500 font-medium">
+                                    بدأ: <span className="text-slate-700 font-bold">{new Date(planStartedAt).toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                </p>
+                            )}
+                            {planExpiresAt && (
+                                <p className="text-xs text-slate-500 font-medium">
+                                    ينتهي: <span className="text-slate-700 font-bold">{new Date(planExpiresAt).toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                </p>
+                            )}
+                            {!planExpiresAt && (
+                                <p className="text-xs text-slate-500 font-medium">لا يوجد تاريخ انتهاء محدد لهذه الباقة.</p>
+                            )}
+                        </div>
                     </div>
                 </div>
                 {/* Upgrade Button (Desktop) */}
