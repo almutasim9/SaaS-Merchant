@@ -236,6 +236,13 @@ export default function MerchantOrdersPage() {
                             تسليم للمندوب
                         </button>
                         <button
+                            onClick={() => updateStatus(order.id, 'pending')}
+                            className="w-9 h-9 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center hover:bg-slate-200 transition-all active:scale-95"
+                            title="تراجع إلى معلق"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                        </button>
+                        <button
                             onClick={() => openCancelModal(order.id, order.customer_info.name)}
                             className="w-9 h-9 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center hover:bg-rose-100 transition-all active:scale-95"
                             title="إلغاء الطلب"
@@ -252,6 +259,13 @@ export default function MerchantOrdersPage() {
                         >
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                             مكتمل
+                        </button>
+                        <button
+                            onClick={() => updateStatus(order.id, 'processing')}
+                            className="w-9 h-9 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center hover:bg-slate-200 transition-all active:scale-95"
+                            title="تراجع إلى قيد التجهيز"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
                         </button>
                         <button
                             onClick={() => openCancelModal(order.id, order.customer_info.name)}
@@ -560,19 +574,9 @@ export default function MerchantOrdersPage() {
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                     </svg>
                                                 </button>
-                                                <select
-                                                    value={order.status}
-                                                    onChange={(e) => updateStatus(order.id, e.target.value)}
-                                                    className="bg-slate-50 border-none rounded-xl px-2 lg:px-4 py-2 text-[10px] lg:text-xs font-bold text-slate-600 focus:outline-none focus:ring-4 focus:ring-indigo-100 cursor-pointer"
-                                                >
-                                                    <option value="pending">معلق</option>
-                                                    <option value="processing">تجهيز</option>
-                                                    <option value="shipped">مندوب</option>
-                                                    <option value="completed">مكتمل</option>
-                                                    <option value="postponed">مؤجل</option>
-                                                    <option value="returned">راجع</option>
-                                                    <option value="cancelled">ملغي</option>
-                                                </select>
+                                                <div className="w-48">
+                                                    <OrderActionButtons order={order} />
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>

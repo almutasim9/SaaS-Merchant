@@ -437,21 +437,12 @@ export default function MerchantOrdersPage() {
                             </div>
                         </div>
 
-                        <div className="p-6 lg:p-10 border-t border-slate-50 bg-[#FBFBFF] sticky bottom-0 z-10 flex flex-col sm:flex-row gap-3 lg:gap-4">
+                        <div className="p-6 lg:p-10 border-t border-slate-50 bg-[#FBFBFF] sticky bottom-0 z-10">
                             <button
                                 onClick={() => setSelectedOrder(null)}
-                                className="order-2 sm:order-1 flex-1 py-3.5 lg:py-4 bg-white border border-slate-100 rounded-xl lg:rounded-2xl text-[11px] lg:text-sm text-slate-400 font-bold shadow-sm hover:text-slate-600 transition-all"
+                                className="w-full py-3.5 lg:py-4 bg-white border border-slate-100 rounded-xl lg:rounded-2xl text-[11px] lg:text-sm text-slate-400 font-bold shadow-sm hover:bg-slate-50 hover:text-slate-600 transition-all"
                             >
                                 إغلاق
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    await updateStatus(selectedOrder.id, 'completed');
-                                    setSelectedOrder(null);
-                                }}
-                                className="order-1 sm:order-2 flex-[2] py-3.5 lg:py-4 bg-indigo-600 text-white text-[11px] lg:text-sm font-bold rounded-xl lg:rounded-2xl shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 transition-all active:scale-95"
-                            >
-                                اعتماد إكمال الطلب
                             </button>
                         </div>
                     </div>
