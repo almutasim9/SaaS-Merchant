@@ -32,7 +32,7 @@ export default async function ShopPage({ params }: Props) {
     // 1. Fetch Store Details
     const { data: store, error: storeError } = await supabase
         .from('stores')
-        .select('id, name, description, phone, email, address, logo_url, social_links, delivery_fees, storefront_config, subscription_plan_id, subscription_plans(custom_theme, remove_branding)')
+        .select('id, name, description, phone, email, address, logo_url, social_links, delivery_fees, storefront_config')
         .eq('slug', slug)
         .single();
 
