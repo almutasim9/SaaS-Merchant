@@ -26,6 +26,8 @@ export default function MerchantOrdersPage() {
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [statusFilter, setStatusFilter] = useState('all');
     const [dateFilter, setDateFilter] = useState('');
+    const [timeRangeFilter, setTimeRangeFilter] = useState('1_month');
+    const [storeId, setStoreId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
 
@@ -48,7 +50,8 @@ export default function MerchantOrdersPage() {
                 .single();
 
             if (storeData) {
-                fetchOrders(storeData.id);
+                setStoreId(storeData.id);
+                fetchOrders(storeData.id, '1_month');
                 cleanup = subscribeToOrders(storeData.id);
             } else {
                 setLoading(false);
@@ -60,13 +63,22 @@ export default function MerchantOrdersPage() {
         return () => { cleanup?.(); };
     }, []);
 
-    const fetchOrders = async (storeId: string) => {
+    const fetchOrders = async (sId: string, range: string = '1_month') => {
+        setLoading(true);
+        let fromDate = new Date();
+        if (range === '1_week') fromDate.setDate(fromDate.getDate() - 7);
+        else if (range === '1_month') fromDate.setMonth(fromDate.getMonth() - 1);
+        else if (range === '2_months') fromDate.setMonth(fromDate.getMonth() - 2);
+        else if (range === '3_months') fromDate.setMonth(fromDate.getMonth() - 3);
+
         const { data, error } = await supabase
             .from('orders')
             .select('id, store_id, customer_info, items, total_price, delivery_fee, status, created_at')
-            .eq('store_id', storeId)
+            .eq('store_id', sId)
             .in('status', ['completed', 'delivered', 'cancelled'])
-            .order('created_at', { ascending: false });
+            .gte('created_at', fromDate.toISOString())
+            .order('created_at', { ascending: false })
+            .limit(20);
 
         if (!error && data) {
             setOrders(data);
@@ -86,7 +98,8 @@ export default function MerchantOrdersPage() {
                 if (payload.eventType === 'INSERT') {
                     toast.success('طلب جديد!', { description: 'لقد استلمت طلباً جديداً للتو من متجرك.' });
                 }
-                fetchOrders(storeId);
+                // Refetching with default 1_month since getting latest state in callback is tricky without refs
+                fetchOrders(storeId, '1_month');
             })
             .subscribe();
 
@@ -180,6 +193,19 @@ export default function MerchantOrdersPage() {
                         onChange={(e) => setDateFilter(e.target.value)}
                         className="px-3 py-3 bg-white border border-slate-100 rounded-2xl text-slate-600 font-medium text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer"
                     />
+                    <select
+                        value={timeRangeFilter}
+                        onChange={(e) => {
+                            setTimeRangeFilter(e.target.value);
+                            if (storeId) fetchOrders(storeId, e.target.value);
+                        }}
+                        className="px-3 py-3 bg-white border border-slate-100 rounded-2xl text-slate-600 font-bold text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer"
+                    >
+                        <option value="1_week">آخر أسبوع</option>
+                        <option value="1_month">آخر شهر</option>
+                        <option value="2_months">آخر شهرين</option>
+                        <option value="3_months">آخر 3 أشهر</option>
+                    </select>
                 </div>
                 {/* Status Pills */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1">

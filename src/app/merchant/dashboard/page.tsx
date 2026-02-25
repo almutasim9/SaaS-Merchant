@@ -81,9 +81,17 @@ export default function MerchantDashboard() {
             setActiveStoreIdx(0); // Set the first store as active
             const activeStore = storesData[0];
 
+            // Calculate dates to prevent pulling all orders
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setHours(0, 0, 0, 0);
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
             // Parallel fetch: stats, products, recent orders, and sections count
             const [allOrdersResult, productsResult, ordersResult, sectionsResult] = await Promise.all([
-                supabase.from('orders').select('total_price, delivery_fee, status, created_at, items').eq('store_id', activeStore.id),
+                supabase.from('orders').select('total_price, delivery_fee, status, created_at, items').eq('store_id', activeStore.id).gte('created_at', sevenDaysAgo.toISOString()),
                 supabase.from('products').select('id, name, price, image_url').eq('store_id', activeStore.id).limit(20),
                 supabase.from('orders').select('id, customer_info, created_at, total_price, delivery_fee, status').eq('store_id', activeStore.id).order('created_at', { ascending: false }).limit(5),
                 supabase.from('sections').select('id', { count: 'exact', head: true }).eq('store_id', activeStore.id)
@@ -94,12 +102,19 @@ export default function MerchantDashboard() {
             if (allOrdersResult.error) throw allOrdersResult.error;
 
             if (allOrders) {
-                // Only count sales for orders that are delivered/completed
-                const completedOrders = allOrders.filter(o => o.status === 'completed' || o.status === 'delivered');
-                const totalSales = completedOrders.reduce((acc, order) => acc + ((order.total_price || 0) - (order.delivery_fee || 0)), 0);
+                // Determine today's orders for the top statistics cards
+                const todayStartMs = todayStart.getTime();
+                const todayOrders = allOrders.filter(o => new Date(o.created_at).getTime() >= todayStartMs);
 
-                const newOrdersCount = allOrders.filter(o => o.status === 'pending').length;
-                const avg = completedOrders.length > 0 ? totalSales / completedOrders.length : 0;
+                // Only count sales for orders that are delivered/completed TODAY
+                const completedTodayOrders = todayOrders.filter(o => o.status === 'completed' || o.status === 'delivered');
+                const totalSales = completedTodayOrders.reduce((acc, order) => acc + ((order.total_price || 0) - (order.delivery_fee || 0)), 0);
+
+                const newOrdersCount = todayOrders.filter(o => o.status === 'pending').length;
+                const avg = completedTodayOrders.length > 0 ? totalSales / completedTodayOrders.length : 0;
+
+                // For the chart, we keep using the last 7 days completed orders
+                const completedOrders = allOrders.filter(o => o.status === 'completed' || o.status === 'delivered');
 
                 // Group by Day for Chart (Last 7 Days)
                 const last7Days: any[] = [];

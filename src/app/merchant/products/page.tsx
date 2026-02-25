@@ -91,6 +91,7 @@ export default function MerchantProductsPage() {
                     .select('id, name, description, section_id, price, image_url, created_at, attributes, stock_quantity')
                     .eq('store_id', storeData.id)
                     .order('created_at', { ascending: false })
+                    .limit(20)
             ]);
 
             if (productsError) throw productsError;
