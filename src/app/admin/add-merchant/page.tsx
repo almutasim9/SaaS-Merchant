@@ -171,8 +171,8 @@ export default function AddMerchantPage() {
                                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
                                 >
                                     <option value="Free">مجاني (Free)</option>
-                                    <option value="Pro">احترافي (Pro)</option>
-                                    <option value="Premium">متميز (Premium)</option>
+                                    <option value="Silver">احترافي (Silver)</option>
+                                    <option value="Gold">متميز (Gold)</option>
                                 </select>
                             </div>
 
@@ -186,8 +186,8 @@ export default function AddMerchantPage() {
                                             type="button"
                                             onClick={() => handleDurationSelect(opt.value)}
                                             className={`py-3 rounded-2xl text-sm font-bold transition-all border-2 ${formData.subscriptionDuration === opt.value
-                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md shadow-emerald-100'
-                                                    : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-emerald-200 hover:text-emerald-600'
+                                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md shadow-emerald-100'
+                                                : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-emerald-200 hover:text-emerald-600'
                                                 }`}
                                         >
                                             {opt.label}

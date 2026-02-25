@@ -22,7 +22,7 @@ const RegisterMerchantSchema = z.object({
     storeName: z.string().min(2, 'اسم المتجر مطلوب').max(100),
     slug: z.string().min(2).regex(/^[a-z0-9-]+$/, 'الرابط يجب أن يحتوي على أحرف إنجليزية وأرقام فقط'),
     category: z.string().min(1, 'يرجى اختيار التصنيف'),
-    subscriptionType: z.enum(['Free', 'Pro', 'Premium']).default('Free'),
+    subscriptionType: z.enum(['Free', 'Silver', 'Gold']).default('Free'),
     subscriptionDuration: z.enum(['3', '6', '12']).default('12'),
     planStartDate: z.string().min(1, 'تاريخ بداية الاشتراك مطلوب'),
     ownerName: z.string().min(2, 'اسم المالك مطلوب'),

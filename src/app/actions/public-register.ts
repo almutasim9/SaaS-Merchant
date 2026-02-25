@@ -7,7 +7,7 @@ const RegistrationSchema = z.object({
     storeName: z.string().min(3, 'اسم المتجر يجب أن يكون 3 أحرف على الأقل').max(50),
     slug: z.string().min(3).regex(/^[a-z0-9-]+$/, 'الرابط يجب أن يحتوي على أحرف إنجليزية وأرقام وشرطات فقط'),
     category: z.string().min(1, 'يرجى اختيار التصنيف'),
-    subscriptionType: z.enum(['Free', 'Pro', 'Premium']).default('Free'),
+    subscriptionType: z.enum(['Free', 'Silver', 'Gold']).default('Free'),
     ownerName: z.string().min(2, 'اسم المالك مطلوب'),
     phone: z.string().min(9, 'رقم الهاتف غير صحيح'),
     email: z.string().email('البريد الإلكتروني غير صحيح'),

@@ -25,7 +25,7 @@ const DURATION_OPTIONS = [
     { value: 12, label: 'سنة كاملة' },
 ];
 
-const SUB_TYPES = ['Free', 'Pro', 'Premium'];
+const SUB_TYPES = ['Free', 'Silver', 'Gold'];
 
 function calcExpiry(startDate: string, months: number): string {
     if (!startDate) return '—';
@@ -56,7 +56,7 @@ export default function AdminMerchantsPage() {
     // Plan change modal state
     const [planModal, setPlanModal] = useState<Store | null>(null);
     const [modalMode, setModalMode] = useState<'renew' | 'change'>('renew');
-    const [newSubType, setNewSubType] = useState('Pro');
+    const [newSubType, setNewSubType] = useState('Silver');
     const [newDuration, setNewDuration] = useState(12);
     const [newStartDate, setNewStartDate] = useState('');
     const [updatingPlan, setUpdatingPlan] = useState(false);
@@ -216,8 +216,8 @@ export default function AdminMerchantsPage() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-center">
-                                        <span className={`px-3 py-1.5 text-xs font-bold rounded-full border ${store.subscription_type === 'Premium' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                            store.subscription_type === 'Pro' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                                        <span className={`px-3 py-1.5 text-xs font-bold rounded-full border ${store.subscription_type === 'Gold' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                            store.subscription_type === 'Silver' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
                                                 'bg-slate-100 text-slate-600 border-slate-200'
                                             }`}>
                                             {store.subscription_type || 'Free'}
@@ -298,7 +298,7 @@ export default function AdminMerchantsPage() {
                                                     : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-indigo-200'
                                                     }`}
                                             >
-                                                {t === 'Free' ? 'مجاني' : t === 'Pro' ? 'احترافي' : 'متميز'}
+                                                {t === 'Free' ? 'مجاني' : t === 'Silver' ? 'احترافي' : 'متميز'}
                                             </button>
                                         ))}
                                     </div>

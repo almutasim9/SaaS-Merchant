@@ -258,8 +258,8 @@ export default function RegisterMerchantModal({ isOpen, onClose }: RegisterMerch
                                                     className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-4 text-slate-800 font-bold focus:border-indigo-500 outline-none appearance-none"
                                                 >
                                                     <option value="Free">مجانية (Starter)</option>
-                                                    <option value="Pro">احترافية (Pro)</option>
-                                                    <option value="Premium">أعمال (Premium)</option>
+                                                    <option value="Silver">احترافية (Silver)</option>
+                                                    <option value="Gold">أعمال (Gold)</option>
                                                 </select>
                                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
                                                     <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
