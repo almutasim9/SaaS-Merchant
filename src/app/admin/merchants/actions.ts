@@ -53,10 +53,23 @@ export async function updateStorePlanAction(
     const planStartedAt = new Date(startDate).toISOString();
     const planExpiresAt = addMonths(startDate, durationMonths);
 
+    // Look up the correct plan_id based on subscriptionType (Free, Pro, Premium)
+    let actualPlanId = planId;
+    if (subscriptionType) {
+        const { data: planData } = await supabaseAdmin
+            .from('subscription_plans')
+            .select('id')
+            .eq('name_en', subscriptionType)
+            .single();
+        if (planData?.id) {
+            actualPlanId = planData.id;
+        }
+    }
+
     const { error } = await supabaseAdmin
         .from('stores')
         .update({
-            plan_id: planId,
+            plan_id: actualPlanId,
             subscription_type: subscriptionType,
             plan_started_at: planStartedAt,
             plan_expires_at: planExpiresAt,

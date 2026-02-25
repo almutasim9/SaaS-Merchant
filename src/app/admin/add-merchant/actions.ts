@@ -86,6 +86,17 @@ export async function registerMerchantAction(formData: any) {
 
         if (profileError) throw profileError;
 
+        // 2.5 Lookup correct plan_id
+        let planId = null;
+        const { data: planData } = await supabaseAdmin
+            .from('subscription_plans')
+            .select('id')
+            .eq('name_en', validData.subscriptionType)
+            .single();
+        if (planData?.id) {
+            planId = planData.id;
+        }
+
         // 3. Insert into Stores with subscription dates
         const { error: storeError } = await supabaseAdmin
             .from('stores')
@@ -95,6 +106,7 @@ export async function registerMerchantAction(formData: any) {
                 category: validData.category,
                 subscription_type: validData.subscriptionType,
                 merchant_id: userId,
+                plan_id: planId,
                 is_active: true,
                 plan_started_at: planStartedAt,
                 plan_expires_at: planExpiresAt,

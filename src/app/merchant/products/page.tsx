@@ -90,7 +90,6 @@ export default function MerchantProductsPage() {
                     .from('products')
                     .select('id, name, description, category, price, image_url, created_at, attributes, stock_quantity')
                     .eq('store_id', storeData.id)
-                    .is('deleted_at', null)
                     .order('created_at', { ascending: false })
             ]);
 
@@ -133,7 +132,7 @@ export default function MerchantProductsPage() {
 
         const { error } = await supabase
             .from('products')
-            .update({ deleted_at: new Date().toISOString() })
+            .delete()
             .eq('id', id);
 
         if (error) {
