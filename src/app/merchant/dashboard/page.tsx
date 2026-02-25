@@ -83,8 +83,8 @@ export default function MerchantDashboard() {
 
             // Parallel fetch: stats, products, recent orders, and sections count
             const [allOrdersResult, productsResult, ordersResult, sectionsResult] = await Promise.all([
-                supabase.from('orders').select('total_price, delivery_fee, status, created_at').eq('store_id', activeStore.id),
-                supabase.from('products').select('id, name, price, image_url').eq('store_id', activeStore.id).is('deleted_at', null).limit(3),
+                supabase.from('orders').select('total_price, delivery_fee, status, created_at, items').eq('store_id', activeStore.id),
+                supabase.from('products').select('id, name, price, image_url').eq('store_id', activeStore.id).limit(20),
                 supabase.from('orders').select('id, customer_info, created_at, total_price, delivery_fee, status').eq('store_id', activeStore.id).order('created_at', { ascending: false }).limit(5),
                 supabase.from('sections').select('id', { count: 'exact', head: true }).eq('store_id', activeStore.id)
             ]);
@@ -130,9 +130,45 @@ export default function MerchantDashboard() {
                     dailySales: last7Days.map(d => d.total),
                     dailyLabels: last7Days.map(d => d.label)
                 });
+
+                // Compute real Best Sellers based on completed orders
+                const productSalesMap = new Map<string, { id: string, name: string, price: number, image_url: string, orders_count: number }>();
+
+                completedOrders.forEach(order => {
+                    if (Array.isArray(order.items)) {
+                        order.items.forEach((item: any) => {
+                            if (item.product_id) {
+                                const existing = productSalesMap.get(item.product_id);
+                                if (existing) {
+                                    existing.orders_count += (item.quantity || 1);
+                                } else {
+                                    productSalesMap.set(item.product_id, {
+                                        id: item.product_id,
+                                        name: item.product_name || item.name || 'منتج محذوف',
+                                        price: item.price || 0,
+                                        image_url: item.image_url || '/placeholder-product.png',
+                                        orders_count: item.quantity || 1
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
+
+                const computedBestSellers = Array.from(productSalesMap.values())
+                    .sort((a, b) => b.orders_count - a.orders_count);
+
+                // If no sales yet, fallback to recently added products
+                if (computedBestSellers.length > 0) {
+                    setProducts(computedBestSellers.slice(0, 3));
+                } else {
+                    setProducts((productsResult.data || []).slice(0, 3).map((p: any) => ({ ...p, orders_count: 0 })));
+                }
+
+            } else {
+                setProducts((productsResult.data || []).slice(0, 3).map((p: any) => ({ ...p, orders_count: 0 })));
             }
 
-            setProducts(productsResult.data || []);
             setRecentOrders(ordersResult.data || []);
 
             const subscription = supabase
@@ -320,8 +356,8 @@ export default function MerchantDashboard() {
                                         <img src={p.image_url || '/placeholder-product.png'} alt="" className="w-full h-full object-cover" />
                                     </div>
                                     <div>
-                                        <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{p.name}</h4>
-                                        <p className="text-[10px] font-medium text-slate-400 mt-0.5">{245 - (idx * 40)} طلب هذا الشهر</p>
+                                        <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{p.name || 'منتج محذوف'}</h4>
+                                        <p className="text-[10px] font-medium text-slate-400 mt-0.5">{p.orders_count || 0} طلب هذا الشهر</p>
                                     </div>
                                 </div>
                                 <span className="text-sm font-bold text-indigo-600">{p.price.toLocaleString()} د.ع</span>
