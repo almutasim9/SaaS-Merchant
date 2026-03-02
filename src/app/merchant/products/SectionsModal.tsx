@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { addSection, updateSection } from '../sections/actions';
+import { addSection, updateSection, uploadSectionImageAction } from '../sections/actions';
 
 interface Section {
     id: string;
@@ -41,24 +41,29 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
 
         setUploading(true);
         try {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Math.random()}.${fileExt}`;
-            const filePath = `sections/${fileName}`;
+            const fileExt = file.name.split('.').pop() || 'png';
 
-            const { error: uploadError } = await supabase.storage
-                .from('store_logos')
-                .upload(filePath, file);
+            // Read file as base64
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async () => {
+                const base64Data = (reader.result as string).split(',')[1];
 
-            if (uploadError) throw uploadError;
+                const result = await uploadSectionImageAction(storeId, base64Data, fileExt);
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('store_logos')
-                .getPublicUrl(filePath);
+                if (!result.success) {
+                    throw new Error(result.error);
+                }
 
-            setImageUrl(publicUrl);
+                setImageUrl(result.url!);
+                setUploading(false);
+            };
+
+            reader.onerror = () => {
+                throw new Error('فشل قراءة الملف');
+            };
         } catch (err: any) {
             alert('فشل رفع الصورة: ' + err.message);
-        } finally {
             setUploading(false);
         }
     };

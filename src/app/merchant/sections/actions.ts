@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient as createServerClient } from '@/lib/supabase-server';
+import { createClient as createServerClient, supabaseAdmin } from '@/lib/supabase-server';
 import { revalidatePath } from 'next/cache';
 
 export async function getSections(storeId: string) {
@@ -80,4 +80,29 @@ export async function deleteSection(sectionId: string) {
     revalidatePath('/merchant/products');
     revalidatePath('/merchant/products/add');
     return { success: true };
+}
+
+export async function uploadSectionImageAction(storeId: string, base64Data: string, fileExt: string) {
+    try {
+        const fileName = `section-${storeId}-${Date.now()}.${fileExt}`;
+        const filePath = `${storeId}/sections/${fileName}`;
+        const buffer = Buffer.from(base64Data, 'base64');
+
+        const { error: uploadError } = await supabaseAdmin.storage
+            .from('store_logos')
+            .upload(filePath, buffer, {
+                contentType: `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`,
+                upsert: true
+            });
+
+        if (uploadError) return { success: false, error: 'فشل في رفع الصورة: ' + uploadError.message };
+
+        const { data: { publicUrl } } = supabaseAdmin.storage
+            .from('store_logos')
+            .getPublicUrl(filePath);
+
+        return { success: true, url: publicUrl };
+    } catch (err: any) {
+        return { success: false, error: err.message || 'خطأ غير متوقع في رفع الصورة' };
+    }
 }
