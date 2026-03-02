@@ -46,13 +46,13 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
             const filePath = `sections/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
-                .from('products')
+                .from('store_logos')
                 .upload(filePath, file);
 
             if (uploadError) throw uploadError;
 
             const { data: { publicUrl } } = supabase.storage
-                .from('products')
+                .from('store_logos')
                 .getPublicUrl(filePath);
 
             setImageUrl(publicUrl);

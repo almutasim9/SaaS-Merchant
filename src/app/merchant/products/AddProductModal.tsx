@@ -216,13 +216,13 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
             const filePath = `products/${fileName}`;
 
             let bucket = 'product_images';
-            const { error: uploadError } = await supabase.storage.from(bucket).upload(filePath, compressedFile);
+            let uploadResult = await supabase.storage.from(bucket).upload(filePath, compressedFile);
 
-            if (uploadError) {
+            if (uploadResult.error) {
                 console.warn('Fallback to store-assets bucket');
                 bucket = 'store-assets';
-                const { error: fallbackError } = await supabase.storage.from(bucket).upload(filePath, compressedFile);
-                if (fallbackError) throw fallbackError;
+                uploadResult = await supabase.storage.from(bucket).upload(filePath, compressedFile);
+                if (uploadResult.error) throw uploadResult.error;
             }
 
             const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(filePath);
