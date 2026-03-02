@@ -52,7 +52,7 @@ export default function MerchantDashboard() {
     const router = useRouter();
 
     useEffect(() => {
-        let cleanup: (() => void) | undefined;
+        let cleanup: any;
 
         const init = async () => {
             // Middleware already verified auth + merchant role
@@ -211,6 +211,29 @@ export default function MerchantDashboard() {
         }
     };
 
+    const downloadQRCode = async () => {
+        if (!store?.slug) return;
+        try {
+            const storeUrl = typeof window !== 'undefined' ? `${window.location.origin}/shop/${store.slug}` : '';
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(storeUrl)}&margin=20`;
+
+            const response = await fetch(qrUrl);
+            const blob = await response.blob();
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `qrcode-${store.slug}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Failed to download QR code:', error);
+            alert('حدث خطأ أثناء تحميل رمز QR. حاول مرة أخرى.');
+        }
+    };
+
     if (loading) {
         return (
             <div className="p-10 flex items-center justify-center">
@@ -268,11 +291,15 @@ export default function MerchantDashboard() {
                         </svg>
                         آخر 30 يوم
                     </button>
-                    <button className="hidden lg:flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-indigo-600/10 hover:bg-indigo-700 transition-all">
+                    <button
+                        onClick={downloadQRCode}
+                        className="hidden lg:flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-indigo-600/10 hover:bg-indigo-700 transition-all"
+                    >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4zM16 16h4v4h-4z" />
                         </svg>
-                        تصدير
+                        تحميل QR
                     </button>
                 </div>
             </div>
