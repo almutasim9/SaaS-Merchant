@@ -127,12 +127,14 @@ export default function MerchantDeliveryPage() {
         if (confirm('هل أنت متأكد من حذف هذه المنطقة؟ سيتم إيقاف التوصيل للمحافظات بداخلها.')) {
             const newZones = zones.filter(z => z.id !== id);
             setZones(newZones);
+            handleSave(newZones);
         }
     };
 
     const handleToggleZone = (id: string) => {
         const newZones = zones.map(z => z.id === id ? { ...z, enabled: !z.enabled } : z);
         setZones(newZones);
+        handleSave(newZones);
     };
 
     const openModal = (zone?: DeliveryZone) => {

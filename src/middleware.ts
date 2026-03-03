@@ -2,6 +2,10 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+    // SECURITY: Strip any incoming x-user-* headers to prevent spoofing
+    request.headers.delete('x-user-id');
+    request.headers.delete('x-user-role');
+
     let response = NextResponse.next({
         request: { headers: request.headers },
     })

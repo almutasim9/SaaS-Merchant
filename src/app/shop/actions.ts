@@ -61,6 +61,8 @@ export async function placeOrderAction(orderData: OrderData) {
         const { data: store, error: storeError } = await supabaseAdmin
             .from('stores')
             .select(`
+                is_active,
+                plan_expires_at,
                 delivery_fees,
                 subscription_plans!inner(
                     max_monthly_orders,
@@ -70,8 +72,17 @@ export async function placeOrderAction(orderData: OrderData) {
             .eq('id', storeId)
             .single();
 
-        if (storeError) {
+        if (storeError || !store) {
             console.error('[SERVER] Store fetch error:', storeError);
+            return { success: false, error: 'لم يتم العثور على المتجر.' };
+        }
+
+        // 2b-ii. Validate store is active and plan is not expired
+        if (!store.is_active) {
+            return { success: false, error: 'عذراً، هذا المتجر غير نشط حالياً.' };
+        }
+        if (store.plan_expires_at && new Date(store.plan_expires_at) < new Date()) {
+            return { success: false, error: 'عذراً، اشتراك هذا المتجر منتهي.' };
         }
 
         // 2c. Check Order Limits
@@ -92,12 +103,12 @@ export async function placeOrderAction(orderData: OrderData) {
             }
         }
 
-        const IRAQ_CITIES = ['بغداد', 'البصرة', 'الموصل', 'أربيل', 'السليمانية', 'دهوك', 'كركوك', 'النجف', 'كربلاء', 'الحلة', 'الأنبار', 'الديوانية', 'الكوت', 'العمارة', 'الناصرية', 'السماوة', 'ديالى', 'صلاح الدين'];
-        const rawFees = store?.delivery_fees;
+        const rawFees = store?.delivery_fees as any;
 
         let cityToFeeMap: Record<string, number> = {};
 
         if (rawFees && Array.isArray(rawFees.zones)) {
+            // Modern format: zones[]
             rawFees.zones.forEach((zone: any) => {
                 if (zone.enabled) {
                     zone.cities.forEach((city: string) => {
@@ -105,18 +116,9 @@ export async function placeOrderAction(orderData: OrderData) {
                     });
                 }
             });
-        } else if (rawFees && typeof rawFees === 'object' && !('baghdad' in rawFees) && Object.keys(rawFees).length > 2) {
-            Object.keys(rawFees).forEach(city => {
-                if (rawFees[city].enabled) {
-                    cityToFeeMap[city] = rawFees[city].fee;
-                }
-            });
         } else {
-            const bFee = rawFees?.baghdad ?? 5000;
-            const pFee = rawFees?.provinces ?? 8000;
-            IRAQ_CITIES.forEach(city => {
-                cityToFeeMap[city] = city === 'بغداد' ? bFee : pFee;
-            });
+            // No delivery zones configured — reject delivery orders
+            return { success: false, error: 'نعتذر، إعدادات التوصيل غير مكتملة لهذا المتجر.' };
         }
 
         let fee = cityToFeeMap[customerInfo.city];
@@ -162,7 +164,15 @@ export async function placeOrderAction(orderData: OrderData) {
                     const combo = variantCombinations.find((c: any) => c.id === comboId);
                     if (combo && combo.price && parseFloat(combo.price) > 0) {
                         unitPrice = parseFloat(combo.price);
+                    } else if (combo?.isUnavailable) {
+                        throw new Error(`الخيار المحدد للمنتج "${product.name}" غير متوفر حالياً.`);
+                    } else if (attrs?.hasVariants) {
+                        // Variant product but no matching combination — reject to prevent price bypass
+                        throw new Error(`الخيارات المحددة للمنتج "${product.name}" غير صالحة.`);
                     }
+                } else if (attrs?.hasVariants) {
+                    // Product has variants but no selections were provided
+                    throw new Error(`يرجى اختيار الخيارات المطلوبة للمنتج "${product.name}".`);
                 }
             }
 

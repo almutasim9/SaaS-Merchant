@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import Image from 'next/image';
+import { useLanguage } from './LanguageContext';
 
 interface SideMenuProps {
     isOpen: boolean;
@@ -23,23 +24,25 @@ export default function SideMenu({ isOpen, onClose, onNavigate, storeName, store
         return () => { document.body.style.overflow = ''; };
     }, [isOpen]);
 
+    const { t, dir } = useLanguage();
+
     const navItems = [
         {
-            id: 'home', label: 'الرئيسية', icon: (
+            id: 'home', label: t('store.home') || 'الرئيسية', icon: (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
             )
         },
         {
-            id: 'about', label: 'من نحن', icon: (
+            id: 'about', label: t('store.about') || 'من نحن', icon: (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             )
         },
         {
-            id: 'contact', label: 'تواصل معنا', icon: (
+            id: 'contact', label: t('store.contact') || 'تواصل معنا', icon: (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
@@ -58,9 +61,9 @@ export default function SideMenu({ isOpen, onClose, onNavigate, storeName, store
 
             {/* Menu Panel */}
             <div
-                className={`fixed top-0 right-0 w-[300px] h-full bg-white z-[201] shadow-2xl transition-transform duration-300 ease-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'
+                className={`fixed top-0 ${dir === 'ltr' ? 'left-0 transition-transform duration-300 ease-out flex flex-col' : 'right-0 transition-transform duration-300 ease-out flex flex-col'} w-[300px] h-full bg-white z-[201] shadow-2xl ${isOpen ? 'translate-x-0' : (dir === 'ltr' ? '-translate-x-full' : 'translate-x-full')
                     }`}
-                dir="rtl"
+                dir={dir}
             >
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 pb-2">
@@ -89,9 +92,9 @@ export default function SideMenu({ isOpen, onClose, onNavigate, storeName, store
                 </div>
 
                 {/* Welcome */}
-                <div className="px-5 pt-2 pb-6 text-right">
-                    <p className="text-sm text-slate-400">أهلاً بك في متجرنا</p>
-                    <h2 className="text-xl font-bold text-slate-800">تسوق ممتع</h2>
+                <div className={`px-5 pt-2 pb-6 ${dir === 'ltr' ? 'text-left' : 'text-right'}`}>
+                    <p className="text-sm text-slate-400">{t('store.welcomeMenu') || 'أهلاً بك في متجرنا'}</p>
+                    <h2 className="text-xl font-bold text-slate-800">{t('store.happyShopping') || 'تسوق ممتع'}</h2>
                 </div>
 
                 {/* Navigation */}
@@ -103,7 +106,7 @@ export default function SideMenu({ isOpen, onClose, onNavigate, storeName, store
                                 onNavigate(item.id as any);
                                 onClose();
                             }}
-                            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl mb-1 transition-all text-right ${activeView === item.id
+                            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl mb-1 transition-all ${dir === 'ltr' ? 'text-left' : 'text-right'} ${activeView === item.id
                                 ? 'font-bold'
                                 : 'text-slate-600 hover:bg-slate-50 font-medium'
                                 }`}

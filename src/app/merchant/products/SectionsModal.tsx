@@ -7,6 +7,8 @@ import { addSection, updateSection, uploadSectionImageAction } from '../sections
 interface Section {
     id: string;
     name: string;
+    name_en?: string;
+    name_ku?: string;
     image_url?: string;
 }
 
@@ -20,6 +22,8 @@ interface SectionsModalProps {
 
 export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, initialData }: SectionsModalProps) {
     const [newName, setNewName] = useState('');
+    const [newNameEn, setNewNameEn] = useState('');
+    const [newNameKu, setNewNameKu] = useState('');
     const [imageUrl, setImageUrl] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -28,9 +32,13 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
     useEffect(() => {
         if (initialData && isOpen) {
             setNewName(initialData.name);
+            setNewNameEn(initialData.name_en || '');
+            setNewNameKu(initialData.name_ku || '');
             setImageUrl(initialData.image_url || '');
         } else if (!initialData && isOpen) {
             setNewName('');
+            setNewNameEn('');
+            setNewNameKu('');
             setImageUrl('');
         }
     }, [initialData, isOpen]);
@@ -75,11 +83,13 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
         setActionLoading(true);
         try {
             if (initialData) {
-                await updateSection(initialData.id, newName.trim(), imageUrl);
+                await updateSection(initialData.id, newName.trim(), imageUrl, newNameEn.trim(), newNameKu.trim());
             } else {
-                await addSection(storeId, newName.trim(), imageUrl);
+                await addSection(storeId, newName.trim(), imageUrl, newNameEn.trim(), newNameKu.trim());
             }
             setNewName('');
+            setNewNameEn('');
+            setNewNameKu('');
             setImageUrl('');
             onSuccess?.();
             onClose();
@@ -127,15 +137,37 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
 
                 <div className="p-6 lg:p-10 space-y-8 bg-[#FAFBFF]">
                     <form onSubmit={handleSubmit} className="space-y-8">
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">اسم القسم</label>
-                            <input
-                                type="text"
-                                value={newName}
-                                onChange={(e) => setNewName(e.target.value)}
-                                placeholder="مثال: إلكترونيات، أزياء..."
-                                className="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-5 text-sm font-black shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
-                            />
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">الاسم بالعربي</label>
+                                <input
+                                    type="text"
+                                    value={newName}
+                                    onChange={(e) => setNewName(e.target.value)}
+                                    placeholder="مثال: إلكترونيات"
+                                    className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-black shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
+                                />
+                            </div>
+                            <div className="space-y-3" dir="ltr">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Name (English)</label>
+                                <input
+                                    type="text"
+                                    value={newNameEn}
+                                    onChange={(e) => setNewNameEn(e.target.value)}
+                                    placeholder="e.g. Electronics"
+                                    className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-black shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">ناوى بەش (کوردی)</label>
+                                <input
+                                    type="text"
+                                    value={newNameKu}
+                                    onChange={(e) => setNewNameKu(e.target.value)}
+                                    placeholder="وەک: ئەلیکترۆنیات"
+                                    className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-black shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none text-right"
+                                />
+                            </div>
                         </div>
 
                         <div className="space-y-4">

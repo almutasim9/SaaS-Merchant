@@ -54,12 +54,12 @@ export default async function ShopPage({ params }: Props) {
     const [sectionsRes, productsRes] = await Promise.all([
         supabase
             .from('sections')
-            .select('id, name, image_url')
+            .select('id, name, name_en, name_ku, image_url')
             .eq('store_id', store.id)
             .order('created_at', { ascending: true }),
         supabase
             .from('products')
-            .select('id, name, description, price, section_id, image_url, attributes, stock_quantity')
+            .select('id, name, name_en, name_ku, description, description_en, description_ku, price, section_id, image_url, attributes, stock_quantity')
             .eq('store_id', store.id)
             .order('created_at', { ascending: false })
             .limit(40)

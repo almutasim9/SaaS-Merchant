@@ -26,7 +26,17 @@ interface Store {
     };
     storefront_config?: {
         banner?: { title?: string; subtitle?: string; badge?: string; show?: boolean; images?: string[] };
-        about?: { content?: string };
+        about?: {
+            content?: string;
+            heroSubtitle?: string;
+            heroTitle?: string;
+            value1Title?: string;
+            value1Desc?: string;
+            value2Title?: string;
+            value2Desc?: string;
+            value3Title?: string;
+            value3Desc?: string;
+        };
         theme_color?: string;
     };
     subscription_plans?: {
@@ -645,22 +655,127 @@ export default function MerchantSettingsPage() {
                     </div>
                     <SectionSaveButton saving={savingAbout} onClick={() => handleSaveStorefront('about')} />
                 </div>
-                <div className="p-6 lg:p-10 space-y-6">
+                <div className="p-6 lg:p-10 space-y-8">
+                    {/* Hero Section Texts */}
+                    <div className="p-6 bg-slate-50 border border-slate-100 rounded-2xl space-y-5">
+                        <h4 className="text-sm font-bold text-slate-800">القسم العلوي (البانر)</h4>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                            <div className="space-y-3">
+                                <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">النص الصغير (الوسم)</label>
+                                <input
+                                    type="text"
+                                    value={store?.storefront_config?.about?.heroSubtitle ?? 'قصتنا'}
+                                    onChange={(e) => setStore(prev => prev ? { ...prev, storefront_config: { ...prev.storefront_config, about: { ...prev.storefront_config?.about, heroSubtitle: e.target.value } } } : null)}
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-cyan-100"
+                                    placeholder="قصتنا"
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">العنوان الرئيسي</label>
+                                <input
+                                    type="text"
+                                    value={store?.storefront_config?.about?.heroTitle ?? 'نبني المستقبل\nلتجربة تسوق أفضل'}
+                                    onChange={(e) => setStore(prev => prev ? { ...prev, storefront_config: { ...prev.storefront_config, about: { ...prev.storefront_config?.about, heroTitle: e.target.value } } } : null)}
+                                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-cyan-100"
+                                    placeholder="نبني المستقبل..."
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main Description */}
                     <div className="space-y-3">
-                        <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">محتوى صفحة من نحن</label>
+                        <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">وصف المتجر التفصيلي</label>
                         <textarea
-                            rows={6}
+                            rows={4}
                             value={store?.storefront_config?.about?.content || ''}
                             onChange={(e) => setStore(prev => prev ? { ...prev, storefront_config: { ...prev.storefront_config, about: { ...prev.storefront_config?.about, content: e.target.value } } } : null)}
                             className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-2xl px-5 lg:px-6 py-3.5 lg:py-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-cyan-100 transition-all resize-none"
                             placeholder="نحن متجر إلكتروني رائد نسعى لتقديم أفضل المنتجات التي تلبي احتياجاتكم اليومية بجودة عالية وأسعار منافسة..."
                         />
                     </div>
+
+                    {/* Three Values Sections */}
+                    <div className="space-y-5">
+                        <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <span className="w-1.5 h-4 bg-cyan-500 rounded-full"></span>
+                            قيم ومميزات المتجر
+                        </h4>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                            {/* Value 1 */}
+                            <div className="p-5 bg-white border border-slate-200 rounded-2xl space-y-4 shadow-sm hover:border-cyan-300 transition-colors">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-500">عنوان الميزة الأولى (مثل: جودة لا تضاهى)</label>
+                                    <input
+                                        type="text"
+                                        value={store?.storefront_config?.about?.value1Title ?? 'جودة لا تضاهى'}
+                                        onChange={(e) => setStore(prev => prev ? { ...prev, storefront_config: { ...prev.storefront_config, about: { ...prev.storefront_config?.about, value1Title: e.target.value } } } : null)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:ring-2"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-500">الوصف</label>
+                                    <textarea
+                                        rows={2}
+                                        value={store?.storefront_config?.about?.value1Desc ?? 'نضمن لكم أفضل الخامات وأدق التفاصيل في جميع منتجاتنا المختارة بعناية فائقة.'}
+                                        onChange={(e) => setStore(prev => prev ? { ...prev, storefront_config: { ...prev.storefront_config, about: { ...prev.storefront_config?.about, value1Desc: e.target.value } } } : null)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 focus:ring-2 resize-none"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Value 2 */}
+                            <div className="p-5 bg-white border border-slate-200 rounded-2xl space-y-4 shadow-sm hover:border-cyan-300 transition-colors">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-500">عنوان الميزة الثانية (مثل: شحن فوري وآمن)</label>
+                                    <input
+                                        type="text"
+                                        value={store?.storefront_config?.about?.value2Title ?? 'شحن فوري وآمن'}
+                                        onChange={(e) => setStore(prev => prev ? { ...prev, storefront_config: { ...prev.storefront_config, about: { ...prev.storefront_config?.about, value2Title: e.target.value } } } : null)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:ring-2"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-500">الوصف</label>
+                                    <textarea
+                                        rows={2}
+                                        value={store?.storefront_config?.about?.value2Desc ?? 'توصيل آمن وسريع خلال أيام معدودة لجميع المناطق مع تتبع مباشر.'}
+                                        onChange={(e) => setStore(prev => prev ? { ...prev, storefront_config: { ...prev.storefront_config, about: { ...prev.storefront_config?.about, value2Desc: e.target.value } } } : null)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 focus:ring-2 resize-none"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Value 3 */}
+                            <div className="p-5 bg-white border border-slate-200 rounded-2xl space-y-4 shadow-sm hover:border-cyan-300 transition-colors">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-500">عنوان الميزة الثالثة (مثل: دعم متواصل 24/7)</label>
+                                    <input
+                                        type="text"
+                                        value={store?.storefront_config?.about?.value3Title ?? 'دعم متواصل 24/7'}
+                                        onChange={(e) => setStore(prev => prev ? { ...prev, storefront_config: { ...prev.storefront_config, about: { ...prev.storefront_config?.about, value3Title: e.target.value } } } : null)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 focus:ring-2"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-500">الوصف</label>
+                                    <textarea
+                                        rows={2}
+                                        value={store?.storefront_config?.about?.value3Desc ?? 'فريق خدمة العملاء جاهز لخدمتكم والإجابة على استفساراتكم في أي وقت.'}
+                                        onChange={(e) => setStore(prev => prev ? { ...prev, storefront_config: { ...prev.storefront_config, about: { ...prev.storefront_config?.about, value3Desc: e.target.value } } } : null)}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 focus:ring-2 resize-none"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="bg-slate-50 rounded-2xl p-4 flex items-start gap-3">
                         <svg className="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p className="text-xs text-slate-500 leading-relaxed">هذا النص يظهر في صفحة &quot;من نحن&quot; في المتجر. إذا تركته فارغاً، سيعرض نص افتراضي. يمكنك أيضاً استخدام وصف المتجر في المعلومات العامة.</p>
+                        <p className="text-xs text-slate-500 leading-relaxed">هذه المعلومات ستظهر بشكل ديناميكي في صفحة "من نحن" الخاصة بالمتجر. يمكنك تخصيص النصوص لتناسب هوية وقصة متجرك.</p>
                     </div>
                 </div>
             </div >

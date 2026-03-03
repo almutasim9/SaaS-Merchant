@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { updateOrderStatusAction } from './actions';
+import { STATUS_CONFIG, ORDER_FILTER_TABS, ACTIVE_ORDER_STATUSES, FINAL_ORDER_STATUSES, type OrderStatus } from '@/lib/order-statuses';
 
 interface Order {
     id: string;
@@ -140,9 +141,9 @@ export default function MerchantOrdersPage() {
         const total = orderList.length;
         const pending = orderList.filter(o => o.status === 'pending').length;
         const processing = orderList.filter(o => o.status === 'processing').length;
-        const completed = orderList.filter(o => o.status === 'completed' || o.status === 'delivered').length;
+        const completed = orderList.filter(o => o.status === 'completed').length;
 
-        const completedOrders = orderList.filter(o => o.status === 'completed' || o.status === 'delivered');
+        const completedOrders = orderList.filter(o => o.status === 'completed');
         const sum = completedOrders.reduce((acc, curr) => acc + (curr.total_price - (curr.delivery_fee || 0)), 0);
         const avg = completedOrders.length > 0 ? sum / completedOrders.length : 0;
 
@@ -172,14 +173,8 @@ export default function MerchantOrdersPage() {
             toast.error(result.error || 'حدث خطأ أثناء تحديث حالة الطلب');
             setOrders(previousOrders); // Revert on error
         } else {
-            const statusLabels: Record<string, string> = {
-                processing: 'قيد التجهيز ✅',
-                shipped: 'تم التسليم للمندوب 🚚',
-                completed: 'مكتمل بنجاح ✅',
-                returned: 'تم تسجيل الإرجاع 🔁',
-                cancelled: 'تم إلغاء الطلب ❌',
-            };
-            toast.success(statusLabels[newStatus] || 'تم تحديث حالة الطلب');
+            const config = STATUS_CONFIG[newStatus as OrderStatus];
+            toast.success(config?.toastMessage || 'تم تحديث حالة الطلب');
             if (isFinalStatus) {
                 calculateStats(orders.filter(o => o.id !== orderId));
             } else {
@@ -281,27 +276,10 @@ export default function MerchantOrdersPage() {
     };
 
     const StatusBadge = ({ status }: { status: string }) => {
-        const styles: any = {
-            pending: 'bg-amber-50 text-amber-600',
-            processing: 'bg-indigo-50 text-indigo-600',
-            shipped: 'bg-blue-50 text-blue-600',
-            completed: 'bg-emerald-50 text-emerald-600',
-            postponed: 'bg-orange-50 text-orange-600',
-            returned: 'bg-rose-50 text-rose-600',
-            cancelled: 'bg-slate-100 text-slate-600'
-        };
-        const labels: any = {
-            pending: 'معلق',
-            processing: 'قيد التجهيز',
-            shipped: 'سلم للمندوب',
-            completed: 'مكتمل / مستلم',
-            postponed: 'مؤجل',
-            returned: 'راجع / مرفوض',
-            cancelled: 'ملغي'
-        };
+        const config = STATUS_CONFIG[status as OrderStatus];
         return (
-            <span className={`px-4 py-1.5 rounded-full text-[10px] font-bold ${styles[status]}`}>
-                {labels[status] || status}
+            <span className={`px-4 py-1.5 rounded-full text-[10px] font-bold ${config?.badgeClass || 'bg-slate-100 text-slate-600'}`}>
+                {config?.label_ar || status}
             </span>
         );
     };
@@ -387,15 +365,7 @@ export default function MerchantOrdersPage() {
                         </div>
                         {/* Status filter pills */}
                         <div className="flex flex-wrap gap-2">
-                            {[
-                                { value: 'all', label: 'الكل' },
-                                { value: 'pending', label: 'معلق' },
-                                { value: 'processing', label: 'قيد التجهيز' },
-                                { value: 'shipped', label: 'مع المندوب' },
-                                { value: 'postponed', label: 'مؤجل' },
-                                { value: 'returned', label: 'راجع' },
-                                { value: 'cancelled', label: 'ملغي' },
-                            ].map(tab => (
+                            {ORDER_FILTER_TABS.map(tab => (
                                 <button
                                     key={tab.value}
                                     onClick={() => setStatusFilter(tab.value)}
@@ -404,7 +374,7 @@ export default function MerchantOrdersPage() {
                                         : 'bg-white border border-slate-100 text-slate-500 hover:border-indigo-200 hover:text-indigo-600'
                                         }`}
                                 >
-                                    {tab.label}
+                                    {tab.label_ar}
                                     {tab.value !== 'all' && (
                                         <span className="mr-1.5 opacity-70">
                                             ({orders.filter(o => o.status === tab.value).length})

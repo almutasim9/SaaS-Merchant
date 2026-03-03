@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getAdminStores, updateStorePlanAction } from './actions';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface Store {
     id: string;

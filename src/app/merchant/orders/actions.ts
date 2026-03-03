@@ -1,13 +1,22 @@
 'use server';
 
 import { createClient as createServerClient } from '@/lib/supabase-server';
+import { ORDER_STATUSES, type OrderStatus } from '@/lib/order-statuses';
+
+/** Valid state transitions — key = current status, value = allowed next statuses */
+const ALLOWED_TRANSITIONS: Record<string, string[]> = {
+    pending: ['processing', 'cancelled'],
+    processing: ['shipped', 'pending', 'cancelled'],
+    shipped: ['completed', 'returned', 'processing'],
+    // completed, returned, cancelled are final states — no transitions allowed
+};
 
 export async function updateOrderStatusAction(orderId: string, newStatus: string, cancellationReason?: string) {
     const supabase = await createServerClient();
 
-    // 1. Validate status first (no DB needed)
-    const validStatuses = ['pending', 'processing', 'shipped', 'completed', 'postponed', 'returned', 'cancelled'];
-    if (!validStatuses.includes(newStatus)) {
+    // 1. Validate status
+    const validStatuses = Object.values(ORDER_STATUSES);
+    if (!validStatuses.includes(newStatus as OrderStatus)) {
         return { success: false, error: 'حالة الطلب غير صالحة.' };
     }
 
@@ -19,7 +28,7 @@ export async function updateOrderStatusAction(orderId: string, newStatus: string
 
     const [storeResult, orderResult] = await Promise.all([
         supabase.from('stores').select('id').eq('merchant_id', user.id).single(),
-        supabase.from('orders').select('id, store_id').eq('id', orderId).single()
+        supabase.from('orders').select('id, store_id, status').eq('id', orderId).single()
     ]);
 
     const store = storeResult.data;
@@ -31,6 +40,13 @@ export async function updateOrderStatusAction(orderId: string, newStatus: string
 
     if (!order || order.store_id !== store.id) {
         return { success: false, error: 'هذا الطلب لا يخص متجرك.' };
+    }
+
+    // 2b. Validate state transition
+    const currentStatus = (order as any).status as string;
+    const allowed = ALLOWED_TRANSITIONS[currentStatus];
+    if (!allowed || !allowed.includes(newStatus)) {
+        return { success: false, error: `لا يمكن نقل الطلب من "${currentStatus}" إلى "${newStatus}".` };
     }
 
     // 3. Build update payload

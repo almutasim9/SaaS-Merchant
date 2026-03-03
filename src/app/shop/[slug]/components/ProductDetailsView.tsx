@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
+import { useLanguage } from './LanguageContext';
 
 interface VariantOption {
     id: string;
@@ -11,11 +12,14 @@ interface VariantCombination {
     id: string;
     options: Record<string, string>;
     price: string;
+    isUnavailable?: boolean;
 }
 
 interface Product {
     id: string;
     name: string;
+    name_en?: string;
+    name_ku?: string;
     price: number;
     discount_price?: number;
     rating?: number;
@@ -23,6 +27,8 @@ interface Product {
     section_id?: string;
     image_url: string;
     description: string;
+    description_en?: string;
+    description_ku?: string;
     attributes?: {
         hasVariants?: boolean;
         isAvailable?: boolean;
@@ -80,21 +86,31 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
         }
     }, [hasVariants, variantOptions]);
 
+    // Selected Combination helper
+    const selectedCombination = useMemo(() => {
+        if (!hasVariants || variantCombinations.length === 0) return null;
+        const sortedKeys = Object.keys(selectedOptions).sort();
+        const comboId = sortedKeys.map(k => `${k}:${selectedOptions[k]}`).join('|');
+        return variantCombinations.find(c => c.id === comboId);
+    }, [selectedOptions, hasVariants, variantCombinations]);
+
     // Dynamic price
     const displayPrice = useMemo(() => {
         if (!hasVariants || variantCombinations.length === 0) return product.price;
-        const sortedKeys = Object.keys(selectedOptions).sort();
-        const comboId = sortedKeys.map(k => `${k}:${selectedOptions[k]}`).join('|');
-        const combo = variantCombinations.find(c => c.id === comboId);
-        if (combo && combo.price && parseFloat(combo.price) > 0) return parseFloat(combo.price);
+        if (selectedCombination && selectedCombination.price && parseFloat(selectedCombination.price) > 0) {
+            return parseFloat(selectedCombination.price);
+        }
         return product.price;
-    }, [selectedOptions, hasVariants, variantCombinations, product.price]);
+    }, [selectedCombination, hasVariants, variantCombinations, product.price]);
+
+    const comboIsUnavailable = hasVariants && selectedCombination?.isUnavailable === true;
+    const finalIsAvailable = isAvailable && !comboIsUnavailable;
 
     const handleAddToCart = () => {
-        if (!isAvailable) return;
+        if (!finalIsAvailable) return;
         const humanSelections: Record<string, string> = {};
         Object.entries(selectedOptions).forEach(([optId, val]) => {
-            const optName = variantOptions.find(o => o.id === optId)?.name || 'متغير';
+            const optName = variantOptions.find(o => o.id === optId)?.name || t('product.variant') || 'متغير';
             humanSelections[optName] = val;
         });
         onAddToCart({ ...product, price: displayPrice, quantity, selections: humanSelections });
@@ -102,8 +118,18 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
         setTimeout(() => setIsAdded(false), 2000);
     };
 
+    const { language, t, dir } = useLanguage();
+
+    const productName = language === 'en' && product.name_en ? product.name_en :
+        language === 'ku' && product.name_ku ? product.name_ku :
+            product.name;
+
+    const productDescription = language === 'en' && product.description_en ? product.description_en :
+        language === 'ku' && product.description_ku ? product.description_ku :
+            product.description;
+
     return (
-        <div className="min-h-screen bg-white" dir="rtl">
+        <div className="min-h-screen bg-white" dir={dir}>
             {/* ─── Image Gallery ─── */}
             <div
                 className="relative w-full aspect-square bg-[#F2F4F7] overflow-hidden"
@@ -124,7 +150,7 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                 {galleryImages[currentImageIndex] ? (
                     <Image
                         src={galleryImages[currentImageIndex]}
-                        alt={product.name}
+                        alt={productName}
                         fill
                         priority
                         className="object-cover transition-all duration-500"
@@ -154,7 +180,7 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                         onClick={onBack}
                         className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:bg-white transition-all"
                     >
-                        <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className={`w-5 h-5 text-slate-600 ${dir === 'ltr' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
@@ -180,7 +206,7 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                 {/* Rating + Name */}
                 <div className="flex items-start justify-between mb-1">
                     <div className="flex-1">
-                        <h1 className="text-xl font-bold text-slate-800 leading-tight">{product.name}</h1>
+                        <h1 className="text-xl font-bold text-slate-800 leading-tight">{productName}</h1>
                         <p className="text-sm text-slate-400 mt-0.5">{product.category}</p>
                     </div>
                     {product.rating && (
@@ -195,10 +221,9 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
 
                 {/* Price */}
                 <div className="flex items-center gap-2 mt-3 mb-5">
-                    <span className="text-3xl font-black text-slate-800">{displayPrice.toLocaleString()} د.ع</span>
-                    <span className="text-base text-slate-400">د.ع</span>
+                    <div dir="ltr"><span className="text-3xl font-black text-slate-800">{displayPrice.toLocaleString()} {t('store.currency')}</span></div>
                     {product.discount_price && product.discount_price < product.price && displayPrice === product.price && (
-                        <span className="text-sm text-slate-400 line-through mr-2">{product.discount_price.toLocaleString()} د.ع</span>
+                        <div dir="ltr"><span className="text-sm text-slate-400 line-through mr-2">{product.discount_price.toLocaleString()} {t('store.currency')}</span></div>
                     )}
                 </div>
 
@@ -208,11 +233,11 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                         {variantOptions.map((opt) => (
                             <div key={opt.id}>
                                 <h3 className="text-sm font-bold text-slate-700 mb-3">
-                                    اختر {opt.name} <span className="text-slate-400 font-normal">({opt.name})</span>
+                                    {t('product.choose') || 'اختر'} {opt.name} <span className="text-slate-400 font-normal">({opt.name})</span>
                                 </h3>
-                                <div className="flex flex-wrap gap-2.5" dir="rtl">
+                                <div className="flex flex-wrap gap-2.5" dir={dir}>
                                     {opt.values.map((val) => {
-                                        const isColorOption = opt.name === 'اللون';
+                                        const isColorOption = opt.name === 'اللون' || opt.name.toLowerCase() === 'color' || opt.name === 'ڕەنگ';
                                         const isHex = isColorOption && val.startsWith('#');
                                         const isSelected = selectedOptions[opt.id] === val;
 
@@ -252,16 +277,16 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
 
                 {/* Description */}
                 <div className="border-t border-slate-100 pt-5">
-                    <h3 className="text-base font-bold text-slate-800 mb-3">وصف المنتج</h3>
+                    <h3 className="text-base font-bold text-slate-800 mb-3">{t('product.details')}</h3>
                     <p className="text-sm text-slate-500 leading-7 whitespace-pre-line">
-                        {product.description || 'هذا المنتج مصنوع من أجود الخامات العالمية لضمان الراحة والأداء المثالي للاستخدام اليومي.'}
+                        {productDescription || t('product.noDescription') || 'هذا المنتج مصنوع من أجود الخامات العالمية لضمان الراحة والأداء المثالي للاستخدام اليومي.'}
                     </p>
                 </div>
 
                 {/* Unavailable Badge */}
-                {!isAvailable && (
+                {!finalIsAvailable && (
                     <div className="mt-5 bg-rose-50 border border-rose-100 rounded-xl p-4 text-center">
-                        <p className="text-sm font-bold text-rose-500">هذا المنتج غير متاح حالياً</p>
+                        <p className="text-sm font-bold text-rose-500">{comboIsUnavailable ? (t('product.variantUnavailable') || 'هذا الخيار (اللون/المقاس) غير متوفر حالياً') : t('product.unavailable')}</p>
                     </div>
                 )}
             </div>
@@ -289,26 +314,26 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                     {/* Add to Cart */}
                     <button
                         onClick={handleAddToCart}
-                        disabled={!isAvailable}
-                        className={`flex-1 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg ${!isAvailable
+                        disabled={!finalIsAvailable}
+                        className={`flex-1 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg ${!finalIsAvailable
                             ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
                             : 'text-white hover:brightness-95 active:scale-[0.98]'
                             }`}
-                        style={isAvailable ? (isAdded ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 85%, black)' } : { backgroundColor: 'var(--theme-primary)' }) : undefined}
+                        style={finalIsAvailable ? (isAdded ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 85%, black)' } : { backgroundColor: 'var(--theme-primary)' }) : undefined}
                     >
-                        {!isAvailable ? (
-                            'غير متاح'
+                        {!finalIsAvailable ? (
+                            comboIsUnavailable ? (t('product.soldOut') || 'نفذت الكمية') : t('product.unavailable')
                         ) : isAdded ? (
                             <>
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                تمت الإضافة
+                                {t('product.added')}
                             </>
                         ) : (
                             <>
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                                 </svg>
-                                إضافة إلى السلة
+                                {t('product.addToCart')}
                             </>
                         )}
                     </button>

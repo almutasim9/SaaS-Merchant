@@ -1,9 +1,51 @@
+import type { OrderStatus } from './order-statuses';
+
+// ── Profiles ────────────────────────────────────────────────────────────────
+
 export interface Profile {
     id: string;
     full_name: string;
-    role: string;
+    role: 'super_admin' | 'merchant';
     phone_number?: string;
     created_at: string;
+}
+
+// ── Store ────────────────────────────────────────────────────────────────────
+
+export interface SocialLinks {
+    whatsapp?: string;
+    instagram?: string;
+    tiktok?: string;
+    facebook?: string;
+    telegram?: string;
+}
+
+export interface StorefrontConfig {
+    primaryColor?: string;
+    secondaryColor?: string;
+    fontFamily?: string;
+    heroImage?: string;
+    bannerText?: string;
+    showRatings?: boolean;
+    layoutStyle?: 'grid' | 'list';
+}
+
+export interface DeliveryZone {
+    id: string;
+    name: string;
+    cities: string[];
+    fee: number;
+    enabled: boolean;
+    freeDeliveryThreshold?: number | null;
+}
+
+export interface DeliveryFees {
+    zones: DeliveryZone[];
+    isFreeDelivery?: boolean;
+    /** @deprecated Legacy fields — use zones[] instead */
+    baghdad?: number;
+    /** @deprecated Legacy fields — use zones[] instead */
+    provinces?: number;
 }
 
 export interface Store {
@@ -18,15 +60,17 @@ export interface Store {
     phone?: string;
     address?: string;
     description?: string;
-    social_links?: any;
-    delivery_fees?: number;
+    social_links?: SocialLinks;
+    delivery_fees?: DeliveryFees;
     email?: string;
-    storefront_config?: any;
+    storefront_config?: StorefrontConfig;
     plan_id: string;
     plan_expires_at?: string;
     plan_started_at?: string;
     created_at: string;
 }
+
+// ── Subscription Plans ───────────────────────────────────────────────────────
 
 export interface SubscriptionPlan {
     id: string;
@@ -49,54 +93,92 @@ export interface SubscriptionPlan {
     created_at: string;
 }
 
+// ── Sections ─────────────────────────────────────────────────────────────────
+
 export interface Section {
     id: string;
     store_id: string;
     name: string;
-    image_url?: string;
+    name_en?: string;
+    name_ku?: string;
+    image_url: string | null;
     created_at: string;
+}
+
+// ── Products & Variants ──────────────────────────────────────────────────────
+
+export interface VariantOption {
+    id: string;
+    name: string;
+    values: string[];
+}
+
+export interface VariantCombination {
+    id: string;
+    options: Record<string, string>;
+    price: string;
+    isUnavailable?: boolean;
+}
+
+export interface ProductAttributes {
+    hasVariants?: boolean;
+    variantOptions?: VariantOption[];
+    variantCombinations?: VariantCombination[];
+    isAvailable?: boolean;
+    isHidden?: boolean;
+    /** @deprecated Use variantOptions/variantCombinations instead */
+    weightPrices?: Record<string, string>;
 }
 
 export interface Product {
     id: string;
     store_id: string;
-    name: string;
-    description?: string;
-    price: number;
     section_id: string;
-    image_url?: string;
+    name: string;
+    name_en?: string;
+    name_ku?: string;
+    description: string | null;
+    description_en?: string;
+    description_ku?: string;
+    price: number;
+    image_url: string | null;
     stock_quantity: number;
     rating?: number;
     is_featured: boolean;
     discount_price?: number;
-    attributes?: any;
+    attributes: ProductAttributes | null;
     deleted_at?: string;
     created_at: string;
 }
 
+// ── Orders ───────────────────────────────────────────────────────────────────
+
 export interface OrderItem {
     id?: string;
-    product_id?: string; // Legacy support
     name: string;
-    product_name?: string; // Legacy support
     price: number;
     quantity: number;
     image_url?: string;
-    selections?: any;
+    selections?: Record<string, string>;
+}
+
+export interface CustomerInfo {
+    name: string;
+    phone: string;
+    city?: string;
+    landmark?: string;
+    notes?: string;
+    address?: string;
 }
 
 export interface Order {
     id: string;
     store_id: string;
-    customer_info: {
-        name: string;
-        phone: string;
-        address?: string;
-    };
+    customer_info: CustomerInfo;
     items: OrderItem[];
     total_price: number;
     delivery_fee?: number;
-    status: 'pending' | 'accepted' | 'preparing' | 'ready' | 'delivering' | 'delivered' | 'completed' | 'cancelled';
+    status: OrderStatus;
     governorate?: string;
     cancellation_reason?: string;
     deleted_at?: string;

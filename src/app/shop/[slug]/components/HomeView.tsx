@@ -1,9 +1,12 @@
 import React, { useMemo, useRef } from 'react';
 import Image from 'next/image';
+import { useLanguage } from './LanguageContext';
 
 interface Product {
     id: string;
     name: string;
+    name_en?: string;
+    name_ku?: string;
     price: number;
     discount_price?: number;
     rating?: number;
@@ -12,6 +15,8 @@ interface Product {
     section_id?: string;
     image_url: string;
     description: string;
+    description_en?: string;
+    description_ku?: string;
     attributes?: {
         hasVariants?: boolean;
         isAvailable?: boolean;
@@ -31,8 +36,13 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product, onAddToCart, onClick }: ProductCardProps) {
+    const { language, t, dir } = useLanguage();
     const isUnavailable = product.attributes?.isAvailable === false || product.isAvailable === false;
     const hasVariants = product.attributes?.hasVariants || product.hasVariants;
+
+    const productName = language === 'en' && product.name_en ? product.name_en :
+        language === 'ku' && product.name_ku ? product.name_ku :
+            product.name;
 
     const displayPrice = useMemo(() => {
         if (hasVariants) {
@@ -72,7 +82,7 @@ function ProductCard({ product, onAddToCart, onClick }: ProductCardProps) {
                 {product.image_url ? (
                     <Image
                         src={product.image_url}
-                        alt={product.name}
+                        alt={productName}
                         fill
                         className="object-contain p-3 group-hover:scale-105 transition-transform duration-500"
                         sizes="180px"
@@ -105,31 +115,46 @@ function ProductCard({ product, onAddToCart, onClick }: ProductCardProps) {
                     </div>
                 )}
 
+                {/* Has Variants Badge */}
+                {hasVariants && !isUnavailable && (
+                    <div className={`absolute top-2 ${dir === 'ltr' ? 'right-2' : 'left-2'} bg-white/90 backdrop-blur-sm text-slate-700 text-[9px] font-black px-2 py-0.5 rounded-lg border border-slate-100 shadow-sm flex items-center gap-1`}>
+                        <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: 'var(--theme-primary)' }} />
+                        {t('product.selectOptions')}
+                    </div>
+                )}
+
                 {/* Unavailable Badge */}
                 {isUnavailable && (
                     <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                        <span className="bg-slate-800 text-white text-[10px] font-bold px-3 py-1 rounded-full">غير متوفر</span>
+                        <span className="bg-slate-800 text-white text-[10px] font-bold px-3 py-1 rounded-full">{t('product.unavailable')}</span>
                     </div>
                 )}
             </div>
 
             {/* Info */}
-            <div className="p-3 text-right">
-                <h3 className="text-sm font-semibold text-slate-800 line-clamp-2 leading-tight mb-1.5">{product.name}</h3>
-                <div className="flex items-center justify-end gap-1.5">
+            <div className="p-3">
+                <h3 className="text-sm font-semibold text-slate-800 line-clamp-2 leading-tight mb-1.5">{productName}</h3>
+                <div className="flex flex-col gap-0.5 mt-auto">
                     {product.discount_price && product.discount_price < product.price ? (
-                        <>
-                            <span className="text-[11px] text-slate-400 line-through">{product.price.toLocaleString()} د.ع</span>
-                            <span className="text-[15px] font-bold" style={{ color: 'var(--theme-primary)' }}>{product.discount_price.toLocaleString()} د.ع</span>
-                        </>
+                        <div className="flex items-center gap-1.5 min-h-[40px]">
+                            <span className="text-[11px] text-slate-400 line-through">{product.price.toLocaleString()} {t('store.currency')}</span>
+                            <span className="text-[15px] font-bold" style={{ color: 'var(--theme-primary)' }}>{product.discount_price.toLocaleString()} {t('store.currency')}</span>
+                        </div>
                     ) : (
-                        <div className="text-left" dir="ltr">
-                            <span className="text-[15px] font-bold" style={{ color: 'var(--theme-primary)' }}>
-                                {hasVariants ? `${displayPrice.toLocaleString()}+ د.ع` : `${displayPrice.toLocaleString()} د.ع`}
-                            </span>
+                        <div className="flex flex-col min-h-[40px]">
+                            {hasVariants && (
+                                <span className={`text-[10px] font-bold text-slate-400 uppercase tracking-tight -mb-1`}>
+                                    {t('product.startsFrom')}
+                                </span>
+                            )}
+                            <div className="flex items-baseline gap-1" dir={dir}>
+                                <span className="text-[16px] font-black" style={{ color: 'var(--theme-primary)' }}>
+                                    {displayPrice.toLocaleString()}
+                                </span>
+                                <span className="text-[10px] font-bold text-slate-400">{t('store.currency')}</span>
+                            </div>
                         </div>
                     )}
-                    <span className="text-[11px] text-slate-400">د.ع</span>
                 </div>
             </div>
         </div>
@@ -138,7 +163,7 @@ function ProductCard({ product, onAddToCart, onClick }: ProductCardProps) {
 
 interface HomeViewProps {
     products: Product[];
-    sections: { id: string; name: string; image_url?: string }[];
+    sections: { id: string; name: string; name_en?: string; name_ku?: string; image_url?: string }[];
     onProductClick?: (product: Product) => void;
     onAddToCart: (product: Product) => void;
     searchQuery: string;
@@ -185,15 +210,17 @@ export default function HomeView({
 }: HomeViewProps) {
 
     const sectionsRef = useRef<HTMLDivElement>(null);
+    const { t, language, setLanguage, dir } = useLanguage();
 
     // Group products by section/category
     const productsBySection = useMemo(() => {
         const map: Record<string, Product[]> = {};
         products.forEach(p => {
             const section = sections.find(s => s.id === p.section_id);
-            const cat = section ? section.name : 'أخرى';
-            if (!map[cat]) map[cat] = [];
-            map[cat].push(p);
+            // We use name as key for lookup, but it must be consistent
+            const key = section ? section.id : '__OTHER__';
+            if (!map[key]) map[key] = [];
+            map[key].push(p);
         });
         return map;
     }, [products, sections]);
@@ -241,17 +268,38 @@ export default function HomeView({
                         )}
                     </div>
 
-                    {/* Cart */}
-                    <button onClick={onCartOpen} className="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-50 transition-colors">
-                        <svg className="w-6 h-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                        </svg>
-                        {totalItems > 0 && (
-                            <span className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full animate-in zoom-in" style={{ backgroundColor: 'var(--theme-primary)' }}>
-                                {totalItems}
-                            </span>
-                        )}
-                    </button>
+                    {/* Language & Cart */}
+                    <div className="flex items-center gap-2">
+                        {/* Language Switcher */}
+                        <div className="relative group">
+                            <button className="flex items-center justify-center gap-1 w-10 h-10 rounded-xl hover:bg-slate-50 transition-colors text-sm font-bold text-slate-700 uppercase">
+                                {language}
+                            </button>
+                            <div className={`absolute top-full ${dir === 'ltr' ? 'right-0' : 'left-0'} mt-1 w-32 bg-white rounded-xl shadow-lg border border-slate-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all`}>
+                                {(['ar', 'en', 'ku'] as const).map((lang) => (
+                                    <button
+                                        key={lang}
+                                        onClick={() => setLanguage(lang)}
+                                        className={`w-full ${dir === 'ltr' ? 'text-left' : 'text-right'} px-4 py-2 text-sm hover:bg-slate-50 ${language === lang ? 'font-bold text-[var(--theme-primary)]' : 'text-slate-600'}`}
+                                    >
+                                        {lang === 'ar' ? 'العربية' : lang === 'en' ? 'English' : 'کوردی'}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Cart */}
+                        <button onClick={onCartOpen} className="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-50 transition-colors">
+                            <svg className="w-6 h-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                            </svg>
+                            {totalItems > 0 && (
+                                <span className="absolute -top-0.5 -right-0.5 text-white text-[9px] font-black min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full animate-in zoom-in" style={{ backgroundColor: 'var(--theme-primary)' }}>
+                                    {totalItems}
+                                </span>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -262,257 +310,237 @@ export default function HomeView({
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="ابحث عن منتج، ماركة، أو فئة..."
-                        className="w-full h-12 pl-4 pr-12 bg-white rounded-xl border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition-all text-right"
+                        placeholder={t('store.searchPlaceholder')}
+                        className={`w-full h-12 ${dir === 'ltr' ? 'pl-10 pr-4' : 'pr-10 pl-4'} bg-white rounded-xl border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition-all`}
                         style={{ '--tw-ring-color': 'var(--theme-primary)' } as any}
-                        dir="rtl"
                     />
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                    <div className={`absolute ${dir === 'ltr' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 text-slate-400`}>
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
                 </div>
-            </div>
 
-            {/* ─── Hero Banner / Slider ─── */}
-            {!isSearching && !selectedSection && (
-                <div className="px-4 pt-3 pb-2">
-                    {/* Render Image Slider if images exist */}
-                    {storefrontConfig?.banner?.images && storefrontConfig.banner.images.length > 0 ? (
-                        <div className="relative rounded-2xl overflow-hidden aspect-[16/9] shadow-sm">
-                            <div className="w-full h-full flex overflow-x-auto snap-x snap-mandatory no-scrollbar" dir="ltr">
-                                {storefrontConfig.banner.images.map((img: string, idx: number) => (
-                                    <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
-                                        <Image src={img} alt={`Banner ${idx + 1}`} fill className="object-cover" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+                {/* ─── Hero Banner / Slider ─── */}
+                {
+                    !isSearching && !selectedSection && (
+                        <div className="px-4 pt-3 pb-2">
+                            {/* Render Image Slider if images exist */}
+                            {storefrontConfig?.banner?.images && storefrontConfig.banner.images.length > 0 ? (
+                                <div className="relative rounded-2xl overflow-hidden aspect-[16/9] shadow-sm">
+                                    <div className="w-full h-full flex overflow-x-auto snap-x snap-mandatory no-scrollbar" dir="ltr">
+                                        {storefrontConfig.banner.images.map((img: string, idx: number) => (
+                                            <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
+                                                <Image src={img} alt={`Banner ${idx + 1}`} fill className="object-cover" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
+                                    {/* Slide Indicators */}
+                                    {storefrontConfig.banner.images.length > 1 && (
+                                        <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5" dir="ltr">
+                                            {storefrontConfig.banner.images.map((_: any, idx: number) => (
+                                                <span key={idx} className={`w-2 h-2 rounded-full ${idx === 0 ? 'bg-white' : 'bg-white/50'}`} />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                /* Text Banner Fallback (only if there is some text config) */
+                                (storefrontConfig?.banner?.title || storefrontConfig?.banner?.subtitle) && (
+                                    <div className="relative rounded-2xl overflow-hidden p-6 min-h-[160px] shadow-sm" style={{ background: `var(--theme-primary)` }}>
+                                        <div className="absolute inset-0 bg-black/10 mix-blend-overlay" />
+                                        {/* Badge */}
+                                        <span className="relative inline-block bg-black/20 text-white text-[11px] font-bold px-3 py-1 rounded-full mb-3 backdrop-blur-[2px]">
+                                            {storefrontConfig?.banner?.badge || t('store.new') || 'جديد'}
+                                        </span>
+                                        {/* Text */}
+                                        <h2 className={`relative text-white text-xl font-bold leading-tight mb-1 ${dir === 'ltr' ? 'text-left' : 'text-right'}`}>
+                                            {storefrontConfig?.banner?.title || `${t('store.welcome') || 'مرحباً بكم في'} ${storeName}`}
+                                        </h2>
+                                        <p className={`relative text-white/90 text-sm mb-4 ${dir === 'ltr' ? 'text-left' : 'text-right'}`}>
+                                            {storefrontConfig?.banner?.subtitle || storeDescription || t('store.browse') || 'تصفح أفضل المنتجات بأسعار مميزة'}
+                                        </p>
+                                        <button
+                                            onClick={() => sectionsRef.current?.scrollIntoView({ behavior: 'smooth' })}
+                                            className={`relative bg-white text-sm font-bold px-5 py-2 rounded-lg hover:bg-slate-50 transition-colors ${dir === 'ltr' ? 'float-left' : 'float-right'}`}
+                                            style={{ color: 'var(--theme-primary)' }}
+                                        >
+                                            {t('store.shopNow') || 'تسوق الآن'}
+                                        </button>
+                                        {/* Decorative circles */}
+                                        <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/10" />
+                                        <div className="absolute -top-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
+                                    </div>
+                                )
+                            )}
+                        </div>
+                    )
+                }
+
+                {/* ─── Categories Section ─── */}
+                {
+                    !isSearching && sections.length > 0 && (
+                        <div ref={sectionsRef} className="py-5">
+                            <h2 className="text-lg font-bold text-slate-800 text-center mb-4">{t('store.categories') || 'الأقسام'}</h2>
+                            <div className="flex justify-center gap-4 px-4 overflow-x-auto no-scrollbar pb-2">
+                                {/* All */}
+                                <button
+                                    onClick={() => setSelectedSection(null)}
+                                    className={`flex flex-col items-center gap-2 min-w-[64px] transition-all ${!selectedSection ? 'opacity-100' : 'opacity-60 hover:opacity-100'
+                                        }`}
+                                >
+                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${!selectedSection ? 'ring-2 shadow-sm' : 'bg-slate-100'
+                                        }`} style={!selectedSection ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)', '--tw-ring-color': 'var(--theme-primary)' } as any : {}}>
+                                        <svg className={`w-6 h-6 ${!selectedSection ? '' : 'text-slate-400'}`} style={!selectedSection ? { color: 'var(--theme-primary)' } : {}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zm0 9.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zm0 9.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-xs font-medium text-slate-600">{t('store.all') || 'الكل'}</span>
+                                </button>
+
+                                {sections.map((section) => {
+                                    const sectionName = language === 'en' && section.name_en ? section.name_en :
+                                        language === 'ku' && section.name_ku ? section.name_ku :
+                                            section.name;
+                                    return (
+                                        <button
+                                            key={section.id}
+                                            onClick={() => setSelectedSection(selectedSection === section.id ? null : section.id)}
+                                            className={`flex flex-col items-center gap-2 min-w-[64px] transition-all ${selectedSection === section.id ? 'opacity-100' : 'opacity-60 hover:opacity-100'
+                                                }`}
+                                        >
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all overflow-hidden ${selectedSection === section.id ? 'ring-2 shadow-sm' : 'bg-slate-100'
+                                                }`} style={selectedSection === section.id ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)', '--tw-ring-color': 'var(--theme-primary)' } as any : {}}>
+                                                {section.image_url ? (
+                                                    <img src={section.image_url} alt={sectionName} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <svg className={`w-6 h-6 ${selectedSection === section.id ? '' : 'text-slate-400'}`} style={selectedSection === section.id ? { color: 'var(--theme-primary)' } : {}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
+                                                    </svg>
+                                                )}
+                                            </div>
+                                            <span className={`text-xs font-medium line-clamp-1 ${selectedSection === section.id ? 'font-bold' : 'text-slate-600'}`} style={selectedSection === section.id ? { color: 'var(--theme-primary)' } : {}}>{sectionName}</span>
+                                        </button>
+                                    )
+                                })}
                             </div>
-                            {/* Slide Indicators */}
-                            {storefrontConfig.banner.images.length > 1 && (
-                                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5" dir="ltr">
-                                    {storefrontConfig.banner.images.map((_: any, idx: number) => (
-                                        <span key={idx} className={`w-2 h-2 rounded-full ${idx === 0 ? 'bg-white' : 'bg-white/50'}`} />
-                                    ))}
+                        </div>
+                    )
+                }
+
+                {/* ─── Products By Section ─── */}
+                {
+                    !isSearching && !selectedSection ? (
+                        <div className="space-y-6 pb-6">
+                            {sections.map(section => {
+                                const sectionProducts = productsBySection[section.id];
+                                if (!sectionProducts || sectionProducts.length === 0) return null;
+
+                                const sectionName = language === 'en' && section.name_en ? section.name_en :
+                                    language === 'ku' && section.name_ku ? section.name_ku :
+                                        section.name;
+
+                                return (
+                                    <div key={section.id}>
+                                        {/* Section Header */}
+                                        <div className="flex items-center justify-between px-4 mb-3">
+                                            <button
+                                                onClick={() => setSelectedSection(section.id)}
+                                                className="text-sm font-medium hover:underline flex items-center gap-1"
+                                                style={{ color: 'var(--theme-primary)' }}
+                                            >
+                                                {t('store.viewAll') || 'عرض الكل'}
+                                            </button>
+                                            <h3 className="text-base font-bold text-slate-800">{sectionName}</h3>
+                                        </div>
+
+                                        {/* Horizontal Scroll */}
+                                        <div className="flex gap-3 px-4 overflow-x-auto no-scrollbar pb-2" dir={dir}>
+                                            {sectionProducts.slice(0, 8).map(product => (
+                                                <ProductCard
+                                                    key={product.id}
+                                                    product={product}
+                                                    onAddToCart={onAddToCart}
+                                                    onClick={onProductClick}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            {/* Uncategorized products */}
+                            {productsBySection['__OTHER__'] && productsBySection['__OTHER__'].length > 0 && (
+                                <div>
+                                    <div className="flex items-center justify-between px-4 mb-3">
+                                        <button
+                                            onClick={() => setSelectedSection('__OTHER__')}
+                                            className="text-sm font-medium text-[var(--theme-primary)] hover:underline flex items-center gap-1"
+                                        >
+                                            {t('store.viewAll') || 'عرض الكل'}
+                                        </button>
+                                        <h3 className="text-base font-bold text-slate-800">{t('store.otherProducts') || 'منتجات أخرى'}</h3>
+                                    </div>
+                                    <div className="flex gap-3 px-4 overflow-x-auto no-scrollbar pb-2" dir={dir}>
+                                        {productsBySection['__OTHER__'].slice(0, 8).map(product => (
+                                            <ProductCard
+                                                key={product.id}
+                                                product={product}
+                                                onAddToCart={onAddToCart}
+                                                onClick={onProductClick}
+                                            />
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
                     ) : (
-                        /* Text Banner Fallback (only if there is some text config) */
-                        (storefrontConfig?.banner?.title || storefrontConfig?.banner?.subtitle) && (
-                            <div className="relative rounded-2xl overflow-hidden p-6 min-h-[160px] shadow-sm" style={{ background: `var(--theme-primary)` }}>
-                                <div className="absolute inset-0 bg-black/10 mix-blend-overlay" />
-                                {/* Badge */}
-                                <span className="relative inline-block bg-black/20 text-white text-[11px] font-bold px-3 py-1 rounded-full mb-3 backdrop-blur-[2px]">
-                                    {storefrontConfig?.banner?.badge || 'جديد'}
-                                </span>
-                                {/* Text */}
-                                <h2 className="relative text-white text-xl font-bold leading-tight mb-1 text-right">
-                                    {storefrontConfig?.banner?.title || `مرحباً بكم في ${storeName}`}
-                                </h2>
-                                <p className="relative text-white/90 text-sm mb-4 text-right">
-                                    {storefrontConfig?.banner?.subtitle || storeDescription || 'تصفح أفضل المنتجات بأسعار مميزة'}
-                                </p>
-                                <button
-                                    onClick={() => sectionsRef.current?.scrollIntoView({ behavior: 'smooth' })}
-                                    className="relative bg-white text-sm font-bold px-5 py-2 rounded-lg hover:bg-slate-50 transition-colors float-right"
-                                    style={{ color: 'var(--theme-primary)' }}
-                                >
-                                    تسوق الآن
-                                </button>
-                                {/* Decorative circles */}
-                                <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/10" />
-                                <div className="absolute -top-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
-                            </div>
-                        )
-                    )}
-                </div>
-            )}
-
-            {/* ─── Categories Section ─── */}
-            {!isSearching && sections.length > 0 && (
-                <div ref={sectionsRef} className="py-5">
-                    <h2 className="text-lg font-bold text-slate-800 text-center mb-4">الأقسام</h2>
-                    <div className="flex justify-center gap-4 px-4 overflow-x-auto no-scrollbar pb-2">
-                        {/* All */}
-                        <button
-                            onClick={() => setSelectedSection(null)}
-                            className={`flex flex-col items-center gap-2 min-w-[64px] transition-all ${!selectedSection ? 'opacity-100' : 'opacity-60 hover:opacity-100'
-                                }`}
-                        >
-                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${!selectedSection ? 'ring-2 shadow-sm' : 'bg-slate-100'
-                                }`} style={!selectedSection ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)', '--tw-ring-color': 'var(--theme-primary)' } as any : {}}>
-                                <svg className={`w-6 h-6 ${!selectedSection ? '' : 'text-slate-400'}`} style={!selectedSection ? { color: 'var(--theme-primary)' } : {}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zm0 9.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zm0 9.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                                </svg>
-                            </div>
-                            <span className="text-xs font-medium text-slate-600">الكل</span>
-                        </button>
-
-                        {sections.map((section) => (
-                            <button
-                                key={section.id}
-                                onClick={() => setSelectedSection(selectedSection === section.name ? null : section.name)}
-                                className={`flex flex-col items-center gap-2 min-w-[64px] transition-all ${selectedSection === section.name ? 'opacity-100' : 'opacity-60 hover:opacity-100'
-                                    }`}
-                            >
-                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all overflow-hidden ${selectedSection === section.name ? 'ring-2 shadow-sm' : 'bg-slate-100'
-                                    }`} style={selectedSection === section.name ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)', '--tw-ring-color': 'var(--theme-primary)' } as any : {}}>
-                                    {section.image_url ? (
-                                        <img src={section.image_url} alt={section.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <svg className={`w-6 h-6 ${selectedSection === section.name ? '' : 'text-slate-400'}`} style={selectedSection === section.name ? { color: 'var(--theme-primary)' } : {}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
-                                        </svg>
-                                    )}
-                                </div>
-                                <span className={`text-xs font-medium line-clamp-1 ${selectedSection === section.name ? 'font-bold' : 'text-slate-600'}`} style={selectedSection === section.name ? { color: 'var(--theme-primary)' } : {}}>{section.name}</span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* ─── Products By Section ─── */}
-            {!isSearching && !selectedSection ? (
-                <div className="space-y-6 pb-6">
-                    {sections.map(section => {
-                        const sectionProducts = productsBySection[section.name];
-                        if (!sectionProducts || sectionProducts.length === 0) return null;
-
-                        return (
-                            <div key={section.id}>
-                                {/* Section Header */}
-                                <div className="flex items-center justify-between px-4 mb-3">
+                        /* ─── Grid View (searching or section selected) ─── */
+                        <div className="px-4 pb-6">
+                            {selectedSection && (
+                                <div className="flex items-center justify-between mb-4">
                                     <button
-                                        onClick={() => setSelectedSection(section.name)}
+                                        onClick={() => setSelectedSection(null)}
                                         className="text-sm font-medium hover:underline"
                                         style={{ color: 'var(--theme-primary)' }}
                                     >
-                                        عرض الكل
+                                        ← {t('store.back') || 'عودة'}
                                     </button>
-                                    <h3 className="text-base font-bold text-slate-800">{section.name}</h3>
+                                    <h2 className="text-lg font-bold text-slate-800">
+                                        {selectedSection === '__OTHER__' ? (t('store.otherProducts') || 'منتجات أخرى') : (
+                                            (() => {
+                                                const s = sections.find(s => s.id === selectedSection);
+                                                return s ? (language === 'en' && s.name_en ? s.name_en : language === 'ku' && s.name_ku ? s.name_ku : s.name) : selectedSection;
+                                            })()
+                                        )}
+                                    </h2>
                                 </div>
-
-                                {/* Horizontal Scroll */}
-                                <div className="flex gap-3 px-4 overflow-x-auto no-scrollbar pb-2" dir="rtl">
-                                    {sectionProducts.slice(0, 8).map(product => (
-                                        <ProductCard
-                                            key={product.id}
-                                            product={product}
-                                            onAddToCart={onAddToCart}
-                                            onClick={onProductClick}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        );
-                    })}
-
-                    {/* Uncategorized products */}
-                    {productsBySection['أخرى'] && productsBySection['أخرى'].length > 0 && (
-                        <div>
-                            <div className="flex items-center justify-between px-4 mb-3">
-                                <button
-                                    onClick={() => setSelectedSection('أخرى')}
-                                    className="text-sm font-medium text-[var(--theme-primary)] hover:underline"
-                                >
-                                    عرض الكل
-                                </button>
-                                <h3 className="text-base font-bold text-slate-800">منتجات أخرى</h3>
-                            </div>
-                            <div className="flex gap-3 px-4 overflow-x-auto no-scrollbar pb-2" dir="rtl">
-                                {productsBySection['أخرى'].slice(0, 8).map(product => (
-                                    <ProductCard
-                                        key={product.id}
-                                        product={product}
-                                        onAddToCart={onAddToCart}
-                                        onClick={onProductClick}
-                                    />
+                            )}
+                            {isSearching && (
+                                <p className="text-sm text-slate-500 text-right mb-3">
+                                    {products.length} {t('store.all')}
+                                </p>
+                            )}
+                            <div className={`grid grid-cols-2 sm:grid-cols-3 gap-3`} dir={dir}>
+                                {products.map(product => (
+                                    <div key={product.id} className="w-full">
+                                        <ProductCard product={product} onAddToCart={onAddToCart} onClick={onProductClick} />
+                                    </div>
                                 ))}
                             </div>
-                        </div>
-                    )}
-                </div>
-            ) : (
-                /* ─── Grid View (searching or section selected) ─── */
-                <div className="px-4 pb-6">
-                    {selectedSection && (
-                        <div className="flex items-center justify-between mb-4">
-                            <button
-                                onClick={() => setSelectedSection(null)}
-                                className="text-sm font-medium hover:underline"
-                                style={{ color: 'var(--theme-primary)' }}
-                            >
-                                ← عودة
-                            </button>
-                            <h2 className="text-lg font-bold text-slate-800">{selectedSection}</h2>
-                        </div>
-                    )}
-                    {isSearching && (
-                        <p className="text-sm text-slate-500 text-right mb-3">
-                            {products.length} نتيجة بحث
-                        </p>
-                    )}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3" dir="rtl">
-                        {products.map(product => (
-                            <div key={product.id} className="w-full">
-                                <div
-                                    onClick={() => onProductClick?.(product)}
-                                    className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 cursor-pointer group transition-all duration-300 hover:shadow-md"
-                                >
-                                    <div className="relative aspect-square bg-slate-50 overflow-hidden">
-                                        {product.image_url ? (
-                                            <Image
-                                                src={product.image_url}
-                                                alt={product.name}
-                                                fill
-                                                className="object-contain p-3 group-hover:scale-105 transition-transform duration-500"
-                                                sizes="(max-width: 640px) 50vw, 33vw"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-slate-300">
-                                                <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                            </div>
-                                        )}
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                const isUnavailable = product.attributes?.isAvailable === false;
-                                                if (isUnavailable) return;
-                                                if (product.attributes?.hasVariants) { onProductClick?.(product); return; }
-                                                onAddToCart({ ...product, quantity: 1 } as any);
-                                            }}
-                                            className="absolute bottom-2 left-2 w-8 h-8 rounded-full bg-[var(--theme-primary)] text-white flex items-center justify-center shadow-md hover:brightness-95 active:scale-90 transition-all"
-                                        >
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                                            </svg>
-                                        </button>
+                            {products.length === 0 && (
+                                <div className="text-center py-16">
+                                    <div className="w-20 h-20 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                                        <svg className="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                                     </div>
-                                    <div className="p-3 text-right">
-                                        <h3 className="text-sm font-semibold text-slate-800 line-clamp-2 leading-tight mb-1.5">{product.name}</h3>
-                                        <div className="flex items-center justify-end gap-1">
-                                            <span className="text-[15px] font-bold text-[var(--theme-primary)]">{product.price.toLocaleString()} د.ع</span>
-                                            <span className="text-[11px] text-slate-400">د.ع</span>
-                                        </div>
-                                    </div>
+                                    <p className="text-slate-500 font-medium">{t('store.empty') || 'لا توجد منتجات'}</p>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-                    {products.length === 0 && (
-                        <div className="text-center py-16">
-                            <div className="w-20 h-20 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                                <svg className="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                            </div>
-                            <p className="text-slate-500 font-medium">لا توجد منتجات</p>
+                            )}
                         </div>
                     )}
-                </div>
-            )}
+            </div>
         </div>
     );
 }
