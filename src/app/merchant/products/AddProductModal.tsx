@@ -15,6 +15,7 @@ interface VariantCombination {
     id: string; // Derived from option values e.g., "Red-S"
     options: Record<string, string>; // e.g., { "Color": "Red", "Size": "S" }
     price: string; // Specific price override
+    isUnavailable?: boolean; // New: toggle to disable specific combo
 }
 
 interface ProductAttributes {
@@ -27,12 +28,18 @@ interface ProductAttributes {
 interface Section {
     id: string;
     name: string;
+    name_en?: string;
+    name_ku?: string;
 }
 
 interface Product {
     id: string;
     name: string;
+    name_en?: string;
+    name_ku?: string;
     description?: string;
+    description_en?: string;
+    description_ku?: string;
     price: number;
     section_id: string;
     image_url?: string;
@@ -57,7 +64,11 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
 
     // Basic Info
     const [name, setName] = useState('');
+    const [nameEn, setNameEn] = useState('');
+    const [nameKu, setNameKu] = useState('');
     const [description, setDescription] = useState('');
+    const [descriptionEn, setDescriptionEn] = useState('');
+    const [descriptionKu, setDescriptionKu] = useState('');
     const [price, setPrice] = useState('');
     const [sectionId, setSectionId] = useState('');
     const [imageUrl, setImageUrl] = useState('');
@@ -73,7 +84,11 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
         if (isOpen) {
             if (initialData) {
                 setName(initialData.name || '');
+                setNameEn(initialData.name_en || '');
+                setNameKu(initialData.name_ku || '');
                 setDescription(initialData.description || '');
+                setDescriptionEn(initialData.description_en || '');
+                setDescriptionKu(initialData.description_ku || '');
                 setPrice(initialData.price?.toString() || '');
                 setSectionId(initialData.section_id || (sections.length > 0 ? sections[0].id : ''));
                 setImageUrl(initialData.image_url || '');
@@ -136,7 +151,8 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
             return {
                 id: comboId,
                 options: comboMap,
-                price: existing ? existing.price : '' // preserve price if combo existed
+                price: existing ? existing.price : '', // preserve price if combo existed
+                isUnavailable: existing ? existing.isUnavailable : false // preserve availability if combo existed
             };
         });
 
@@ -180,6 +196,10 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
         setVariantCombinations(prev => prev.map(c => c.id === comboId ? { ...c, price } : c));
     };
 
+    const toggleCombinationAvailability = (comboId: string) => {
+        setVariantCombinations(prev => prev.map(c => c.id === comboId ? { ...c, isUnavailable: !c.isUnavailable } : c));
+    };
+
     // --- Media Upload ---
     // If we have a subscription object, we check the plan ID or max_products as an indicator if it's free.
     // Assuming `free` plan has `id === 'free'` or missing subscription.
@@ -216,13 +236,13 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
             const filePath = `products/${fileName}`;
 
             let bucket = 'product_images';
-            const { error: uploadError } = await supabase.storage.from(bucket).upload(filePath, compressedFile);
+            let uploadResult = await supabase.storage.from(bucket).upload(filePath, compressedFile);
 
-            if (uploadError) {
+            if (uploadResult.error) {
                 console.warn('Fallback to store-assets bucket');
                 bucket = 'store-assets';
-                const { error: fallbackError } = await supabase.storage.from(bucket).upload(filePath, compressedFile);
-                if (fallbackError) throw fallbackError;
+                uploadResult = await supabase.storage.from(bucket).upload(filePath, compressedFile);
+                if (uploadResult.error) throw uploadResult.error;
             }
 
             const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(filePath);
@@ -257,7 +277,11 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
 
     const resetForm = () => {
         setName('');
+        setNameEn('');
+        setNameKu('');
         setDescription('');
+        setDescriptionEn('');
+        setDescriptionKu('');
         setPrice('');
         setSectionId(sections.length > 0 ? sections[0].id : '');
         setImageUrl('');
@@ -289,7 +313,11 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
             const productData = {
                 store_id: storeId,
                 name,
+                name_en: nameEn.trim() || null,
+                name_ku: nameKu.trim() || null,
                 description,
+                description_en: descriptionEn.trim() || null,
+                description_ku: descriptionKu.trim() || null,
                 price: parseFloat(price || '0'),
                 section_id: sectionId,
                 stock_quantity: isAvailable ? 999 : 0, // Mock stock as requested
@@ -389,14 +417,30 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                                     <p className="text-[10px] text-slate-400 font-medium">الصورة الأولى هي الرئيسية. أضف حتى {MAX_IMAGES} {MAX_IMAGES === 1 ? 'صورة' : 'صور'} (PNG, JPG — حتى 2MB).</p>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">اسم المنتج</label>
-                                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="مثال: قميص قطني فاخر" className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none" />
+                                <div className="space-y-4 pt-2">
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">اسم المنتج (عربي)</label>
+                                            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="مثال: قميص قطني فاخر" className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none" />
+                                        </div>
+                                        <div className="space-y-2" dir="ltr">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Product Name (EN)</label>
+                                            <input type="text" value={nameEn} onChange={(e) => setNameEn(e.target.value)} placeholder="e.g. Premium Cotton Shirt" className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">ناوى بەرهەم (کوردی)</label>
+                                        <input type="text" value={nameKu} onChange={(e) => setNameKu(e.target.value)} placeholder="وەک: تیشێرتى لۆکەى نایاب" className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none text-right" />
+                                    </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">الوصف (اختياري)</label>
-                                    <textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="اكتب وصفاً جذاباً..." className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none resize-none" />
+                                <div className="space-y-4 pt-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">الوصف والمواصفات (ثلاث لغات)</label>
+                                    <div className="space-y-3">
+                                        <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="الوصف بالعربي..." className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none resize-none" />
+                                        <textarea rows={3} dir="ltr" value={descriptionEn} onChange={(e) => setDescriptionEn(e.target.value)} placeholder="Description in English..." className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none resize-none" />
+                                        <textarea rows={3} value={descriptionKu} onChange={(e) => setDescriptionKu(e.target.value)} placeholder="وەسف بە زمانی کوردی..." className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none resize-none text-right" />
+                                    </div>
                                 </div>
                             </div>
 
@@ -514,8 +558,9 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                                                     <table className="w-full text-right text-xs font-bold">
                                                         <thead className="bg-slate-50 border-b border-slate-200 text-slate-400">
                                                             <tr>
-                                                                <th className="px-4 py-3 w-4/6 font-black uppercase tracking-widest">المتغير</th>
-                                                                <th className="px-4 py-3 font-black uppercase tracking-widest">السعر المخصص</th>
+                                                                <th className="px-4 py-3 w-3/6 font-black uppercase tracking-widest">المتغير</th>
+                                                                <th className="px-4 py-3 w-2/6 font-black uppercase tracking-widest">السعر المخصص</th>
+                                                                <th className="px-4 py-3 w-1/6 font-black uppercase tracking-widest text-center">متوفر</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody className="divide-y divide-slate-100">
@@ -537,7 +582,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                                                                             })}
                                                                         </div>
                                                                     </td>
-                                                                    <td className="px-3 py-1.5 w-1/3">
+                                                                    <td className="px-3 py-1.5 w-2/6">
                                                                         <div className="relative">
                                                                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">د.ع</span>
                                                                             <input
@@ -548,6 +593,17 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                                                                                 className="w-full h-8 bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-3 text-xs font-bold outline-none focus:border-indigo-500 focus:bg-white transition-colors"
                                                                                 dir="ltr"
                                                                             />
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="px-3 py-1.5 w-1/6">
+                                                                        <div className="flex justify-center">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => toggleCombinationAvailability(combo.id)}
+                                                                                className={`w-10 h-5 rounded-full relative transition-all ${!combo.isUnavailable ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                                                                            >
+                                                                                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm transition-all ${!combo.isUnavailable ? 'right-6' : 'right-1'}`} />
+                                                                            </button>
                                                                         </div>
                                                                     </td>
                                                                 </tr>

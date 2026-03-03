@@ -89,17 +89,26 @@ export default function MerchantProductsPage() {
 
             if (!storeData) throw new Error('Store not found');
 
-            const [sectionsData, { data: productsData, error: productsError }] = await Promise.all([
+            const [
+                sectionsData,
+                { data: productsData, error: productsError },
+                { data: allProductsSummary, error: summaryError }
+            ] = await Promise.all([
                 getSections(storeData.id),
                 supabase
                     .from('products')
                     .select('id, name, description, section_id, price, image_url, created_at, attributes, stock_quantity')
                     .eq('store_id', storeData.id)
                     .order('created_at', { ascending: false })
-                    .limit(20)
+                    .limit(20),
+                supabase
+                    .from('products')
+                    .select('attributes, section_id')
+                    .eq('store_id', storeData.id)
             ]);
 
             if (productsError) throw productsError;
+            if (summaryError) throw summaryError;
 
             const mappedProducts: Product[] = (productsData || []).map((p: any) => ({
                 ...p,
@@ -108,20 +117,30 @@ export default function MerchantProductsPage() {
             }));
 
             const calculatedStats = {
-                total: mappedProducts.length,
-                active: mappedProducts.filter(p => p.attributes?.isAvailable !== false).length,
-                inactive: mappedProducts.filter(p => p.attributes?.isAvailable === false).length
+                total: allProductsSummary.length,
+                active: allProductsSummary.filter(p => (p.attributes?.isAvailable !== false) && (p.attributes?.isHidden !== true)).length,
+                inactive: allProductsSummary.filter(p => (p.attributes?.isAvailable === false) || (p.attributes?.isHidden === true)).length
             };
+
+            // Calculate product counts per section for accurate filter pills
+            const sectionCounts: Record<string, number> = {};
+            allProductsSummary.forEach(p => {
+                const sId = p.section_id || 'unclassified';
+                sectionCounts[sId] = (sectionCounts[sId] || 0) + 1;
+            });
 
             return {
                 storeId: storeData.id,
                 subscription: storeData.subscription_plans,
                 sections: sectionsData,
                 products: mappedProducts,
-                stats: calculatedStats
+                stats: calculatedStats,
+                sectionCounts
             };
         }
     });
+
+    const [sectionCounts, setSectionCounts] = useState<Record<string, number>>({});
 
     useEffect(() => {
         if (pageData) {
@@ -130,7 +149,8 @@ export default function MerchantProductsPage() {
             setSections(pageData.sections);
             setProducts(pageData.products);
             setStats(pageData.stats);
-            setHasMore(pageData.products.length === 20);
+            setSectionCounts(pageData.sectionCounts);
+            setHasMore(pageData.products.length >= 20); // Keep loading more if we hit the limit
             setPage(1);
         }
     }, [pageData]);
@@ -364,7 +384,7 @@ export default function MerchantProductsPage() {
                         : 'bg-white border border-slate-100 text-slate-500'
                         }`}
                 >
-                    الكل ({products.length})
+                    الكل ({stats.total})
                 </button>
                 {sections.map(section => (
                     <button
@@ -375,7 +395,7 @@ export default function MerchantProductsPage() {
                             : 'bg-white border border-slate-100 text-slate-500'
                             }`}
                     >
-                        {section.name} ({products.filter(p => p.section_id === section.id).length})
+                        {section.name} ({sectionCounts[section.id] || 0})
                     </button>
                 ))}
             </div>

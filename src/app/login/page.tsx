@@ -54,9 +54,9 @@ export default function LoginPage() {
                     // Small delay to show success message before redirecting
                     setTimeout(() => {
                         if (role === 'super_admin') {
-                            window.location.href = '/admin/dashboard';
+                            router.push('/admin/dashboard');
                         } else if (role === 'merchant') {
-                            window.location.href = '/merchant/dashboard';
+                            router.push('/merchant/dashboard');
                         } else {
                             setError('رتبة المستخدم غير معروفة. يرجى التواصل مع الدعم الفني.');
                             setSuccess(false);

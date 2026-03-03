@@ -2,11 +2,14 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { useLanguage } from './LanguageContext';
 
 interface CartItem {
     id: string;
     cartKey: string;
     name: string;
+    name_en?: string;
+    name_ku?: string;
     price: number;
     quantity: number;
     image_url: string;
@@ -23,17 +26,18 @@ interface CartViewProps {
 }
 
 export default function CartView({ items, onUpdateQuantity, onRemoveItem, onContinue, onBack, totalPrice }: CartViewProps) {
+    const { language, t, dir } = useLanguage();
     return (
-        <div className="min-h-screen bg-white" dir="rtl">
+        <div className="min-h-screen bg-white" dir={dir}>
             {/* Header */}
             <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100">
                 <div className="flex items-center justify-between px-4 py-3">
                     <button onClick={onBack} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-50 transition-colors">
-                        <svg className="w-6 h-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className={`w-6 h-6 text-slate-600 ${dir === 'ltr' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
-                    <h1 className="text-lg font-bold text-slate-800">سلة المشتريات</h1>
+                    <h1 className="text-lg font-bold text-slate-800">{t('store.cart')}</h1>
                     <div className="w-10" />
                 </div>
             </header>
@@ -46,14 +50,14 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                             <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                         </svg>
                     </div>
-                    <h3 className="text-xl font-bold text-slate-700 mb-2">سلتك فارغة</h3>
-                    <p className="text-sm text-slate-400 mb-6">لم تضف أي منتجات بعد</p>
+                    <h3 className="text-xl font-bold text-slate-700 mb-2">{t('cart.empty')}</h3>
+                    <p className="text-sm text-slate-400 mb-6">{t('cart.emptyMessage')}</p>
                     <button
                         onClick={onBack}
                         className="px-8 py-3 text-white rounded-xl font-bold text-sm active:scale-95 transition-all shadow-lg hover:brightness-95"
                         style={{ backgroundColor: 'var(--theme-primary)' }}
                     >
-                        تصفح المنتجات
+                        {t('cart.startShopping')}
                     </button>
                 </div>
             ) : (
@@ -77,7 +81,11 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                                     {/* Info */}
                                     <div className="flex-1 flex flex-col justify-between min-w-0">
                                         <div className="flex items-start justify-between gap-2">
-                                            <h4 className="text-sm font-bold text-slate-800 leading-tight line-clamp-2">{item.name}</h4>
+                                            <h4 className="text-sm font-bold text-slate-800 leading-tight line-clamp-2">
+                                                {language === 'en' && item.name_en ? item.name_en :
+                                                    language === 'ku' && item.name_ku ? item.name_ku :
+                                                        item.name}
+                                            </h4>
                                             {/* Delete */}
                                             <button
                                                 onClick={() => onRemoveItem(item.cartKey)}
@@ -91,9 +99,26 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
 
                                         {/* Selections */}
                                         {item.selections && Object.keys(item.selections).length > 0 && (
-                                            <p className="text-xs text-slate-400 mt-0.5">
-                                                {Object.entries(item.selections).map(([, val]) => val).join(' · ')}
-                                            </p>
+                                            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 mt-0.5">
+                                                {Object.entries(item.selections).map(([key, val], idx) => {
+                                                    const isHex = val.startsWith('#') && (val.length === 4 || val.length === 7);
+                                                    return (
+                                                        <React.Fragment key={key}>
+                                                            {idx > 0 && <span className="text-[10px] text-slate-300">·</span>}
+                                                            <div className="flex items-center gap-1">
+                                                                {isHex ? (
+                                                                    <div
+                                                                        className="w-3.5 h-3.5 rounded-full border border-slate-200 shadow-sm flex-shrink-0"
+                                                                        style={{ backgroundColor: val }}
+                                                                    />
+                                                                ) : (
+                                                                    <span className="text-[10px] text-slate-400 font-medium">{val}</span>
+                                                                )}
+                                                            </div>
+                                                        </React.Fragment>
+                                                    );
+                                                })}
+                                            </div>
                                         )}
 
                                         {/* Price + Quantity */}
@@ -114,8 +139,9 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                                                 </button>
                                             </div>
                                             <div className="flex items-center gap-1">
-                                                <span className="text-base font-bold text-[var(--theme-primary)]">{(item.price * item.quantity).toLocaleString()} د.ع</span>
-                                                <span className="text-xs text-[var(--theme-primary)]">د.ع</span>
+                                                <div dir="ltr">
+                                                    <span className="text-base font-bold text-[var(--theme-primary)]">{(item.price * item.quantity).toLocaleString()} {t('store.currency')}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -128,10 +154,9 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                     <div className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-100 px-5 pt-4 pb-6 z-50 safe-area-bottom">
                         {/* Total */}
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-base font-bold text-slate-800">الإجمالي</h3>
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-xl font-black text-[var(--theme-primary)]">{totalPrice.toLocaleString()} د.ع</span>
-                                <span className="text-sm text-[var(--theme-primary)]">د.ع</span>
+                            <h3 className="text-base font-bold text-slate-800">{t('checkout.total')}</h3>
+                            <div className="flex items-center gap-1.5" dir="ltr">
+                                <span className="text-xl font-black text-[var(--theme-primary)]">{totalPrice.toLocaleString()} {t('store.currency')}</span>
                             </div>
                         </div>
 
@@ -140,8 +165,8 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                             onClick={onContinue}
                             className="w-full h-13 py-3.5 bg-[var(--theme-primary)] text-white rounded-xl font-bold text-base shadow-lg shadow-sm hover:brightness-95 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                         >
-                            إتمام الطلب
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <span>{t('cart.checkout')}</span>
+                            <svg className={`w-5 h-5 ${dir === 'rtl' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                             </svg>
                         </button>

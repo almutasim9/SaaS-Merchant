@@ -6,6 +6,8 @@ export interface CartItem {
     id: string; // product ID
     cartKey: string; // unique key = productId + selections hash
     name: string;
+    name_en?: string;
+    name_ku?: string;
     price: number;
     image_url: string;
     quantity: number;
@@ -14,7 +16,7 @@ export interface CartItem {
 
 interface CartContextType {
     cart: CartItem[];
-    addToCart: (product: any) => void;
+    addToCart: (product: Omit<CartItem, 'cartKey' | 'quantity'> & { quantity?: number }) => void;
     removeFromCart: (cartKey: string) => void;
     updateQuantity: (cartKey: string, quantity: number) => void;
     clearCart: () => void;
@@ -61,7 +63,7 @@ export const CartProvider = ({ children, storeSlug }: { children: React.ReactNod
         localStorage.setItem(storageKey, JSON.stringify(cart));
     }, [cart]);
 
-    const addToCart = (product: any) => {
+    const addToCart = (product: Omit<CartItem, 'cartKey' | 'quantity'> & { quantity?: number }) => {
         const selections = product.selections || undefined;
         const cartKey = generateCartKey(product.id, selections);
 
@@ -78,6 +80,8 @@ export const CartProvider = ({ children, storeSlug }: { children: React.ReactNod
                 id: product.id,
                 cartKey,
                 name: product.name,
+                name_en: product.name_en,
+                name_ku: product.name_ku,
                 price: product.price,
                 image_url: product.image_url,
                 quantity: product.quantity || 1,

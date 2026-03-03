@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { fetchPlansAction, updatePlanAction, SubscriptionPlan } from './actions';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function AdminPlansPage() {
     const [plans, setPlans] = useState<SubscriptionPlan[]>([]);

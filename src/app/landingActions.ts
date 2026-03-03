@@ -1,6 +1,6 @@
 'use server';
 
-import { supabaseAdmin } from '@/lib/supabase-server';
+import { createClient } from '@/lib/supabase-server';
 
 export interface PublicSubscriptionPlan {
     id: string;
@@ -28,7 +28,8 @@ export interface PublicSubscriptionPlan {
 
 export async function getPublicSubscriptionPlans() {
     try {
-        const { data, error } = await supabaseAdmin
+        const supabase = await createClient();
+        const { data, error } = await supabase
             .from('subscription_plans')
             .select('*')
             .order('price_monthly', { ascending: true });
