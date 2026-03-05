@@ -3,6 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { useLanguage } from './LanguageContext';
+import { formatCurrency, CurrencyPreference } from '@/lib/format-currency';
 
 interface CartItem {
     id: string;
@@ -23,9 +24,10 @@ interface CartViewProps {
     onContinue: () => void;
     onBack: () => void;
     totalPrice: number;
+    storeCurrency?: CurrencyPreference;
 }
 
-export default function CartView({ items, onUpdateQuantity, onRemoveItem, onContinue, onBack, totalPrice }: CartViewProps) {
+export default function CartView({ items, onUpdateQuantity, onRemoveItem, onContinue, onBack, totalPrice, storeCurrency }: CartViewProps) {
     const { language, t, dir } = useLanguage();
     return (
         <div className="min-h-screen bg-white" dir={dir}>
@@ -140,7 +142,7 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <div dir="ltr">
-                                                    <span className="text-base font-bold text-[var(--theme-primary)]">{(item.price * item.quantity).toLocaleString()} {t('store.currency')}</span>
+                                                    <span className="text-base font-bold text-[var(--theme-primary)]">{formatCurrency(item.price * item.quantity, storeCurrency)}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -156,7 +158,7 @@ export default function CartView({ items, onUpdateQuantity, onRemoveItem, onCont
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-base font-bold text-slate-800">{t('checkout.total')}</h3>
                             <div className="flex items-center gap-1.5" dir="ltr">
-                                <span className="text-xl font-black text-[var(--theme-primary)]">{totalPrice.toLocaleString()} {t('store.currency')}</span>
+                                <span className="text-xl font-black text-[var(--theme-primary)]">{formatCurrency(totalPrice, storeCurrency)}</span>
                             </div>
                         </div>
 

@@ -55,9 +55,10 @@ interface AddProductModalProps {
     sections: Section[];
     initialData?: Product | null;
     storeSubscription?: any;
+    storeCurrency?: 'IQD' | 'USD';
 }
 
-export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, sections, initialData, storeSubscription }: AddProductModalProps) {
+export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, sections, initialData, storeSubscription, storeCurrency }: AddProductModalProps) {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -455,7 +456,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                                 <div className="space-y-2 relative">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">السعر الأساسي</label>
                                     <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">د.ع</span>
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">{storeCurrency === 'USD' ? '$' : 'د.ع'}</span>
                                         <input type="number" min="0" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="0.00" className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl pl-12 pr-4 text-sm font-bold text-slate-800 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none" dir="ltr" />
                                     </div>
                                 </div>
@@ -584,7 +585,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                                                                     </td>
                                                                     <td className="px-3 py-1.5 w-2/6">
                                                                         <div className="relative">
-                                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">د.ع</span>
+                                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">{storeCurrency === 'USD' ? '$' : 'د.ع'}</span>
                                                                             <input
                                                                                 type="number"
                                                                                 placeholder="الافتراضي"

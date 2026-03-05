@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useLanguage } from './LanguageContext';
+import { formatCurrency, CurrencyPreference } from '@/lib/format-currency';
 
 interface CheckoutViewProps {
     totalPrice: number;
@@ -9,6 +10,7 @@ interface CheckoutViewProps {
     onPlaceOrder: (info: any) => void;
     isOrdering: boolean;
     deliveryFees?: any;
+    storeCurrency?: CurrencyPreference;
 }
 
 const IRAQ_CITIES = ['بغداد', 'البصرة', 'الموصل', 'أربيل', 'السليمانية', 'دهوك', 'كركوك', 'النجف', 'كربلاء', 'الحلة', 'الأنبار', 'الديوانية', 'الكوت', 'العمارة', 'الناصرية', 'السماوة', 'ديالى', 'صلاح الدين'];
@@ -18,7 +20,7 @@ const normalizeNumbers = (str: string) => {
     return str.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d).toString());
 };
 
-export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrdering, deliveryFees }: CheckoutViewProps) {
+export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrdering, deliveryFees, storeCurrency }: CheckoutViewProps) {
     const { t, dir } = useLanguage();
     const [info, setInfo] = useState({
         name: '',
@@ -238,17 +240,17 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
                 <div className="mt-8 space-y-3">
                     <div className="flex items-center justify-between">
                         <span className="text-sm text-slate-500">{t('checkout.subtotal')}</span>
-                        <div dir="ltr"><span className="text-sm font-bold text-slate-700">{totalPrice.toLocaleString()} {t('store.currency')}</span></div>
+                        <div dir="ltr"><span className="text-sm font-bold text-slate-700">{formatCurrency(totalPrice, storeCurrency)}</span></div>
                     </div>
                     <div className="flex items-center justify-between">
                         <span className="text-sm text-slate-500">{t('checkout.deliveryFee')}</span>
                         <span className="text-sm font-bold text-[var(--theme-primary)]">
-                            {isFreeDelivery ? t('checkout.free') : info.city ? <div dir="ltr">{deliveryFee.toLocaleString()} {t('store.currency')}</div> : t('checkout.chooseCity')}
+                            {isFreeDelivery ? t('checkout.free') : info.city ? <div dir="ltr">{formatCurrency(deliveryFee, storeCurrency)}</div> : t('checkout.chooseCity')}
                         </span>
                     </div>
                     <div className="border-t border-slate-100 pt-3 flex items-center justify-between">
                         <span className="text-base font-bold text-slate-800">{t('checkout.total')}</span>
-                        <div dir="ltr"><span className="text-xl font-black text-slate-800">{finalTotal.toLocaleString()} {t('store.currency')}</span></div>
+                        <div dir="ltr"><span className="text-xl font-black text-slate-800">{formatCurrency(finalTotal, storeCurrency)}</span></div>
                     </div>
                 </div>
             </form>

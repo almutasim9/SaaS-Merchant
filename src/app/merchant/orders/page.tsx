@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { updateOrderStatusAction } from './actions';
 import { STATUS_CONFIG, ORDER_FILTER_TABS, ACTIVE_ORDER_STATUSES, FINAL_ORDER_STATUSES, type OrderStatus } from '@/lib/order-statuses';
+import { formatCurrency, CurrencyPreference } from '@/lib/format-currency';
 
 interface Order {
     id: string;
@@ -26,11 +27,17 @@ interface Order {
     created_at: string;
 }
 
+interface Store {
+    id: string;
+    currency_preference?: CurrencyPreference;
+}
+
 export default function MerchantOrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [statusFilter, setStatusFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const [store, setStore] = useState<Store | null>(null);
 
     // Cancellation modal state
     const [cancelModal, setCancelModal] = useState<{ orderId: string; orderName: string } | null>(null);
@@ -58,7 +65,7 @@ export default function MerchantOrdersPage() {
 
             const { data: storeData } = await supabase
                 .from('stores')
-                .select('id, currency')
+                .select('id, currency_preference')
                 .eq('merchant_id', user.id)
                 .single();
 
@@ -75,6 +82,7 @@ export default function MerchantOrdersPage() {
             if (error) throw error;
 
             return {
+                store: storeData,
                 storeId: storeData.id,
                 orders: ordersData || []
             };
@@ -83,6 +91,7 @@ export default function MerchantOrdersPage() {
 
     useEffect(() => {
         if (qData) {
+            setStore(qData.store);
             setOrders(qData.orders);
             calculateStats(qData.orders);
         }
@@ -466,8 +475,8 @@ export default function MerchantOrdersPage() {
                                         </div>
                                     </div>
                                     <div className="text-left">
-                                        <p className="text-lg font-black text-indigo-600">{order.total_price.toLocaleString()}</p>
-                                        <p className="text-[10px] text-slate-400 text-left">د.ع — {order.items.reduce((acc, item) => acc + (item.quantity || 1), 0)} منتج</p>
+                                        <p className="text-lg font-black text-indigo-600">{formatCurrency(order.total_price, store?.currency_preference)}</p>
+                                        <p className="text-[10px] text-slate-400 text-left">عدد المنتجات: {order.items.reduce((acc, item) => acc + (item.quantity || 1), 0)}</p>
                                     </div>
                                 </div>
                                 {order.customer_info.notes && (
@@ -525,7 +534,7 @@ export default function MerchantOrdersPage() {
                                             </div>
                                         </td>
                                         <td className="px-6 lg:px-10 py-6 text-center">
-                                            <div className="font-bold text-indigo-600 text-base lg:text-lg tracking-tight">{order.total_price.toLocaleString()} د.ع</div>
+                                            <div className="font-bold text-indigo-600 text-base lg:text-lg tracking-tight">{formatCurrency(order.total_price, store?.currency_preference)}</div>
                                         </td>
                                         <td className="px-6 lg:px-10 py-6 text-center">
                                             <StatusBadge status={order.status} />
@@ -619,9 +628,9 @@ export default function MerchantOrdersPage() {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="font-bold text-slate-800 text-sm lg:text-base truncate">{item.name}</div>
-                                                    <div className="text-[10px] lg:text-xs font-medium text-slate-400 mt-0.5">{item.quantity} × {item.price.toLocaleString()} د.ع</div>
+                                                    <div className="text-[10px] lg:text-xs font-medium text-slate-400 mt-0.5">{item.quantity} × {formatCurrency(item.price, store?.currency_preference)}</div>
                                                 </div>
-                                                <div className="text-sm lg:text-base font-bold text-slate-800 whitespace-nowrap">{(item.price * item.quantity).toLocaleString()} د.ع</div>
+                                                <div className="text-sm lg:text-base font-bold text-slate-800 whitespace-nowrap">{formatCurrency(item.price * item.quantity, store?.currency_preference)}</div>
                                             </div>
                                         ))}
                                     </div>
@@ -632,15 +641,15 @@ export default function MerchantOrdersPage() {
                                     <div className="space-y-3 lg:space-y-4">
                                         <div className="flex justify-between items-center text-xs lg:text-sm font-medium text-slate-400">
                                             <span>المجموع الفرعي</span>
-                                            <span>{(selectedOrder.total_price - (selectedOrder.delivery_fee || 0)).toLocaleString()} د.ع</span>
+                                            <span>{formatCurrency(selectedOrder.total_price - (selectedOrder.delivery_fee || 0), store?.currency_preference)}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-xs lg:text-sm font-medium text-slate-400">
                                             <span>رسوم التوصيل ({selectedOrder.governorate || 'غير محدد'})</span>
-                                            <span className="text-amber-600">{(selectedOrder.delivery_fee || 0).toLocaleString()} د.ع</span>
+                                            <span className="text-amber-600">{formatCurrency(selectedOrder.delivery_fee || 0, store?.currency_preference)}</span>
                                         </div>
                                         <div className="pt-4 lg:pt-6 flex justify-between items-center">
                                             <span className="text-lg lg:text-xl font-bold text-slate-800">الإجمالي النهائي</span>
-                                            <span className="text-2xl lg:text-4xl font-black text-indigo-600 tracking-tighter">{selectedOrder.total_price.toLocaleString()} د.ع</span>
+                                            <span className="text-2xl lg:text-4xl font-black text-indigo-600 tracking-tighter">{formatCurrency(selectedOrder.total_price, store?.currency_preference)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -690,7 +699,7 @@ export default function MerchantOrdersPage() {
 
                         <div className="flex justify-between font-bold text-sm mt-3 pt-2 border-t border-black border-dashed">
                             <span>المجموع (مع التوصيل):</span>
-                            <span>{selectedOrder.total_price.toLocaleString()} د.ع</span>
+                            <span>{formatCurrency(selectedOrder.total_price, store?.currency_preference)}</span>
                         </div>
                     </div>
                 )}

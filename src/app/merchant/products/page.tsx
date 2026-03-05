@@ -9,6 +9,7 @@ import AddProductModal from './AddProductModal';
 import SectionsModal from './SectionsModal';
 import ExcelImportModal from './ExcelImportModal';
 import { getSections } from '../sections/actions';
+import { formatCurrency, CurrencyPreference } from '@/lib/format-currency';
 
 interface Section {
     id: string;
@@ -67,6 +68,7 @@ export default function MerchantProductsPage() {
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
+    const [storePreference, setStorePreference] = useState<CurrencyPreference | undefined>(undefined);
 
     const router = useRouter();
 
@@ -80,6 +82,7 @@ export default function MerchantProductsPage() {
                 .from('stores')
                 .select(`
                     id,
+                    currency_preference,
                     subscription_plans (
                         id, max_products, max_categories, custom_theme, remove_branding, advanced_reports
                     )
@@ -132,6 +135,7 @@ export default function MerchantProductsPage() {
             return {
                 storeId: storeData.id,
                 subscription: storeData.subscription_plans,
+                currency_preference: storeData.currency_preference,
                 sections: sectionsData,
                 products: mappedProducts,
                 stats: calculatedStats,
@@ -146,6 +150,7 @@ export default function MerchantProductsPage() {
         if (pageData) {
             setStoreId(pageData.storeId);
             setStoreSubscription(pageData.subscription);
+            setStorePreference(pageData.currency_preference);
             setSections(pageData.sections);
             setProducts(pageData.products);
             setStats(pageData.stats);
@@ -437,8 +442,7 @@ export default function MerchantProductsPage() {
                                     <div className="p-3">
                                         <h4 className="font-black text-slate-800 text-sm leading-tight line-clamp-2">{product.name}</h4>
                                         <div className="flex items-center justify-between mt-2">
-                                            <span className="text-base font-black text-indigo-600">{product.price.toLocaleString()}</span>
-                                            <span className="text-[10px] text-slate-400 font-bold">د.ع</span>
+                                            <span className="text-base font-black text-indigo-600">{formatCurrency(product.price, storePreference)}</span>
                                         </div>
                                         {product.section_id && <span className="inline-block mt-1.5 px-2 py-0.5 bg-slate-50 rounded-full text-[10px] font-bold text-slateate-500">{sections.find(s => s.id === product.section_id)?.name || 'غير مصنف'}</span>}
                                         <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-50">
@@ -506,8 +510,7 @@ export default function MerchantProductsPage() {
                                     </td>
                                     <td className="px-6 lg:px-8 py-6 text-center">
                                         <div className="flex flex-col items-center">
-                                            <span className="text-base lg:text-lg font-black text-slate-800">{product.price.toLocaleString()}</span>
-                                            <span className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase">د.ع</span>
+                                            <span className="text-base lg:text-lg font-black text-slate-800 tracking-tight">{formatCurrency(product.price, storePreference)}</span>
                                         </div>
                                     </td>
                                     <td className="px-6 lg:px-8 py-6 text-center">
@@ -641,6 +644,7 @@ export default function MerchantProductsPage() {
                     sections={sections}
                     initialData={editingProduct}
                     storeSubscription={storeSubscription}
+                    storeCurrency={storePreference}
                 />
             )}
 

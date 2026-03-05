@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { useLanguage } from './LanguageContext';
+import { formatCurrency, CurrencyPreference } from '@/lib/format-currency';
 
 interface VariantOption {
     id: string;
@@ -49,9 +50,10 @@ interface ProductDetailsViewProps {
     onBack: () => void;
     onAddToCart: (product: any) => void;
     storeLogo?: string;
+    storeCurrency?: CurrencyPreference;
 }
 
-export default function ProductDetailsView({ product, onBack, onAddToCart, storeLogo }: ProductDetailsViewProps) {
+export default function ProductDetailsView({ product, onBack, onAddToCart, storeLogo, storeCurrency }: ProductDetailsViewProps) {
     const attributes = product.attributes;
     const hasVariants = attributes?.hasVariants;
     const variantOptions = attributes?.variantOptions || [];
@@ -221,9 +223,9 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
 
                 {/* Price */}
                 <div className="flex items-center gap-2 mt-3 mb-5">
-                    <div dir="ltr"><span className="text-3xl font-black text-slate-800">{displayPrice.toLocaleString()} {t('store.currency')}</span></div>
+                    <div dir="ltr"><span className="text-3xl font-black text-slate-800">{formatCurrency(displayPrice, storeCurrency)}</span></div>
                     {product.discount_price && product.discount_price < product.price && displayPrice === product.price && (
-                        <div dir="ltr"><span className="text-sm text-slate-400 line-through mr-2">{product.discount_price.toLocaleString()} {t('store.currency')}</span></div>
+                        <div dir="ltr"><span className="text-sm text-slate-400 line-through mr-2">{formatCurrency(product.discount_price, storeCurrency)}</span></div>
                     )}
                 </div>
 

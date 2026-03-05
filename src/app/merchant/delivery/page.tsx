@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/format-currency';
 
 interface DeliveryZone {
     id: string;
@@ -19,6 +20,7 @@ interface Store {
         max_delivery_zones: number;
         free_delivery_all_zones: boolean;
     };
+    currency_preference?: 'IQD' | 'USD';
 }
 
 const IRAQ_CITIES = [
@@ -53,14 +55,15 @@ export default function MerchantDeliveryPage() {
 
         const { data: storeData } = await supabase
             .from('stores')
-            .select('id, delivery_fees, subscription_plans(max_delivery_zones, free_delivery_all_zones)')
+            .select('id, delivery_fees, currency_preference, subscription_plans(max_delivery_zones, free_delivery_all_zones)')
             .eq('merchant_id', user.id)
             .single();
 
         if (storeData) {
             setStore({
                 id: storeData.id,
-                subscription_plans: storeData.subscription_plans as any
+                subscription_plans: storeData.subscription_plans as any,
+                currency_preference: storeData.currency_preference
             });
 
             // Auto Migrate Database Formats to Zones
@@ -77,7 +80,7 @@ export default function MerchantDeliveryPage() {
                 Object.keys(rawFees).forEach(city => {
                     const { fee, enabled } = rawFees[city];
                     if (enabled) {
-                        if (!groupedMap[fee]) groupedMap[fee] = { name: `مجموعة ${fee} د.ع`, cities: [] };
+                        if (!groupedMap[fee]) groupedMap[fee] = { name: `مجموعة ${formatCurrency(fee, storeData.currency_preference)}`, cities: [] };
                         groupedMap[fee].cities.push(city);
                     }
                 });
@@ -301,7 +304,7 @@ export default function MerchantDeliveryPage() {
                             <div>
                                 <h3 className={`text-xl font-bold ${zone.enabled ? 'text-slate-800' : 'text-slate-400'} line-clamp-1`}>{zone.name}</h3>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-sm font-bold text-emerald-600" dir="ltr">{zone.fee.toLocaleString()} د.ع</span>
+                                    <span className="text-sm font-bold text-emerald-600" dir="ltr">{formatCurrency(zone.fee, store?.currency_preference)}</span>
                                     <span className="w-1 h-1 rounded-full bg-slate-300"></span>
                                     <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">{zone.cities.length} محافظات</span>
                                 </div>
@@ -381,7 +384,7 @@ export default function MerchantDeliveryPage() {
                                             placeholder="8000"
                                             dir="ltr"
                                         />
-                                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">د.ع</span>
+                                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">{store?.currency_preference === 'USD' ? '$' : 'د.ع'}</span>
                                     </div>
                                 </div>
                             </div>

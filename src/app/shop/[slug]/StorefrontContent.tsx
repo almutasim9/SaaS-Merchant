@@ -75,6 +75,7 @@ interface Store {
         custom_theme: boolean;
         remove_branding: boolean;
     } | { custom_theme: boolean; remove_branding: boolean; }[] | null;
+    currency_preference?: 'IQD' | 'USD';
 }
 
 interface Section {
@@ -273,6 +274,7 @@ function StorefrontInner({ store, products, sections }: { store: Store, products
                         onBack={() => setView('home')}
                         onAddToCart={handleAddToCart}
                         storeLogo={store.logo_url}
+                        storeCurrency={store.currency_preference}
                     />
                 ) : null;
             case 'cart':
@@ -284,6 +286,7 @@ function StorefrontInner({ store, products, sections }: { store: Store, products
                         onContinue={() => setView('checkout')}
                         onBack={() => setView('home')}
                         totalPrice={totalPrice}
+                        storeCurrency={store.currency_preference}
                     />
                 );
             case 'checkout':
@@ -294,6 +297,7 @@ function StorefrontInner({ store, products, sections }: { store: Store, products
                         onPlaceOrder={handlePlaceOrder}
                         isOrdering={isOrdering}
                         deliveryFees={store.delivery_fees}
+                        storeCurrency={store.currency_preference}
                     />
                 );
             case 'about':
@@ -346,6 +350,7 @@ function StorefrontInner({ store, products, sections }: { store: Store, products
                                 })()
                             }
                         }}
+                        storeCurrency={store.currency_preference}
                     />
                 );
         }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { formatCurrency, CurrencyPreference } from '@/lib/format-currency';
 
 interface Order {
     id: string;
@@ -27,6 +28,7 @@ export default function MerchantOrdersPage() {
     const [statusFilter, setStatusFilter] = useState('all');
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
     const [timeRangeFilter, setTimeRangeFilter] = useState('1_month');
+    const [storePreference, setStorePreference] = useState<CurrencyPreference | undefined>(undefined);
     const [storeId, setStoreId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(1);
@@ -47,12 +49,13 @@ export default function MerchantOrdersPage() {
 
             const { data: storeData } = await supabase
                 .from('stores')
-                .select('id, currency')
+                .select('id, currency, currency_preference')
                 .eq('merchant_id', user.id)
                 .single();
 
             if (storeData) {
                 setStoreId(storeData.id);
+                setStorePreference(storeData.currency_preference);
                 fetchOrders(storeData.id, '1_month');
                 cleanup = subscribeToOrders(storeData.id);
             } else {
@@ -287,8 +290,8 @@ export default function MerchantOrdersPage() {
                                     <a href={`tel:${order.customer_info.phone}`} className="text-xs text-indigo-600 font-bold">{order.customer_info.phone}</a>
                                 </div>
                                 <div className="text-left">
-                                    <p className="text-lg font-black text-indigo-600">{(order.total_price - (order.delivery_fee || 0)).toLocaleString()}</p>
-                                    <p className="text-[10px] text-slate-400 text-left">د.ع — {order.items.reduce((acc, item) => acc + (item.quantity || 1), 0)} منتج</p>
+                                    <p className="text-lg font-black text-indigo-600">{formatCurrency(order.total_price - (order.delivery_fee || 0), storePreference)}</p>
+                                    <p className="text-[10px] text-slate-400 text-left">عدد المنتجات: {order.items.reduce((acc, item) => acc + (item.quantity || 1), 0)}</p>
                                 </div>
                             </div>
                         </div>
@@ -332,7 +335,7 @@ export default function MerchantOrdersPage() {
                                         <span className="text-sm font-bold text-slate-800">{order.items.reduce((acc, item) => acc + (item.quantity || 1), 0)} منتجات</span>
                                     </td>
                                     <td className="px-6 lg:px-10 py-6 text-center">
-                                        <div className="font-bold text-indigo-600 text-base lg:text-lg tracking-tight">{(order.total_price - (order.delivery_fee || 0)).toLocaleString()} د.ع</div>
+                                        <div className="font-bold text-indigo-600 text-base lg:text-lg tracking-tight">{formatCurrency(order.total_price - (order.delivery_fee || 0), storePreference)}</div>
                                     </td>
                                     <td className="px-6 lg:px-10 py-6 text-center"><StatusBadge status={order.status} /></td>
                                     <td className="px-6 lg:px-10 py-6 text-center text-[11px] lg:text-sm font-medium text-slate-400">
@@ -430,9 +433,9 @@ export default function MerchantOrdersPage() {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="font-bold text-slate-800 text-sm lg:text-base truncate">{item.name}</div>
-                                                <div className="text-[10px] lg:text-xs font-medium text-slate-400 mt-0.5">{item.quantity} × {item.price.toLocaleString()} د.ع</div>
+                                                <div className="text-[10px] lg:text-xs font-medium text-slate-400 mt-0.5">{item.quantity} × {formatCurrency(item.price, storePreference)}</div>
                                             </div>
-                                            <div className="text-sm lg:text-base font-bold text-slate-800 whitespace-nowrap">{(item.price * item.quantity).toLocaleString()} د.ع</div>
+                                            <div className="text-sm lg:text-base font-bold text-slate-800 whitespace-nowrap">{formatCurrency(item.price * item.quantity, storePreference)}</div>
                                         </div>
                                     ))}
                                 </div>
@@ -443,15 +446,15 @@ export default function MerchantOrdersPage() {
                                 <div className="space-y-3 lg:space-y-4">
                                     <div className="flex justify-between items-center text-xs lg:text-sm font-medium text-slate-400">
                                         <span>سعر المنتجات</span>
-                                        <span>{(selectedOrder.total_price - (selectedOrder.delivery_fee || 0)).toLocaleString()} د.ع</span>
+                                        <span>{formatCurrency(selectedOrder.total_price - (selectedOrder.delivery_fee || 0), storePreference)}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-xs lg:text-sm font-medium text-slate-400">
                                         <span>رسوم التوصيل</span>
-                                        <span className="text-amber-600">{(selectedOrder.delivery_fee || 0).toLocaleString()} د.ع</span>
+                                        <span className="text-amber-600">{formatCurrency(selectedOrder.delivery_fee || 0, storePreference)}</span>
                                     </div>
                                     <div className="pt-4 lg:pt-6 flex justify-between items-center">
                                         <span className="text-lg lg:text-xl font-bold text-slate-800">إجمالي المبيعات</span>
-                                        <span className="text-2xl lg:text-4xl font-black text-indigo-600 tracking-tighter">{(selectedOrder.total_price - (selectedOrder.delivery_fee || 0)).toLocaleString()} د.ع</span>
+                                        <span className="text-2xl lg:text-4xl font-black text-indigo-600 tracking-tighter">{formatCurrency(selectedOrder.total_price - (selectedOrder.delivery_fee || 0), storePreference)}</span>
                                     </div>
                                 </div>
                             </div>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import OnboardingChecklist from './OnboardingChecklist';
+import { formatCurrency, CurrencyPreference } from '@/lib/format-currency';
 
 interface Product {
     id: string;
@@ -30,7 +31,7 @@ interface Store {
     id: string;
     name: string;
     slug: string;
-    currency?: 'IQD' | string;
+    currency_preference?: CurrencyPreference;
 }
 
 export default function MerchantDashboard() {
@@ -71,7 +72,7 @@ export default function MerchantDashboard() {
         try {
             const { data: storesData, error: storeError } = await supabase
                 .from('stores')
-                .select('id, name, slug, currency')
+                .select('id, name, slug, currency_preference')
                 .eq('merchant_id', userId);
 
             if (storeError) throw storeError;
@@ -244,7 +245,6 @@ export default function MerchantDashboard() {
 
     const StatCard = ({ title, value, change, color, icon }: any) => {
         const isPositive = parseFloat(change) >= 0;
-        const currencySymbol = 'د.ع';
 
         return (
             <div className="bg-white p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-between group hover:border-[#4F46E5]/30 hover:shadow-xl hover:shadow-[#4F46E5]/5 transition-all">
@@ -259,7 +259,9 @@ export default function MerchantDashboard() {
                 <div>
                     <h3 className="text-slate-400 text-xs lg:text-sm font-bold tracking-widest uppercase mb-2 pr-1">{title}</h3>
                     <div className="text-3xl lg:text-4xl font-black text-slate-800 tracking-tighter">
-                        {typeof value === 'number' && (title.includes('المبيعات') || title.includes('متوسط')) ? `${value.toLocaleString()} ${currencySymbol}` : value}
+                        {typeof value === 'number' && (title.includes('المبيعات') || title.includes('متوسط'))
+                            ? formatCurrency(value, store?.currency_preference)
+                            : value}
                     </div>
                 </div>
             </div>
@@ -401,7 +403,7 @@ export default function MerchantDashboard() {
                                         <p className="text-[10px] font-medium text-slate-400 mt-0.5">{p.orders_count || 0} طلب هذا الشهر</p>
                                     </div>
                                 </div>
-                                <span className="text-sm font-bold text-indigo-600">{p.price.toLocaleString()} د.ع</span>
+                                <span className="text-sm font-bold text-indigo-600">{formatCurrency(p.price, store?.currency_preference)}</span>
                             </div>
                         ))}
                     </div>
@@ -447,7 +449,7 @@ export default function MerchantDashboard() {
                                         <td className="px-6 lg:px-10 py-6 text-sm font-medium text-slate-400">
                                             {new Date(order.created_at).toLocaleDateString('ar-IQ', { day: 'numeric', month: 'long', year: 'numeric' })}
                                         </td>
-                                        <td className="px-6 lg:px-10 py-6 text-sm font-bold text-slate-800">{order.total_price.toLocaleString()} د.ع</td>
+                                        <td className="px-6 lg:px-10 py-6 text-sm font-bold text-slate-800">{formatCurrency(order.total_price, store?.currency_preference)}</td>
                                         <td className="px-6 lg:px-10 py-6">
                                             <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-bold
                                                 ${order.status === 'completed' ? 'bg-emerald-50 text-emerald-600' :

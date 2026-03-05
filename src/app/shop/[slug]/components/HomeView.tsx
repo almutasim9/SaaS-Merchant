@@ -1,6 +1,7 @@
 import React, { useMemo, useRef } from 'react';
 import Image from 'next/image';
 import { useLanguage } from './LanguageContext';
+import { formatCurrency, CurrencyPreference } from '@/lib/format-currency';
 
 interface Product {
     id: string;
@@ -33,9 +34,10 @@ interface ProductCardProps {
     product: Product;
     onAddToCart: (product: Product) => void;
     onClick?: (product: Product) => void;
+    storeCurrency?: CurrencyPreference;
 }
 
-function ProductCard({ product, onAddToCart, onClick }: ProductCardProps) {
+function ProductCard({ product, onAddToCart, onClick, storeCurrency }: ProductCardProps) {
     const { language, t, dir } = useLanguage();
     const isUnavailable = product.attributes?.isAvailable === false || product.isAvailable === false;
     const hasVariants = product.attributes?.hasVariants || product.hasVariants;
@@ -137,8 +139,8 @@ function ProductCard({ product, onAddToCart, onClick }: ProductCardProps) {
                 <div className="flex flex-col gap-0.5 mt-auto">
                     {product.discount_price && product.discount_price < product.price ? (
                         <div className="flex items-center gap-1.5 min-h-[40px]">
-                            <span className="text-[11px] text-slate-400 line-through">{product.price.toLocaleString()} {t('store.currency')}</span>
-                            <span className="text-[15px] font-bold" style={{ color: 'var(--theme-primary)' }}>{product.discount_price.toLocaleString()} {t('store.currency')}</span>
+                            <span className="text-[11px] text-slate-400 line-through">{formatCurrency(product.price, storeCurrency)}</span>
+                            <span className="text-[15px] font-bold" style={{ color: 'var(--theme-primary)' }}>{formatCurrency(product.discount_price, storeCurrency)}</span>
                         </div>
                     ) : (
                         <div className="flex flex-col min-h-[40px]">
@@ -149,9 +151,8 @@ function ProductCard({ product, onAddToCart, onClick }: ProductCardProps) {
                             )}
                             <div className="flex items-baseline gap-1" dir={dir}>
                                 <span className="text-[16px] font-black" style={{ color: 'var(--theme-primary)' }}>
-                                    {displayPrice.toLocaleString()}
+                                    {formatCurrency(displayPrice, storeCurrency)}
                                 </span>
-                                <span className="text-[10px] font-bold text-slate-400">{t('store.currency')}</span>
                             </div>
                         </div>
                     )}
@@ -189,6 +190,7 @@ interface HomeViewProps {
         banner?: { title?: string; subtitle?: string; badge?: string; show?: boolean; images?: string[] };
         about?: { content?: string };
     };
+    storeCurrency?: CurrencyPreference;
 }
 
 export default function HomeView({
@@ -207,6 +209,7 @@ export default function HomeView({
     onCartOpen,
     totalItems,
     storefrontConfig,
+    storeCurrency,
 }: HomeViewProps) {
 
     const sectionsRef = useRef<HTMLDivElement>(null);
@@ -464,6 +467,7 @@ export default function HomeView({
                                                     product={product}
                                                     onAddToCart={onAddToCart}
                                                     onClick={onProductClick}
+                                                    storeCurrency={storeCurrency}
                                                 />
                                             ))}
                                         </div>
@@ -490,6 +494,7 @@ export default function HomeView({
                                                 product={product}
                                                 onAddToCart={onAddToCart}
                                                 onClick={onProductClick}
+                                                storeCurrency={storeCurrency}
                                             />
                                         ))}
                                     </div>
@@ -526,7 +531,7 @@ export default function HomeView({
                             <div className={`grid grid-cols-2 sm:grid-cols-3 gap-3`} dir={dir}>
                                 {products.map(product => (
                                     <div key={product.id} className="w-full">
-                                        <ProductCard product={product} onAddToCart={onAddToCart} onClick={onProductClick} />
+                                        <ProductCard product={product} onAddToCart={onAddToCart} onClick={onProductClick} storeCurrency={storeCurrency} />
                                     </div>
                                 ))}
                             </div>

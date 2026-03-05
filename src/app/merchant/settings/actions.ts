@@ -40,6 +40,20 @@ export async function saveGeneralInfoAction(storeId: string, data: { name: strin
     return { success: true };
 }
 
+// ─── Currency Preference ────────────────────────────────────────────────────────
+export async function saveCurrencyPreferenceAction(storeId: string, currency: 'IQD' | 'USD') {
+    const auth = await verifyStoreOwnership(storeId);
+    if (auth.error) return { success: false, error: auth.error };
+
+    const { error } = await supabaseAdmin
+        .from('stores')
+        .update({ currency_preference: currency })
+        .eq('id', storeId);
+
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+}
+
 // ─── Contact Info ─────────────────────────────────────────────────────────────
 export async function saveContactInfoAction(storeId: string, data: { phone: string; email: string; address: string }) {
     const auth = await verifyStoreOwnership(storeId);

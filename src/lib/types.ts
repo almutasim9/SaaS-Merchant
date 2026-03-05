@@ -179,6 +179,7 @@ export interface Order {
     total_price: number;
     delivery_fee?: number;
     status: OrderStatus;
+    currency_preference?: 'IQD' | 'USD';
     governorate?: string;
     cancellation_reason?: string;
     deleted_at?: string;
