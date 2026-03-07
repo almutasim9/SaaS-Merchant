@@ -2,6 +2,24 @@
 
 import { createClient as createServerClient, supabaseAdmin } from '@/lib/supabase-server';
 
+// ─── Ordering Preferences ─────────────────────────────────────────────────────
+export async function saveOrderingPreferencesAction(storeId: string, data: { accepts_orders: boolean; offers_delivery: boolean; offers_pickup: boolean }) {
+    const auth = await verifyStoreOwnership(storeId);
+    if (auth.error) return { success: false, error: auth.error };
+
+    const { error } = await supabaseAdmin
+        .from('stores')
+        .update({
+            accepts_orders: data.accepts_orders,
+            offers_delivery: data.offers_delivery,
+            offers_pickup: data.offers_pickup
+        })
+        .eq('id', storeId);
+
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+}
+
 // ─── Helper: Auth + Ownership Check ──────────────────────────────────────────
 // Returns { userId, storeId } if the authenticated user owns the given storeId
 // Returns { error } if unauthorized

@@ -17,9 +17,18 @@ const OrderItemSchema = z.object({
 const CustomerInfoSchema = z.object({
     name: z.string().min(2, 'الاسم يجب أن يكون حرفين على الأقل').max(100),
     phone: z.string().min(8, 'رقم الهاتف غير صحيح').max(20).regex(/^\+?[0-9\s-]+$/, 'رقم الهاتف يجب أن يحتوي على أرقام فقط'),
-    city: z.string().min(2, 'الرجاء اختيار المحافظة'),
+    city: z.string().optional(),
     landmark: z.string().max(500).optional().or(z.literal('')),
     notes: z.string().max(1000).optional().or(z.literal('')),
+    orderType: z.enum(['delivery', 'pickup']).optional().default('delivery'),
+}).superRefine((data, ctx) => {
+    if (data.orderType === 'delivery' && (!data.city || data.city.trim() === '')) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'الرجاء اختيار المحافظة لتوصيل الطلب',
+            path: ['city']
+        });
+    }
 });
 
 const PlaceOrderSchema = z.object({
@@ -44,6 +53,21 @@ export async function placeOrderAction(orderData: OrderData) {
 
         const { storeId, customerInfo, items } = result.data;
 
+        // 1.5 Anti-Bot Rate Limiting (Max 3 orders per phone number per 15 minutes)
+        const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+        const { count: recentOrderCount, error: rateLimitError } = await supabaseAdmin
+            .from('orders')
+            .select('*', { count: 'exact', head: true })
+            .eq('store_id', storeId)
+            // Extract the phone from the JSONB customer_info column
+            .or(`customer_info->>phone.eq.${customerInfo.phone},customer_info->>phone.eq.+${customerInfo.phone}`)
+            .gte('created_at', fifteenMinsAgo);
+
+        if (recentOrderCount !== null && recentOrderCount >= 3) {
+            console.warn(`[SECURITY] Rate limit triggered for phone: ${customerInfo.phone} at store: ${storeId}`);
+            return { success: false, error: 'لقد تجاوزت الحد المسموح به من الطلبات. يرجى الانتظار قليلاً أو التواصل مع المتجر.' };
+        }
+
         // 2. Fetch Products for Verification
         const productIds = items.map(item => item.id);
 
@@ -62,11 +86,13 @@ export async function placeOrderAction(orderData: OrderData) {
             .from('stores')
             .select(`
                 is_active,
+                accepts_orders,
                 plan_expires_at,
                 delivery_fees,
                 subscription_plans!inner(
                     max_monthly_orders,
-                    free_delivery_all_zones
+                    free_delivery_all_zones,
+                    enable_ordering
                 )
             `)
             .eq('id', storeId)
@@ -80,6 +106,12 @@ export async function placeOrderAction(orderData: OrderData) {
         // 2b-ii. Validate store is active and plan is not expired
         if (!store.is_active) {
             return { success: false, error: 'عذراً، هذا المتجر غير نشط حالياً.' };
+        }
+        if (store.accepts_orders === false) {
+            return { success: false, error: 'عذراً، المتجر مغلق ولا يستقبل طلبات حالياً.' };
+        }
+        if ((store.subscription_plans as any)?.enable_ordering === false) {
+            return { success: false, error: 'عذراً، خطة هذا المتجر لا تدعم استقبال الطلبات حالياً.' };
         }
         if (store.plan_expires_at && new Date(store.plan_expires_at) < new Date()) {
             return { success: false, error: 'عذراً، اشتراك هذا المتجر منتهي.' };
@@ -107,28 +139,32 @@ export async function placeOrderAction(orderData: OrderData) {
 
         let cityToFeeMap: Record<string, number> = {};
 
-        if (rawFees && Array.isArray(rawFees.zones)) {
-            // Modern format: zones[]
-            rawFees.zones.forEach((zone: any) => {
-                if (zone.enabled) {
-                    zone.cities.forEach((city: string) => {
-                        cityToFeeMap[city] = zone.fee;
-                    });
-                }
-            });
-        } else {
-            // No delivery zones configured — reject delivery orders
-            return { success: false, error: 'نعتذر، إعدادات التوصيل غير مكتملة لهذا المتجر.' };
-        }
+        let fee = 0;
 
-        let fee = cityToFeeMap[customerInfo.city];
-        if (fee === undefined) {
-            return { success: false, error: 'نعتذر، التوصيل غير متاح إلى هذه المحافظة حالياً.' };
-        }
+        if (customerInfo.orderType !== 'pickup') {
+            if (rawFees && Array.isArray(rawFees.zones)) {
+                // Modern format: zones[]
+                rawFees.zones.forEach((zone: any) => {
+                    if (zone.enabled) {
+                        zone.cities.forEach((city: string) => {
+                            cityToFeeMap[city] = zone.fee;
+                        });
+                    }
+                });
+            } else {
+                // No delivery zones configured — reject delivery orders
+                return { success: false, error: 'نعتذر، إعدادات التوصيل غير مكتملة لهذا المتجر.' };
+            }
 
-        // Apply Free Delivery if the store has it enabled globally AND the plan supports it
-        if (rawFees?.isFreeDelivery && (store?.subscription_plans as any)?.free_delivery_all_zones) {
-            fee = 0;
+            fee = cityToFeeMap[customerInfo.city || ''];
+            if (fee === undefined) {
+                return { success: false, error: 'نعتذر، التوصيل غير متاح إلى هذه المحافظة حالياً.' };
+            }
+
+            // Apply Free Delivery if the store has it enabled globally AND the plan supports it
+            if (rawFees?.isFreeDelivery && (store?.subscription_plans as any)?.free_delivery_all_zones) {
+                fee = 0;
+            }
         }
 
         // 3. Logic & Price Calculation (with variant support)
@@ -210,6 +246,7 @@ export async function placeOrderAction(orderData: OrderData) {
                 total_price: serverTotalPrice,
                 delivery_fee: fee,
                 governorate: customerInfo.city,
+                order_type: customerInfo.orderType || 'delivery',
                 status: 'pending'
             })
             .select()

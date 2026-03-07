@@ -51,9 +51,10 @@ interface ProductDetailsViewProps {
     onAddToCart: (product: any) => void;
     storeLogo?: string;
     storeCurrency?: CurrencyPreference;
+    canReceiveOrders?: boolean;
 }
 
-export default function ProductDetailsView({ product, onBack, onAddToCart, storeLogo, storeCurrency }: ProductDetailsViewProps) {
+export default function ProductDetailsView({ product, onBack, onAddToCart, storeLogo, storeCurrency, canReceiveOrders = true }: ProductDetailsViewProps) {
     const attributes = product.attributes;
     const hasVariants = attributes?.hasVariants;
     const variantOptions = attributes?.variantOptions || [];
@@ -294,53 +295,55 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
             </div>
 
             {/* ─── Fixed Bottom Bar ─── */}
-            <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t border-slate-100 px-5 py-4 z-50 safe-area-bottom">
-                <div className="flex items-center gap-3">
-                    {/* Quantity */}
-                    <div className="flex items-center bg-slate-100 rounded-xl overflow-hidden">
+            {canReceiveOrders && (
+                <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t border-slate-100 px-5 py-4 z-50 safe-area-bottom">
+                    <div className="flex items-center gap-3">
+                        {/* Quantity */}
+                        <div className="flex items-center bg-slate-100 rounded-xl overflow-hidden">
+                            <button
+                                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                className="w-10 h-12 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors text-lg font-bold"
+                            >
+                                −
+                            </button>
+                            <span className="w-8 text-center text-sm font-bold text-slate-800">{quantity}</span>
+                            <button
+                                onClick={() => setQuantity(quantity + 1)}
+                                className="w-10 h-12 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors text-lg font-bold"
+                            >
+                                +
+                            </button>
+                        </div>
+
+                        {/* Add to Cart */}
                         <button
-                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                            className="w-10 h-12 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors text-lg font-bold"
+                            onClick={handleAddToCart}
+                            disabled={!finalIsAvailable}
+                            className={`flex-1 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg ${!finalIsAvailable
+                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
+                                : 'text-white hover:brightness-95 active:scale-[0.98]'
+                                }`}
+                            style={finalIsAvailable ? (isAdded ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 85%, black)' } : { backgroundColor: 'var(--theme-primary)' }) : undefined}
                         >
-                            −
-                        </button>
-                        <span className="w-8 text-center text-sm font-bold text-slate-800">{quantity}</span>
-                        <button
-                            onClick={() => setQuantity(quantity + 1)}
-                            className="w-10 h-12 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors text-lg font-bold"
-                        >
-                            +
+                            {!finalIsAvailable ? (
+                                comboIsUnavailable ? (t('product.soldOut') || 'نفذت الكمية') : t('product.unavailable')
+                            ) : isAdded ? (
+                                <>
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                    {t('product.added')}
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                    </svg>
+                                    {t('product.addToCart')}
+                                </>
+                            )}
                         </button>
                     </div>
-
-                    {/* Add to Cart */}
-                    <button
-                        onClick={handleAddToCart}
-                        disabled={!finalIsAvailable}
-                        className={`flex-1 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg ${!finalIsAvailable
-                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
-                            : 'text-white hover:brightness-95 active:scale-[0.98]'
-                            }`}
-                        style={finalIsAvailable ? (isAdded ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 85%, black)' } : { backgroundColor: 'var(--theme-primary)' }) : undefined}
-                    >
-                        {!finalIsAvailable ? (
-                            comboIsUnavailable ? (t('product.soldOut') || 'نفذت الكمية') : t('product.unavailable')
-                        ) : isAdded ? (
-                            <>
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                {t('product.added')}
-                            </>
-                        ) : (
-                            <>
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                                </svg>
-                                {t('product.addToCart')}
-                            </>
-                        )}
-                    </button>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

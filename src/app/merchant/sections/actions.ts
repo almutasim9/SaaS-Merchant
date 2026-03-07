@@ -3,6 +3,21 @@
 import { createClient as createServerClient, supabaseAdmin } from '@/lib/supabase-server';
 import { revalidatePath } from 'next/cache';
 
+// Helper to securely get the authenticated merchant's store ID
+async function getSecureStoreId(supabase: any) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) throw new Error('غير مصرح لك بالقيام بهذا الإجراء.');
+
+    const { data: store, error: storeError } = await supabase
+        .from('stores')
+        .select('id')
+        .eq('merchant_id', user.id)
+        .single();
+
+    if (storeError || !store) throw new Error('لم يتم العثور على متجرك.');
+    return store.id;
+}
+
 export async function getSections(storeId: string) {
     const supabase = await createServerClient();
     const { data, error } = await supabase
@@ -20,6 +35,11 @@ export async function getSections(storeId: string) {
 
 export async function addSection(storeId: string, name: string, imageUrl?: string, name_en?: string, name_ku?: string) {
     const supabase = await createServerClient();
+    const secureStoreId = await getSecureStoreId(supabase);
+
+    if (storeId !== secureStoreId) {
+        throw new Error('غير مصرح لمتجرك بالقيام بهذا الإجراء.');
+    }
 
     // Check for duplicate name in the same store
     const { data: existing } = await supabase
@@ -56,6 +76,8 @@ export async function addSection(storeId: string, name: string, imageUrl?: strin
 
 export async function updateSection(id: string, name: string, imageUrl?: string, name_en?: string, name_ku?: string) {
     const supabase = await createServerClient();
+    const secureStoreId = await getSecureStoreId(supabase);
+
     const { data, error } = await supabase
         .from('sections')
         .update({
@@ -65,6 +87,7 @@ export async function updateSection(id: string, name: string, imageUrl?: string,
             image_url: imageUrl
         })
         .eq('id', id)
+        .eq('store_id', secureStoreId) // Critical: Tenant Isolation
         .select()
         .single();
 
@@ -79,10 +102,13 @@ export async function updateSection(id: string, name: string, imageUrl?: string,
 
 export async function deleteSection(sectionId: string) {
     const supabase = await createServerClient();
+    const secureStoreId = await getSecureStoreId(supabase);
+
     const { error } = await supabase
         .from('sections')
         .delete()
-        .eq('id', sectionId);
+        .eq('id', sectionId)
+        .eq('store_id', secureStoreId); // Critical: Tenant Isolation
 
     if (error) {
         throw new Error(error.message);
@@ -95,6 +121,12 @@ export async function deleteSection(sectionId: string) {
 
 export async function uploadSectionImageAction(storeId: string, base64Data: string, fileExt: string) {
     try {
+        const supabase = await createServerClient();
+        const secureStoreId = await getSecureStoreId(supabase);
+
+        if (storeId !== secureStoreId) {
+            throw new Error('غير مصرح لمتجرك بالقيام بهذا الإجراء.');
+        }
         const fileName = `section-${storeId}-${Date.now()}.${fileExt}`;
         const filePath = `${storeId}/sections/${fileName}`;
         const buffer = Buffer.from(base64Data, 'base64');

@@ -25,11 +25,19 @@ interface Order {
     governorate: string;
     status: string;
     created_at: string;
+    order_type?: 'delivery' | 'pickup';
 }
 
 interface Store {
     id: string;
+    name: string;
+    phone: string;
+    social_links?: {
+        instagram?: string;
+        whatsapp?: string;
+    };
     currency_preference?: CurrencyPreference;
+    subscription_plans?: any;
 }
 
 export default function MerchantOrdersPage() {
@@ -65,7 +73,7 @@ export default function MerchantOrdersPage() {
 
             const { data: storeData } = await supabase
                 .from('stores')
-                .select('id, currency_preference')
+                .select('id, name, phone, social_links, currency_preference, subscription_plans(allow_thermal_printing)')
                 .eq('merchant_id', user.id)
                 .single();
 
@@ -73,7 +81,7 @@ export default function MerchantOrdersPage() {
 
             const { data: ordersData, error } = await supabase
                 .from('orders')
-                .select('id, store_id, customer_info, items, total_price, delivery_fee, governorate, status, created_at')
+                .select('id, store_id, customer_info, items, total_price, delivery_fee, governorate, status, created_at, order_type')
                 .eq('store_id', storeData.id)
                 .is('deleted_at', null)
                 .in('status', ['pending', 'processing', 'shipped'])
@@ -145,6 +153,116 @@ export default function MerchantOrdersPage() {
             removeSubscription();
         };
     }, [qData?.storeId]);
+
+    // Robust thermal printing using an isolated iframe
+    const handlePrintReceipt = (order: Order) => {
+        if (!store?.subscription_plans?.allow_thermal_printing) {
+            toast.error('طباعة الفواتير متوفرة في الباقات المدفوعة فقط');
+            return;
+        }
+
+        const html = `
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="utf-8">
+            <title>Receipt #${order.id.slice(0, 6).toUpperCase()}</title>
+            <style>
+                @page { margin: 0; size: 80mm auto; }
+                body { 
+                    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+                    width: 72mm; /* Leave a small margin for 80mm paper */
+                    margin: 0 auto; 
+                    padding: 4mm; 
+                    font-size: 13px; 
+                    color: #000;
+                }
+                .text-center { text-align: center; }
+                .font-bold { font-weight: bold; }
+                .mb-1 { margin-bottom: 6px; }
+                .mb-3 { margin-bottom: 12px; }
+                .border-b { border-bottom: 1px dashed #000; padding-bottom: 8px; margin-bottom: 8px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 12px; }
+                th, td { padding: 6px 4px; border-bottom: 1px solid #eee; }
+                th { text-align: right; border-bottom: 1px dashed #000; font-size: 12px; }
+                .text-left { text-align: left; }
+                .text-center-td { text-align: center; }
+                .total { display: flex; justify-content: space-between; font-weight: bold; border-top: 1px dashed #000; padding-top: 8px; margin-top: 12px; font-size: 16px; }
+            </style>
+        </head>
+        <body>
+            <div class="text-center font-bold mb-1" style="font-size: 20px;">${store?.name || 'SaaS Merchant'}</div>
+            <div class="text-center" style="font-size: 11px; margin-bottom: 8px;">
+                ${store?.phone ? `<div>📞 ${store.phone}</div>` : ''}
+                ${store?.social_links?.instagram ? `<div>📷 @${store.social_links.instagram.replace('https://instagram.com/', '')}</div>` : ''}
+            </div>
+
+            <div class="text-center font-bold border-b text-sm" style="margin-top: 8px;">
+                فاتورة طلب - ${order.order_type === 'pickup' ? 'استلام من الفرع' : 'توصيل'}
+            </div>
+            
+            <div class="mb-1"><strong>رقم الطلب:</strong> #${order.id.slice(0, 6).toUpperCase()}</div>
+            <div class="mb-1"><strong>العميل:</strong> ${order.customer_info.name}</div>
+            <div class="mb-3"><strong>رقم الهاتف:</strong> <span dir="ltr">${order.customer_info.phone}</span></div>
+            ${order.order_type === 'pickup' ? '' : `
+            <div class="mb-1"><strong>المحافظة:</strong> ${(order as any).governorate || 'غير محدد'}</div>
+            <div class="mb-3"><strong>العنوان:</strong> ${order.governorate}${order.customer_info.landmark ? ` - ${order.customer_info.landmark}` : ''}</div>
+            `}
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>المنتج</th>
+                        <th class="text-center-td">الكمية</th>
+                        <th class="text-left">السعر</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${order.items.map(i => `
+                        <tr>
+                            <td>${i.name}</td>
+                            <td class="text-center-td">${i.quantity || 1}</td>
+                            <td class="text-left">${formatCurrency((i.price * (i.quantity || 1)), store?.currency_preference)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            
+            <div class="total">
+                <span>المجموع:</span>
+                <span>${formatCurrency(order.total_price, store?.currency_preference)}</span>
+            </div>
+            
+            <div class="text-center" style="margin-top: 24px; font-size: 11px; color: #555;">
+                تمت الطباعة بواسطة منّصة <strong>SaaS Merchant</strong>
+            </div>
+        </body>
+        </html>
+        `;
+
+        const printFrame = document.createElement('iframe');
+        printFrame.style.position = 'absolute';
+        printFrame.style.width = '0px';
+        printFrame.style.height = '0px';
+        printFrame.style.border = 'none';
+        document.body.appendChild(printFrame);
+
+        printFrame.contentDocument?.open();
+        printFrame.contentDocument?.write(html);
+        printFrame.contentDocument?.close();
+
+        // Wait briefly for iframe to render before calling print
+        setTimeout(() => {
+            printFrame.contentWindow?.focus();
+            printFrame.contentWindow?.print();
+            // Cleanup after a delay
+            setTimeout(() => {
+                if (document.body.contains(printFrame)) {
+                    document.body.removeChild(printFrame);
+                }
+            }, 5000);
+        }, 200);
+    };
 
     const calculateStats = (orderList: Order[]) => {
         const total = orderList.length;
@@ -459,6 +577,12 @@ export default function MerchantOrdersPage() {
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs font-black text-slate-400 uppercase">#{order.id.slice(0, 6).toUpperCase()}</span>
                                     <StatusBadge status={order.status} />
+                                    {order.order_type === 'pickup' && (
+                                        <span className="px-2 py-1 bg-amber-50 text-amber-600 rounded-lg text-[10px] font-bold">🛍️ استلام</span>
+                                    )}
+                                    {order.order_type === 'delivery' && (
+                                        <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold">🚚 توصيل</span>
+                                    )}
                                 </div>
                                 <span className="text-xs text-slate-400 font-medium">
                                     {new Date(order.created_at).toLocaleDateString('ar-IQ', { day: 'numeric', month: 'short' })}
@@ -517,7 +641,15 @@ export default function MerchantOrdersPage() {
                                 {filteredOrders.length > 0 ? filteredOrders.map((order, idx) => (
                                     <tr key={order.id} className="hover:bg-slate-50/50 transition-all group">
                                         <td className="px-6 lg:px-10 py-6">
-                                            <span className="text-sm font-bold text-slate-800 uppercase">#{order.id.slice(0, 6).toUpperCase()}</span>
+                                            <div className="flex flex-col gap-1.5">
+                                                <span className="text-sm font-bold text-slate-800 uppercase">#{order.id.slice(0, 6).toUpperCase()}</span>
+                                                {order.order_type === 'pickup' && (
+                                                    <span className="w-max px-2 py-0.5 bg-amber-50 text-amber-600 rounded text-[10px] font-bold">🛍️ استلام</span>
+                                                )}
+                                                {order.order_type === 'delivery' && (
+                                                    <span className="w-max px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold">🚚 توصيل</span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-6 lg:px-10 py-6 text-right">
                                             <div>
@@ -586,7 +718,15 @@ export default function MerchantOrdersPage() {
                         <div className="relative w-full max-w-full lg:max-w-xl bg-white h-screen shadow-2xl animate-in slide-in-from-left lg:slide-in-from-right duration-500 overflow-y-auto">
                             <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-10">
                                 <div>
-                                    <h3 className="text-xl lg:text-2xl font-bold text-slate-800">تفاصيل <span className="text-indigo-600">الطلب</span></h3>
+                                    <div className="flex items-center gap-3">
+                                        <h3 className="text-xl lg:text-2xl font-bold text-slate-800">تفاصيل <span className="text-indigo-600">الطلب</span></h3>
+                                        {selectedOrder.order_type === 'pickup' && (
+                                            <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-xl text-xs font-bold">🛍️ استلام من الفرع</span>
+                                        )}
+                                        {selectedOrder.order_type === 'delivery' && (
+                                            <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold">🚚 توصيل</span>
+                                        )}
+                                    </div>
                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">رقم الطلب: #{selectedOrder.id.slice(0, 6).toUpperCase()}</p>
                                 </div>
                                 <button onClick={() => setSelectedOrder(null)} className="w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center hover:bg-slate-50 rounded-xl lg:rounded-2xl transition-all">
@@ -643,10 +783,12 @@ export default function MerchantOrdersPage() {
                                             <span>المجموع الفرعي</span>
                                             <span>{formatCurrency(selectedOrder.total_price - (selectedOrder.delivery_fee || 0), store?.currency_preference)}</span>
                                         </div>
-                                        <div className="flex justify-between items-center text-xs lg:text-sm font-medium text-slate-400">
-                                            <span>رسوم التوصيل ({selectedOrder.governorate || 'غير محدد'})</span>
-                                            <span className="text-amber-600">{formatCurrency(selectedOrder.delivery_fee || 0, store?.currency_preference)}</span>
-                                        </div>
+                                        {selectedOrder.order_type !== 'pickup' && (
+                                            <div className="flex justify-between items-center text-xs lg:text-sm font-medium text-slate-400">
+                                                <span>رسوم التوصيل ({selectedOrder.governorate || 'غير محدد'})</span>
+                                                <span className="text-amber-600">{formatCurrency(selectedOrder.delivery_fee || 0, store?.currency_preference)}</span>
+                                            </div>
+                                        )}
                                         <div className="pt-4 lg:pt-6 flex justify-between items-center">
                                             <span className="text-lg lg:text-xl font-bold text-slate-800">الإجمالي النهائي</span>
                                             <span className="text-2xl lg:text-4xl font-black text-indigo-600 tracking-tighter">{formatCurrency(selectedOrder.total_price, store?.currency_preference)}</span>
@@ -656,6 +798,27 @@ export default function MerchantOrdersPage() {
                             </div>
 
                             <div className="p-6 lg:p-10 border-t border-slate-50 bg-[#FBFBFF] sticky bottom-0 z-10 flex flex-col sm:flex-row gap-3 lg:gap-4">
+                                {/* Print Button */}
+                                <button
+                                    onClick={() => handlePrintReceipt(selectedOrder)}
+                                    className={`w-full py-3.5 lg:py-4 flex items-center justify-center gap-2 rounded-xl lg:rounded-2xl text-[11px] lg:text-sm font-bold transition-all active:scale-95 ${(store?.subscription_plans as any)?.allow_thermal_printing
+                                        ? 'bg-emerald-600 text-white shadow-xl shadow-emerald-600/20 hover:bg-emerald-700'
+                                        : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                        }`}
+                                >
+                                    {(store?.subscription_plans as any)?.allow_thermal_printing ? (
+                                        <>
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                            طباعة الفاتورة
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h8z" /></svg>
+                                            طباعة الفاتورة (مقفلة)
+                                        </>
+                                    )}
+                                </button>
+
                                 <button
                                     onClick={() => setSelectedOrder(null)}
                                     className="w-full py-3.5 lg:py-4 bg-slate-900 text-white rounded-xl lg:rounded-2xl text-[11px] lg:text-sm font-bold shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all active:scale-95"
@@ -667,42 +830,6 @@ export default function MerchantOrdersPage() {
                     </div>
                 )}
 
-                {/* Print View for Thermal Printers (80mm) */}
-                {selectedOrder && (
-                    <div className="hidden print:block w-[80mm] p-2 text-black font-sans mx-auto text-right text-xs" dir="rtl">
-                        <div className="text-center font-bold text-lg mb-2">تفاصيل الطلب</div>
-                        <div className="text-center font-bold border-b border-black pb-2 mb-2 text-sm">{(selectedOrder as any).governorate || 'توصيل'}</div>
-                        <div className="mb-1"><strong>رقم الطلب:</strong> #{selectedOrder.id.slice(0, 6).toUpperCase()}</div>
-                        <div className="mb-1"><strong>العميل:</strong> {selectedOrder.customer_info.name}</div>
-                        <div className="mb-1"><strong>المحافظة:</strong> {(selectedOrder as any).governorate || 'غير محدد'}</div>
-                        <div className="mb-1"><strong>الهاتف:</strong> {selectedOrder.customer_info.phone}</div>
-                        <div className="mb-2"><strong>العنوان:</strong> <span className="whitespace-pre-wrap">{selectedOrder.governorate}{selectedOrder.customer_info.landmark ? ` - ${selectedOrder.customer_info.landmark}` : ''}</span></div>
-
-                        <table className="w-full text-right border-t border-b border-black mt-2 mb-2">
-                            <thead>
-                                <tr className="border-b border-black">
-                                    <th className="py-1">المنتج</th>
-                                    <th className="py-1">الكمية</th>
-                                    <th className="py-1 text-left">السعر</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {selectedOrder.items.map((i, idx) => (
-                                    <tr key={idx}>
-                                        <td className="py-1 pr-1">{i.name}</td>
-                                        <td className="py-1 text-center">{i.quantity}</td>
-                                        <td className="py-1 text-left">{(i.price * i.quantity).toLocaleString()}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-
-                        <div className="flex justify-between font-bold text-sm mt-3 pt-2 border-t border-black border-dashed">
-                            <span>المجموع (مع التوصيل):</span>
-                            <span>{formatCurrency(selectedOrder.total_price, store?.currency_preference)}</span>
-                        </div>
-                    </div>
-                )}
                 {/* Cancellation Reason Modal */}
                 {cancelModal && (
                     <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-4" dir="rtl">
@@ -771,6 +898,6 @@ export default function MerchantOrdersPage() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }

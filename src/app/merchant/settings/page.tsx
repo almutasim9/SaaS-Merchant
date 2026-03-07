@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { saveGeneralInfoAction, saveContactInfoAction, saveSocialLinksAction, uploadLogoAction, updateSlugAction, saveStorefrontConfigAction, uploadBannerImageAction, deleteBannerImageAction, saveCurrencyPreferenceAction } from './actions';
+import { saveGeneralInfoAction, saveContactInfoAction, saveSocialLinksAction, uploadLogoAction, updateSlugAction, saveStorefrontConfigAction, uploadBannerImageAction, deleteBannerImageAction, saveCurrencyPreferenceAction, saveOrderingPreferencesAction } from './actions';
+import { useFeatureGate } from '@/hooks/useFeatureGate';
 
 interface Store {
     id: string;
@@ -18,6 +19,9 @@ interface Store {
     logo_url?: string;
     merchant_id: string;
     currency_preference?: 'IQD' | 'USD';
+    accepts_orders?: boolean;
+    offers_delivery?: boolean;
+    offers_pickup?: boolean;
     delivery_fees?: any;
     social_links?: {
         whatsapp?: string;
@@ -44,6 +48,15 @@ interface Store {
         custom_theme: boolean;
         remove_branding: boolean;
         allow_custom_slug: boolean;
+        enable_ordering: boolean;
+        allow_social_links: boolean;
+        allow_banner: boolean;
+        allow_variants: boolean;
+        allow_excel_import: boolean;
+        max_products: number;
+        max_categories: number;
+        max_delivery_zones: number;
+        max_monthly_orders: number;
     };
 }
 
@@ -70,6 +83,7 @@ export default function MerchantSettingsPage() {
     const [savingContact, setSavingContact] = useState(false);
     const [savingSocial, setSavingSocial] = useState(false);
     const [savingCurrency, setSavingCurrency] = useState(false);
+    const [savingOrdering, setSavingOrdering] = useState(false);
     const [savingLogo, setSavingLogo] = useState(false);
     const [slugEditing, setSlugEditing] = useState(false);
     const [newSlug, setNewSlug] = useState('');
@@ -82,6 +96,7 @@ export default function MerchantSettingsPage() {
     const [savingAbout, setSavingAbout] = useState(false);
 
     const router = useRouter();
+    const { plan } = useFeatureGate(store?.id || null);
 
     useEffect(() => {
         fetchStore();
@@ -93,7 +108,7 @@ export default function MerchantSettingsPage() {
 
         const { data } = await supabase
             .from('stores')
-            .select('*, subscription_plans (custom_theme, remove_branding, allow_custom_slug)')
+            .select('*, subscription_plans (custom_theme, remove_branding, allow_custom_slug, enable_ordering, allow_social_links, allow_banner, allow_variants, allow_excel_import, max_products, max_categories, max_delivery_zones, max_monthly_orders)')
             .eq('merchant_id', user.id)
             .single();
 
@@ -167,6 +182,19 @@ export default function MerchantSettingsPage() {
         if (result.success) toast.success('تم حفظ عملة المتجر ✅');
         else toast.error(result.error || 'فشل في الحفظ');
         setSavingCurrency(false);
+    };
+
+    const handleSaveOrdering = async () => {
+        if (!store) return;
+        setSavingOrdering(true);
+        const result = await saveOrderingPreferencesAction(store.id, {
+            accepts_orders: !!store.accepts_orders,
+            offers_delivery: !!store.offers_delivery,
+            offers_pickup: !!store.offers_pickup,
+        });
+        if (result.success) toast.success('تم حفظ خيارات الطلب ✅');
+        else toast.error(result.error || 'فشل في الحفظ');
+        setSavingOrdering(false);
     };
 
     const handleSaveStorefront = async (section: 'appearance' | 'banner' | 'about') => {
@@ -395,6 +423,119 @@ export default function MerchantSettingsPage() {
                     </div>
                 </div>
 
+                {/* ═══════════════════ Ordering Preferences ═══════════════════ */}
+                <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+                    <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-emerald-50 text-emerald-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
+                                <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 className="text-lg lg:text-xl font-bold text-slate-800">خيارات استقبال الطلبات</h3>
+                                <p className="text-slate-400 text-[10px] lg:text-xs font-medium">التحكم في تفعيل سلة المشتريات وخيارات التوصيل والاستلام</p>
+                            </div>
+                        </div>
+                        <SectionSaveButton saving={savingOrdering} onClick={handleSaveOrdering} />
+                    </div>
+                    <div className="p-6 lg:p-10">
+                        <div className="space-y-6 lg:space-y-8">
+
+                            {/* Toggle 1: Accept Orders */}
+                            <div className="flex items-center justify-between p-4 lg:p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h4 className="font-bold text-slate-800">استقبال الطلبات (سلة المشتريات)</h4>
+                                        {!plan.allow_order_reception_options && (
+                                            <span className="px-2 py-0.5 bg-amber-100 text-amber-600 text-[10px] font-bold rounded-lg border border-amber-200">ميزة حصرية للذهبي</span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-slate-500 font-medium">عند الإغلاق، سيتحول متجرك إلى "كتالوج" لاستعراض المنتجات فقط دون إمكانية الطلب.</p>
+                                </div>
+                                <button
+                                    disabled={!plan.allow_order_reception_options}
+                                    onClick={() => {
+                                        if (plan.allow_order_reception_options) {
+                                            setStore(prev => prev ? { ...prev, accepts_orders: !prev.accepts_orders } : null);
+                                        } else {
+                                            toast.error('إيقاف الطلبات متاح فقط للباقة الذهبية.');
+                                        }
+                                    }}
+                                    className={`relative inline-flex h-7 w-12 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 ${store?.accepts_orders ? 'bg-indigo-600' : 'bg-slate-300'} ${(!plan.allow_order_reception_options) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                    role="switch"
+                                    aria-checked={store?.accepts_orders}
+                                >
+                                    <span aria-hidden="true" className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${store?.accepts_orders ? '-translate-x-5' : 'translate-x-0'}`} />
+                                </button>
+                            </div>
+
+                            {/* Toggle 2: Offer Delivery */}
+                            <div className={`transition-opacity duration-300 ${!store?.accepts_orders ? 'opacity-50 pointer-events-none' : ''}`}>
+                                <div className="flex items-center justify-between p-4 lg:p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div>
+                                        <h4 className="font-bold text-slate-800 mb-1">توفير خدمة التوصيل (دليفري) 🚚</h4>
+                                        <p className="text-xs text-slate-500 font-medium">السماح للعملاء بطلب توصيل المشتريات إلى عناوينهم.</p>
+                                    </div>
+                                    <button
+                                        disabled={!plan.allow_order_reception_options}
+                                        onClick={() => {
+                                            if (plan.allow_order_reception_options) {
+                                                setStore(prev => prev ? { ...prev, offers_delivery: !prev.offers_delivery } : null);
+                                            } else {
+                                                toast.error('أنت تستخدم الإعدادات الافتراضية للطلب. خيارات التوصيل حصرية للباقة الذهبية.');
+                                            }
+                                        }}
+                                        className={`relative inline-flex h-7 w-12 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 ${store?.offers_delivery ? 'bg-indigo-600' : 'bg-slate-300'} ${(!plan.allow_order_reception_options) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                        role="switch"
+                                        aria-checked={store?.offers_delivery}
+                                    >
+                                        <span aria-hidden="true" className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${store?.offers_delivery ? '-translate-x-5' : 'translate-x-0'}`} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Toggle 3: Offer Pickup */}
+                            <div className={`transition-opacity duration-300 ${!store?.accepts_orders ? 'opacity-50 pointer-events-none' : ''}`}>
+                                <div className="flex items-center justify-between p-4 lg:p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div>
+                                        <h4 className="font-bold text-slate-800 mb-1">توفير الاستلام من الفرع (Pickup) 🛍️</h4>
+                                        <p className="text-xs text-slate-500 font-medium">السماح للعملاء بالطلب واستلام المشتريات بأنفسهم من المتجر.</p>
+                                        {!store?.address && store?.offers_pickup && (
+                                            <p className="text-xs text-amber-600 font-bold mt-2">⚠️ يرجى التأكد من كتابة عنوان المتجر أدناه ليتمكن العملاء من الاستدلال عليه.</p>
+                                        )}
+                                    </div>
+                                    <button
+                                        disabled={!plan.allow_order_reception_options}
+                                        onClick={() => {
+                                            if (plan.allow_order_reception_options) {
+                                                setStore(prev => prev ? { ...prev, offers_pickup: !prev.offers_pickup } : null);
+                                            } else {
+                                                toast.error('أنت تستخدم الإعدادات الافتراضية للطلب. خيارات الاستلام حصرية للباقة الذهبية.');
+                                            }
+                                        }}
+                                        className={`relative inline-flex h-7 w-12 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 ${store?.offers_pickup ? 'bg-indigo-600' : 'bg-slate-300'} ${(!plan.allow_order_reception_options) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                        role="switch"
+                                        aria-checked={store?.offers_pickup}
+                                    >
+                                        <span aria-hidden="true" className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${store?.offers_pickup ? '-translate-x-5' : 'translate-x-0'}`} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {store?.accepts_orders && !store?.offers_delivery && !store?.offers_pickup && (
+                                <div className="p-4 bg-rose-50 text-rose-600 font-bold text-xs rounded-xl border border-rose-200 flex items-center gap-2">
+                                    <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    يجب إتاحة خيار واحد على الأقل (نوصيل أو استلام) للسماح للعملاء بالطلب.
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+                </div>
+
                 {/* ═══════════════════ Contact Info ═══════════════════ */}
                 <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
                     <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between">
@@ -497,64 +638,66 @@ export default function MerchantSettingsPage() {
                 </div>
 
                 {/* ═══════════════════ Social Media ═══════════════════ */}
-                <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-                    <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-pink-50 text-pink-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
-                                <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                                </svg>
+                {store?.subscription_plans?.allow_social_links !== false && (
+                    <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+                        <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-pink-50 text-pink-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
+                                    <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg lg:text-xl font-bold text-slate-800">روابط التواصل الاجتماعي</h3>
+                                    <p className="text-slate-400 text-[10px] lg:text-xs font-medium">ستظهر كأيقونات في واجهة المتجر.</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="text-lg lg:text-xl font-bold text-slate-800">روابط التواصل الاجتماعي</h3>
-                                <p className="text-slate-400 text-[10px] lg:text-xs font-medium">ستظهر كأيقونات في واجهة المتجر.</p>
+                            <SectionSaveButton saving={savingSocial} onClick={handleSaveSocial} />
+                        </div>
+                        <div className="p-6 lg:p-10 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 lg:gap-y-8">
+                            {/* WhatsApp */}
+                            <div className="space-y-3">
+                                <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">رقم الواتساب</label>
+                                <div className="relative" dir="ltr">
+                                    <input type="tel" value={store?.social_links?.whatsapp || ''} onChange={(e) => setStore(prev => prev ? { ...prev, social_links: { ...prev.social_links, whatsapp: e.target.value } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-2xl pl-12 lg:pl-14 pr-5 lg:pr-6 py-3.5 lg:py-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all text-left" placeholder="9647XXXXXXXX" dir="ltr" />
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500">
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.484 8.412-.003 6.557-5.338 11.892-11.893 11.892-1.997 0-3.951-.5-5.688-1.448l-6.309 1.656zm6.29-4.143c1.559.925 3.328 1.413 5.127 1.414 5.564 0 10.091-4.527 10.093-10.091 0-2.693-1.05-5.228-2.955-7.134-1.905-1.906-4.44-2.956-7.134-2.957-5.564 0-10.09 4.526-10.093 10.091 0 1.782.47 3.522 1.36 5.068l-.893 3.255 3.492-.916z" /></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            {/* Instagram */}
+                            <div className="space-y-3">
+                                <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">حساب انستغرام</label>
+                                <div className="relative" dir="ltr">
+                                    <input type="text" value={store?.social_links?.instagram || ''} onChange={(e) => setStore(prev => prev ? { ...prev, social_links: { ...prev.social_links, instagram: e.target.value } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-2xl pl-12 lg:pl-14 pr-5 lg:pr-6 py-3.5 lg:py-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-pink-100 transition-all text-left" placeholder="your_handle" dir="ltr" />
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-500">
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            {/* TikTok */}
+                            <div className="space-y-3">
+                                <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">حساب تيك توك</label>
+                                <div className="relative" dir="ltr">
+                                    <input type="text" value={store?.social_links?.tiktok || ''} onChange={(e) => setStore(prev => prev ? { ...prev, social_links: { ...prev.social_links, tiktok: e.target.value } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-2xl pl-12 lg:pl-14 pr-5 lg:pr-6 py-3.5 lg:py-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-100 transition-all text-left" placeholder="your_handle" dir="ltr" />
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-900">
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.6-4.12-1.31a8.6 8.6 0 01-1.87-1.41v8.74c0 1.39-.3 2.8-.91 4.05a7.8 7.8 0 01-2.49 3.01c-1.25.86-2.73 1.36-4.24 1.47-1.52.11-3.08-.1-4.49-.69a7.8 7.8 0 01-3.23-2.58A7.8 7.8 0 010 13.9c.01-1.39.29-2.8.91-4.05a7.8 7.8 0 012.49-3.01c1.25-.86 2.73-1.36 4.24-1.47 1.52-.11 3.08.1 4.49.69.21.09.41.19.61.3V1.52c-.01-.5-.01-1 0-1.5z" /></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            {/* Facebook */}
+                            <div className="space-y-3">
+                                <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">رابط فيسبوك</label>
+                                <div className="relative" dir="ltr">
+                                    <input type="text" value={store?.social_links?.facebook || ''} onChange={(e) => setStore(prev => prev ? { ...prev, social_links: { ...prev.social_links, facebook: e.target.value } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-2xl pl-12 lg:pl-14 pr-5 lg:pr-6 py-3.5 lg:py-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all text-left" placeholder="facebook.com/your-store" dir="ltr" />
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600">
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <SectionSaveButton saving={savingSocial} onClick={handleSaveSocial} />
                     </div>
-                    <div className="p-6 lg:p-10 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 lg:gap-y-8">
-                        {/* WhatsApp */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">رقم الواتساب</label>
-                            <div className="relative" dir="ltr">
-                                <input type="tel" value={store?.social_links?.whatsapp || ''} onChange={(e) => setStore(prev => prev ? { ...prev, social_links: { ...prev.social_links, whatsapp: e.target.value } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-2xl pl-12 lg:pl-14 pr-5 lg:pr-6 py-3.5 lg:py-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-emerald-100 transition-all text-left" placeholder="9647XXXXXXXX" dir="ltr" />
-                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.484 8.412-.003 6.557-5.338 11.892-11.893 11.892-1.997 0-3.951-.5-5.688-1.448l-6.309 1.656zm6.29-4.143c1.559.925 3.328 1.413 5.127 1.414 5.564 0 10.091-4.527 10.093-10.091 0-2.693-1.05-5.228-2.955-7.134-1.905-1.906-4.44-2.956-7.134-2.957-5.564 0-10.09 4.526-10.093 10.091 0 1.782.47 3.522 1.36 5.068l-.893 3.255 3.492-.916z" /></svg>
-                                </div>
-                            </div>
-                        </div>
-                        {/* Instagram */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">حساب انستغرام</label>
-                            <div className="relative" dir="ltr">
-                                <input type="text" value={store?.social_links?.instagram || ''} onChange={(e) => setStore(prev => prev ? { ...prev, social_links: { ...prev.social_links, instagram: e.target.value } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-2xl pl-12 lg:pl-14 pr-5 lg:pr-6 py-3.5 lg:py-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-pink-100 transition-all text-left" placeholder="your_handle" dir="ltr" />
-                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-500">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
-                                </div>
-                            </div>
-                        </div>
-                        {/* TikTok */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">حساب تيك توك</label>
-                            <div className="relative" dir="ltr">
-                                <input type="text" value={store?.social_links?.tiktok || ''} onChange={(e) => setStore(prev => prev ? { ...prev, social_links: { ...prev.social_links, tiktok: e.target.value } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-2xl pl-12 lg:pl-14 pr-5 lg:pr-6 py-3.5 lg:py-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-100 transition-all text-left" placeholder="your_handle" dir="ltr" />
-                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-900">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.6-4.12-1.31a8.6 8.6 0 01-1.87-1.41v8.74c0 1.39-.3 2.8-.91 4.05a7.8 7.8 0 01-2.49 3.01c-1.25.86-2.73 1.36-4.24 1.47-1.52.11-3.08-.1-4.49-.69a7.8 7.8 0 01-3.23-2.58A7.8 7.8 0 010 13.9c.01-1.39.29-2.8.91-4.05a7.8 7.8 0 012.49-3.01c1.25-.86 2.73-1.36 4.24-1.47 1.52-.11 3.08.1 4.49.69.21.09.41.19.61.3V1.52c-.01-.5-.01-1 0-1.5z" /></svg>
-                                </div>
-                            </div>
-                        </div>
-                        {/* Facebook */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">رابط فيسبوك</label>
-                            <div className="relative" dir="ltr">
-                                <input type="text" value={store?.social_links?.facebook || ''} onChange={(e) => setStore(prev => prev ? { ...prev, social_links: { ...prev.social_links, facebook: e.target.value } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-2xl pl-12 lg:pl-14 pr-5 lg:pr-6 py-3.5 lg:py-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all text-left" placeholder="facebook.com/your-store" dir="ltr" />
-                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                )}
             </div>
 
             {/* ═══════════════════ Storefront: Appearance ═══════════════════ */}
@@ -609,15 +752,15 @@ export default function MerchantSettingsPage() {
             </div>
 
             {/* ═══════════════════ Storefront: Banner ═══════════════════ */}
-            <div className={`bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden relative ${!store?.subscription_plans?.custom_theme ? 'opacity-80' : ''}`}>
-                {!store?.subscription_plans?.custom_theme && (
+            <div className={`bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden relative mb-6 lg:mb-8 ${!plan.allow_banner ? 'opacity-80' : ''}`}>
+                {!plan.allow_banner && (
                     <div className="absolute inset-x-0 bottom-0 top-[88px] z-10 backdrop-blur-[2px] bg-slate-50/50 flex items-center justify-center">
                         <div className="bg-white px-6 py-4 rounded-2xl shadow-xl flex flex-col items-center gap-2 border border-slate-100 max-w-sm text-center animate-in zoom-in duration-300">
                             <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-1">
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                             </div>
                             <h4 className="font-bold text-slate-800 text-lg">ميزة احترافية</h4>
-                            <p className="text-xs text-slate-500 font-medium">سلايدر الصور وتغيير البانر متاح للباقات المتقدمة (الفضية والذهبية). يرجى الترقية لتفعيل هذه الميزة.</p>
+                            <p className="text-xs text-slate-500 font-medium">سلايدر الصور وتغيير البانر متاح حصرياً للباقة الذهبية. يرجى الترقية لتفعيل هذه الميزة.</p>
                         </div>
                     </div>
                 )}
@@ -637,7 +780,7 @@ export default function MerchantSettingsPage() {
                         <SectionSaveButton saving={savingBanner} onClick={() => handleSaveStorefront('banner')} />
                     )}
                 </div>
-                <div className={`p-6 lg:p-10 space-y-6 ${!store?.subscription_plans?.custom_theme ? 'pointer-events-none' : ''}`}>
+                <div className={`p-6 lg:p-10 space-y-6 ${!plan.allow_banner ? 'pointer-events-none' : ''}`}>
                     {/* Banner Images */}
                     <div className="space-y-3">
                         <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">صور البانر (سلايدر)</label>
@@ -689,10 +832,20 @@ export default function MerchantSettingsPage() {
                         </div>
                     </div>
                 </div>
-            </div >
-
+            </div>
             {/* ═══════════════════ Storefront: About Us ═══════════════════ */}
-            < div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden" >
+            <div className={`bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden relative mb-6 lg:mb-8 ${!plan.allow_about_page ? 'opacity-80' : ''}`}>
+                {!plan.allow_about_page && (
+                    <div className="absolute inset-x-0 bottom-0 top-[88px] z-10 backdrop-blur-[2px] bg-slate-50/50 flex items-center justify-center">
+                        <div className="bg-white px-6 py-4 rounded-2xl shadow-xl flex flex-col items-center gap-2 border border-slate-100 max-w-sm text-center animate-in zoom-in duration-300">
+                            <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-1">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            </div>
+                            <h4 className="font-bold text-slate-800 text-lg">ميزة احترافية</h4>
+                            <p className="text-xs text-slate-500 font-medium">تخصيص صفحة "من نحن" متاح حصرياً للباقة الذهبية للمتاجر المتميزة.</p>
+                        </div>
+                    </div>
+                )}
                 <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 lg:w-12 lg:h-12 bg-cyan-50 text-cyan-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
@@ -707,7 +860,7 @@ export default function MerchantSettingsPage() {
                     </div>
                     <SectionSaveButton saving={savingAbout} onClick={() => handleSaveStorefront('about')} />
                 </div>
-                <div className="p-6 lg:p-10 space-y-8">
+                <div className={`p-6 lg:p-10 space-y-8 ${!plan.allow_about_page ? 'pointer-events-none' : ''}`}>
                     {/* Hero Section Texts */}
                     <div className="p-6 bg-slate-50 border border-slate-100 rounded-2xl space-y-5">
                         <h4 className="text-sm font-bold text-slate-800">القسم العلوي (البانر)</h4>

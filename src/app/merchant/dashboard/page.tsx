@@ -32,6 +32,9 @@ interface Store {
     name: string;
     slug: string;
     currency_preference?: CurrencyPreference;
+    subscription_plans?: {
+        name_en: string;
+    } | any;
 }
 
 export default function MerchantDashboard() {
@@ -49,6 +52,7 @@ export default function MerchantDashboard() {
     });
     const [loading, setLoading] = useState(true);
     const [hasSections, setHasSections] = useState(false);
+    const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
     const router = useRouter();
 
@@ -72,7 +76,7 @@ export default function MerchantDashboard() {
         try {
             const { data: storesData, error: storeError } = await supabase
                 .from('stores')
-                .select('id, name, slug, currency_preference')
+                .select('id, name, slug, currency_preference, subscription_plans(name_en)')
                 .eq('merchant_id', userId);
 
             if (storeError) throw storeError;
@@ -215,7 +219,7 @@ export default function MerchantDashboard() {
     const downloadQRCode = async () => {
         if (!store?.slug) return;
         try {
-            const storeUrl = typeof window !== 'undefined' ? `${window.location.origin}/shop/${store.slug}` : '';
+            const storeUrl = typeof window !== 'undefined' ? `${window.location.origin}/shop/${store.slug}?ref=qr` : '';
             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(storeUrl)}&margin=20`;
 
             const response = await fetch(qrUrl);
@@ -293,16 +297,18 @@ export default function MerchantDashboard() {
                         </svg>
                         آخر 30 يوم
                     </button>
-                    <button
-                        onClick={downloadQRCode}
-                        className="hidden lg:flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-indigo-600/10 hover:bg-indigo-700 transition-all"
-                    >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4zM16 16h4v4h-4z" />
-                        </svg>
-                        تحميل QR
-                    </button>
+                    {((store?.subscription_plans as any)?.name_en !== 'Free') && (
+                        <button
+                            onClick={() => setIsQrModalOpen(true)}
+                            className="hidden lg:flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-indigo-600/10 hover:bg-indigo-700 transition-all font-sans tracking-wide"
+                        >
+                            تحميل QR
+                            <svg className="w-5 h-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4zM16 16h4v4h-4z" />
+                            </svg>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -476,6 +482,94 @@ export default function MerchantDashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* QR Code and Sharing Modal */}
+            {isQrModalOpen && store && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-slate-900/40 backdrop-blur-sm transition-opacity">
+                    <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden border border-slate-100 flex flex-col items-center p-8 relative animate-in fade-in zoom-in duration-200">
+
+                        <button
+                            onClick={() => setIsQrModalOpen(false)}
+                            className="absolute top-6 left-6 w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-700 rounded-full flex items-center justify-center transition-colors"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+
+                        <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6">
+                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                            </svg>
+                        </div>
+
+                        <h3 className="text-2xl font-black text-slate-800 mb-2">مشاركة متجرك</h3>
+                        <p className="text-slate-500 font-medium text-center text-sm mb-8">
+                            دع عملائك يزورون متجرك بسهولة عبر رمز QR أو عن طريق الرابط المباشر.
+                        </p>
+
+                        <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100 mb-6">
+                            <img
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/shop/${store.slug}?ref=qr` : '')}&margin=20`}
+                                alt="Store QR Code"
+                                className="w-48 h-48 mix-blend-multiply rounded-xl"
+                            />
+                        </div>
+
+                        <button
+                            onClick={downloadQRCode}
+                            className="w-full flex items-center justify-center gap-2 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-colors shadow-lg shadow-indigo-600/20 mb-6"
+                        >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            تحميل QR Code
+                        </button>
+
+                        <div className="w-full">
+                            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-2 mb-2 block">رابط المتجر</label>
+                            <div className="flex bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden p-1.5 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+                                <input
+                                    type="text"
+                                    readOnly
+                                    value={typeof window !== 'undefined' ? `${window.location.origin}/shop/${store.slug}` : ''}
+                                    className="flex-1 bg-transparent px-3 text-sm font-medium text-slate-600 outline-none w-full"
+                                    dir="ltr"
+                                />
+                                <button
+                                    onClick={() => {
+                                        const url = typeof window !== 'undefined' ? `${window.location.origin}/shop/${store.slug}` : '';
+                                        if (navigator.clipboard && window.isSecureContext) {
+                                            navigator.clipboard.writeText(url);
+                                            toast.success('تم نسخ الرابط بنجاح');
+                                        } else {
+                                            const textArea = document.createElement("textarea");
+                                            textArea.value = url;
+                                            textArea.style.position = "absolute";
+                                            textArea.style.left = "-999999px";
+                                            document.body.prepend(textArea);
+                                            textArea.select();
+                                            try {
+                                                document.execCommand('copy');
+                                                toast.success('تم نسخ الرابط بنجاح');
+                                            } catch (error) {
+                                                console.error(error);
+                                                toast.error('حدث خطأ أثناء نسخ الرابط');
+                                            } finally {
+                                                textArea.remove();
+                                            }
+                                        }
+                                    }}
+                                    className="bg-white hover:bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs border border-slate-200 transition-colors shadow-sm"
+                                >
+                                    نسخ
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

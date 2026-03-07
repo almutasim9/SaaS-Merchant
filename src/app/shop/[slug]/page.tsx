@@ -32,7 +32,7 @@ export default async function ShopPage({ params }: Props) {
     // 1. Fetch Store Details
     const { data: store, error: storeError } = await supabase
         .from('stores')
-        .select('id, name, description, phone, email, address, logo_url, social_links, delivery_fees, storefront_config, currency_preference')
+        .select('id, name, description, phone, email, address, logo_url, social_links, delivery_fees, storefront_config, currency_preference, accepts_orders, offers_delivery, offers_pickup, subscription_plans (enable_ordering, custom_theme, remove_branding)')
         .eq('slug', slug)
         .single();
 
@@ -68,9 +68,20 @@ export default async function ShopPage({ params }: Props) {
     const sections = sectionsRes.data || [];
     const products = productsRes.data || [];
 
+    // Calculate if the store can receive orders
+    const acceptsOrdersFlag = store.accepts_orders !== false; // Default true
+    const plans = store.subscription_plans;
+    const planAllowsOrdering = Array.isArray(plans) ? (plans[0] as any)?.enable_ordering !== false : (plans as any)?.enable_ordering !== false;
+    const canReceiveOrders = acceptsOrdersFlag && planAllowsOrdering;
+
     return (
         <CartProvider>
-            <StorefrontContent store={store} products={products || []} sections={sections || []} />
+            <StorefrontContent
+                store={store}
+                products={products || []}
+                sections={sections || []}
+                canReceiveOrders={canReceiveOrders}
+            />
         </CartProvider>
     );
 }

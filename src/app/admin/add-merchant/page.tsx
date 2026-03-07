@@ -65,12 +65,33 @@ export default function AddMerchantPage() {
         const { name, value } = e.target;
 
         if (name === 'storeName') {
-            const generatedSlug = value
+            // Only auto-generate slug if the user hasn't manually typed a custom slug yet
+            // or if the current slug is exactly the auto-generated version of the old store name.
+            setFormData(prev => {
+                const oldGeneratedSlug = prev.storeName
+                    .toLowerCase()
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/\s+/g, '-')
+                    .trim();
+
+                let newSlug = prev.slug;
+                if (!prev.slug || prev.slug === oldGeneratedSlug) {
+                    newSlug = value
+                        .toLowerCase()
+                        .replace(/[^\w\s-]/g, '')
+                        .replace(/\s+/g, '-')
+                        .trim();
+                }
+
+                return { ...prev, storeName: value, slug: newSlug };
+            });
+        } else if (name === 'slug') {
+            // Allow manual slug editing, but force lowercase and no spaces
+            const sanitizedSlug = value
                 .toLowerCase()
-                .replace(/[^\w\s-]/g, '')
-                .replace(/\s+/g, '-')
+                .replace(/[^\w-]/g, '') // Only allow letters, numbers, and dashes
                 .trim();
-            setFormData(prev => ({ ...prev, storeName: value, slug: generatedSlug }));
+            setFormData(prev => ({ ...prev, slug: sanitizedSlug }));
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
         }
@@ -140,8 +161,8 @@ export default function AddMerchantPage() {
                                     <input
                                         type="text" name="slug" required
                                         value={formData.slug} onChange={handleInputChange}
-                                        className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-slate-500 focus:outline-none cursor-not-allowed font-mono text-sm"
-                                        readOnly
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-mono text-sm"
+                                        placeholder="mat3am-alsa3ada"
                                     />
                                 </div>
                             </div>

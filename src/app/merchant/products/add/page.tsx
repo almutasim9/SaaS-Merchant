@@ -5,17 +5,27 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { getSections } from '../../sections/actions';
+import { useFeatureGate } from '@/hooks/useFeatureGate';
 
 export default function AddProductPage() {
     const [loading, setLoading] = useState(false);
-    const [uploading, setUploading] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
     const [storeId, setStoreId] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [additionalImages, setAdditionalImages] = useState<string[]>([]);
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<{
+        name: string;
+        description: string;
+        price: string;
+        section_id: string;
+        isAvailable: boolean;
+        outOfStockBehavior: 'hide' | 'show_badge';
+        image_url: string;
+        hasVariants: boolean;
+        options: { sizes: string[], colors: string[], weights: { value: string, unit: string }[] };
+        weightPrices: Record<string, string>;
+    }>({
         name: '',
         description: '',
         price: '', // Base price
@@ -32,8 +42,15 @@ export default function AddProductPage() {
         weightPrices: {} as Record<string, string> // weight_unit -> price string
     });
     const [sections, setSections] = useState<any[]>([]);
+    const [additionalImages, setAdditionalImages] = useState<string[]>([]);
+    const [uploading, setUploading] = useState(false);
 
     const router = useRouter();
+    const { plan } = useFeatureGate(storeId);
+    const MAX_IMAGES = plan.allow_multiple_product_images ? 5 : 1;
+
+    const allImages = [formData.image_url, ...additionalImages].filter(Boolean);
+    const canAddMore = allImages.length < MAX_IMAGES;
 
     useEffect(() => {
         checkMerchant();
@@ -75,10 +92,6 @@ export default function AddProductPage() {
             setError('لم يتم العثور على متجر لهذا الحساب.');
         }
     };
-
-    const MAX_IMAGES = 5;
-    const allImages = [formData.image_url, ...additionalImages].filter(Boolean);
-    const canAddMore = allImages.length < MAX_IMAGES;
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -618,7 +631,12 @@ export default function AddProductPage() {
                                 </div>
                                 <h2 className="text-lg lg:text-xl font-black text-slate-800">صور المنتج</h2>
                             </div>
-                            <span className="text-xs font-bold text-slate-400">{allImages.length}/{MAX_IMAGES}</span>
+                            <div className="flex items-center gap-3">
+                                {!plan.allow_multiple_product_images && (
+                                    <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md">صور متعددة في الذهبي</span>
+                                )}
+                                <span className="text-xs font-bold text-slate-400">{allImages.length}/{MAX_IMAGES}</span>
+                            </div>
                         </div>
 
                         <div className="p-6 lg:p-10">

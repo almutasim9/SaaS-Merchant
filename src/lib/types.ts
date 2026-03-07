@@ -62,6 +62,9 @@ export interface Store {
     description?: string;
     social_links?: SocialLinks;
     delivery_fees?: DeliveryFees;
+    accepts_orders?: boolean;
+    offers_delivery?: boolean;
+    offers_pickup?: boolean;
     email?: string;
     storefront_config?: StorefrontConfig;
     plan_id: string;
@@ -86,6 +89,7 @@ export interface SubscriptionPlan {
     free_delivery_all_zones: boolean;
     allow_custom_slug: boolean;
     max_monthly_orders: number;
+    enable_ordering?: boolean;
     description_ar?: string;
     description_en?: string;
     description_ku?: string;
@@ -180,8 +184,19 @@ export interface Order {
     delivery_fee?: number;
     status: OrderStatus;
     currency_preference?: 'IQD' | 'USD';
+    order_type?: 'delivery' | 'pickup';
     governorate?: string;
     cancellation_reason?: string;
     deleted_at?: string;
+    created_at: string;
+}
+
+// ── Analytics ───────────────────────────────────────────────────────────────
+
+export interface StoreVisit {
+    id: string;
+    store_id: string;
+    source: 'link' | 'qr';
+    visitor_id?: string;
     created_at: string;
 }

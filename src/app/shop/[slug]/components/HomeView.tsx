@@ -35,9 +35,10 @@ interface ProductCardProps {
     onAddToCart: (product: Product) => void;
     onClick?: (product: Product) => void;
     storeCurrency?: CurrencyPreference;
+    canReceiveOrders?: boolean;
 }
 
-function ProductCard({ product, onAddToCart, onClick, storeCurrency }: ProductCardProps) {
+function ProductCard({ product, onAddToCart, onClick, storeCurrency, canReceiveOrders = true }: ProductCardProps) {
     const { language, t, dir } = useLanguage();
     const isUnavailable = product.attributes?.isAvailable === false || product.isAvailable === false;
     const hasVariants = product.attributes?.hasVariants || product.hasVariants;
@@ -96,19 +97,21 @@ function ProductCard({ product, onAddToCart, onClick, storeCurrency }: ProductCa
                 )}
 
                 {/* Add Button */}
-                <button
-                    onClick={handleAddToCart}
-                    disabled={isUnavailable}
-                    className={`absolute bottom-2 left-2 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${isUnavailable
-                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                        : 'text-white hover:brightness-95 active:scale-90'
-                        }`}
-                    style={!isUnavailable ? { backgroundColor: 'var(--theme-primary)' } : undefined}
-                >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                </button>
+                {canReceiveOrders && (
+                    <button
+                        onClick={handleAddToCart}
+                        disabled={isUnavailable}
+                        className={`absolute bottom-2 left-2 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${isUnavailable
+                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                            : 'text-white hover:brightness-95 active:scale-90'
+                            }`}
+                        style={!isUnavailable ? { backgroundColor: 'var(--theme-primary)' } : undefined}
+                    >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                    </button>
+                )}
 
                 {/* Discount Badge */}
                 {product.discount_price && product.discount_price < product.price && (
@@ -191,6 +194,7 @@ interface HomeViewProps {
         about?: { content?: string };
     };
     storeCurrency?: CurrencyPreference;
+    canReceiveOrders?: boolean;
 }
 
 export default function HomeView({
@@ -210,6 +214,7 @@ export default function HomeView({
     totalItems,
     storefrontConfig,
     storeCurrency,
+    canReceiveOrders = true,
 }: HomeViewProps) {
 
     const sectionsRef = useRef<HTMLDivElement>(null);

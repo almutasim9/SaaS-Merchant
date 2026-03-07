@@ -12,6 +12,7 @@ interface Store {
     id: string;
     name: string;
     slug: string;
+    logo_url?: string;
 }
 
 interface NavigationItem {
@@ -90,7 +91,7 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
         try {
             const { data } = await supabase
                 .from('stores')
-                .select('id, name, slug')
+                .select('id, name, slug, logo_url')
                 .eq('merchant_id', userId)
                 .single();
 
@@ -150,6 +151,7 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
         {
             group: 'المبيعات',
             items: [
+                { id: 'analytics', label: 'الإحصائيات', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', href: '/merchant/analytics' },
                 { id: 'orders', label: 'الطلبات', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z', href: '/merchant/orders', badge: pendingOrdersCount > 0 ? pendingOrdersCount : null },
                 { id: 'sales-history', label: 'سجل المبيعات', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4', href: '/merchant/sales-history' },
             ]
@@ -182,11 +184,17 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
             `}>
                     <div className="flex items-center justify-between mb-16 px-2 lg:block">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
-                                <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 3L4 9V21H20V9L12 3ZM12 11C10.9 11 10 10.1 10 9C10 7.9 10.9 7 12 7C13.1 7 14 7.9 14 9C14 10.1 13.1 11 12 11Z" />
-                                </svg>
-                            </div>
+                            {store?.logo_url ? (
+                                <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-100 shadow-lg shadow-black/5 flex-shrink-0 bg-white p-1">
+                                    <img src={store.logo_url} alt={store.name} className="w-full h-full object-contain rounded-lg" />
+                                </div>
+                            ) : (
+                                <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20 flex-shrink-0">
+                                    <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 3L4 9V21H20V9L12 3ZM12 11C10.9 11 10 10.1 10 9C10 7.9 10.9 7 12 7C13.1 7 14 7.9 14 9C14 10.1 13.1 11 12 11Z" />
+                                    </svg>
+                                </div>
+                            )}
                             <div>
                                 <h2 className="text-xl font-bold text-slate-800 leading-tight">{store?.name || 'متجر النخبة'}</h2>
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">حساب التاجر الموثق</span>
@@ -330,6 +338,7 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
                             { href: '/merchant/dashboard', label: 'الرئيسية', badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> },
                             { href: '/merchant/products', label: 'المنتجات', badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg> },
                             { href: '/merchant/orders', label: 'الطلبات', badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg> },
+                            { href: '/merchant/analytics', label: 'الإحصائيات', badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
                             { href: '/merchant/sales-history', label: 'المبيعات', badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg> },
                             { href: '/merchant/settings', label: 'الإعدادات', badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
                         ].map((tab) => {

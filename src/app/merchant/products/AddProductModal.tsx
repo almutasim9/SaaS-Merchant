@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import imageCompression from 'browser-image-compression';
+import { useFeatureGate } from '@/hooks/useFeatureGate';
 
 // --- Types & Interfaces ---
 interface VariantOption {
@@ -204,8 +205,8 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
     // --- Media Upload ---
     // If we have a subscription object, we check the plan ID or max_products as an indicator if it's free.
     // Assuming `free` plan has `id === 'free'` or missing subscription.
-    const isFreePlan = !storeSubscription || storeSubscription.id === 'free';
-    const MAX_IMAGES = isFreePlan ? 1 : 5;
+    const { plan } = useFeatureGate(storeId);
+    const MAX_IMAGES = plan.allow_multiple_product_images ? 5 : 1;
     const allImages = [imageUrl, ...additionalImages].filter(Boolean);
     const canAddMore = allImages.length < MAX_IMAGES;
 
@@ -381,7 +382,12 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                             <div className="bg-white rounded-[2rem] p-5 lg:p-8 border border-slate-200/60 shadow-sm space-y-6">
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-xs font-black text-slate-700">صور المنتج</label>
+                                        <div className="flex items-center gap-2">
+                                            <label className="text-xs font-black text-slate-700">صور المنتج</label>
+                                            {!plan.allow_multiple_product_images && (
+                                                <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md">صور متعددة في الذهبي</span>
+                                            )}
+                                        </div>
                                         <span className="text-[10px] font-bold text-slate-400">{allImages.length}/{MAX_IMAGES}</span>
                                     </div>
                                     <div className="grid grid-cols-5 gap-3">
@@ -408,10 +414,10 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                                                 <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="absolute inset-0 opacity-0 cursor-pointer" title="أضف صورة" />
                                             </div>
                                         )}
-                                        {!canAddMore && isFreePlan && (
-                                            <div className="relative aspect-square rounded-xl bg-rose-50 border-2 border-dashed border-rose-200 flex flex-col items-center justify-center text-center p-2 opacity-80" title="الترقية مطلوبة لتخطي الحد المسموح">
-                                                <svg className="w-5 h-5 text-rose-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                                                <span className="text-[9px] font-bold text-rose-600 uppercase tracking-widest">تجاوزت الحد (رقي باقتك)</span>
+                                        {!canAddMore && !plan.allow_multiple_product_images && (
+                                            <div className="relative aspect-square rounded-xl bg-orange-50 border-2 border-dashed border-orange-200 flex flex-col items-center justify-center text-center p-2 opacity-80" title="الترقية مطلوبة لتخطي الحد المسموح">
+                                                <svg className="w-5 h-5 text-orange-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                                <span className="text-[9px] font-bold text-orange-600 uppercase tracking-widest">ميزة للذهبي (رقي باقتك)</span>
                                             </div>
                                         )}
                                     </div>

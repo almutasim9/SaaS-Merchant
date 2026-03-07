@@ -1,8 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
+
 import { useCart } from '@/context/CartContext';
 import { placeOrderAction } from '../actions';
+import { recordVisitAction } from './actions';
+import { formatCurrency } from '@/lib/format-currency';
+import { useSearchParams } from 'next/navigation';
 
 // Components
 import HomeView from './components/HomeView';
@@ -74,8 +78,12 @@ interface Store {
     subscription_plans?: {
         custom_theme: boolean;
         remove_branding: boolean;
-    } | { custom_theme: boolean; remove_branding: boolean; }[] | null;
+        enable_ordering?: boolean;
+    } | { custom_theme: boolean; remove_branding: boolean; enable_ordering?: boolean; }[] | null;
     currency_preference?: 'IQD' | 'USD';
+    accepts_orders?: boolean;
+    offers_delivery?: boolean;
+    offers_pickup?: boolean;
 }
 
 interface Section {
@@ -86,7 +94,7 @@ interface Section {
     image_url?: string;
 }
 
-export default function StorefrontContent(props: { store: Store, products: Product[], sections: Section[] }) {
+export default function StorefrontContent(props: { store: Store, products: Product[], sections: Section[], canReceiveOrders: boolean }) {
     return (
         <LanguageProvider>
             <StorefrontInner {...props} />
@@ -94,7 +102,7 @@ export default function StorefrontContent(props: { store: Store, products: Produ
     );
 }
 
-function StorefrontInner({ store, products, sections }: { store: Store, products: Product[], sections: Section[] }) {
+function StorefrontInner({ store, products, sections, canReceiveOrders }: { store: Store, products: Product[], sections: Section[], canReceiveOrders: boolean }) {
     const { cart, addToCart, removeFromCart, updateQuantity, totalPrice, totalItems, clearCart } = useCart();
     const { t, dir } = useLanguage();
 
@@ -106,7 +114,17 @@ function StorefrontInner({ store, products, sections }: { store: Store, products
     const [isOrdering, setIsOrdering] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState(false);
     const [orderNumber, setOrderNumber] = useState<string>('');
+    const [orderSummary, setOrderSummary] = useState<any>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    const searchParams = useSearchParams();
+
+    // Track Visit
+    React.useEffect(() => {
+        const sourceParam = searchParams.get('ref') === 'qr' ? 'qr' : 'link';
+        // Fire and forget
+        recordVisitAction(store.id, sourceParam).catch(err => console.error('Failed to record visit', err));
+    }, [store.id, searchParams]);
 
     // Unified filtering logic
     const visibleProducts = products.filter(p => {
@@ -166,6 +184,14 @@ function StorefrontInner({ store, products, sections }: { store: Store, products
                 return;
             }
 
+            setOrderSummary({
+                items: [...cart],
+                orderType: customerInfo.orderType,
+                deliveryFee: customerInfo.__deliveryFee,
+                totalPrice: customerInfo.__finalTotal,
+                subTotal: customerInfo.__subTotal
+            });
+
             clearCart();
             setOrderNumber(result.orderId ? `#${String(result.orderId).slice(-5)}` : `#${Math.floor(10000 + Math.random() * 90000)}`);
             setOrderSuccess(true);
@@ -187,6 +213,7 @@ function StorefrontInner({ store, products, sections }: { store: Store, products
     const handleBackFromSuccess = () => {
         setOrderSuccess(false);
         setOrderNumber('');
+        setOrderSummary(null);
         setView('home');
         setSelectedProduct(null);
         window.scrollTo(0, 0);
@@ -204,7 +231,11 @@ function StorefrontInner({ store, products, sections }: { store: Store, products
                             </svg>
                         </div>
                         <h2 className="text-2xl font-black text-slate-800 mb-2">{t('success.title') || 'تم استلام طلبك بنجاح! 🎉'}</h2>
-                        <p className="text-sm text-slate-500 leading-6 whitespace-pre-wrap">{t('success.desc') || 'شكراً لشرائك منا، سنتواصل معك قريباً\nلتأكيد تفاصيل الطلب والشحن.'}</p>
+                        <p className="text-sm text-slate-500 leading-6 whitespace-pre-wrap">
+                            {orderSummary?.orderType === 'pickup'
+                                ? 'سنقوم بالتواصل معك قريباً لتأكيد الطلب وترتيب عملية الاستلام.'
+                                : 'سنقوم بالتواصل معك قريباً لتأكيد الطلب وترتيب عملية التوصيل.'}
+                        </p>
                     </div>
 
                     {/* Order Info Card */}
@@ -229,12 +260,44 @@ function StorefrontInner({ store, products, sections }: { store: Store, products
                         </div>
                     </div>
 
-                    {/* Delivery Banner */}
-                    <div className="mx-5 mt-4 bg-gradient-to-l from-[var(--theme-primary)] to-[color-mix(in_srgb,var(--theme-primary)_70%,black)] rounded-2xl overflow-hidden p-6 text-center relative">
-                        <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
-                        <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/10" />
-                        <p className="text-white font-bold text-lg relative z-10">{t('success.deliveryMsg') || 'نصلك منتجاتنا أينما كنت 📦'}</p>
-                    </div>
+                    {orderSummary && (
+                        <div className="mx-5 mt-4">
+                            <div id="invoice-capture-area" className="bg-white rounded-2xl border border-slate-100 p-6 text-right mb-4">
+                                <h3 className="text-xl font-bold text-slate-800 mb-1 border-b border-slate-100 pb-3">{store.name}</h3>
+                                <p className="text-xs text-slate-400 mb-6 uppercase tracking-widest font-bold">رقم الطلب: {orderNumber}</p>
+
+                                <div className="space-y-3 mb-4">
+                                    {orderSummary.items.map((item: any, idx: number) => (
+                                        <div key={idx} className="flex justify-between items-start text-sm">
+                                            <div className="flex flex-col pe-4">
+                                                <span className="text-slate-800 font-semibold">{item.quantity} × {item.name}</span>
+                                            </div>
+                                            <span className="font-bold text-slate-800 whitespace-nowrap" dir="ltr">{formatCurrency(item.price * item.quantity, store.currency_preference)}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="border-t border-slate-100 pt-4 space-y-3 text-sm">
+                                    <div className="flex justify-between text-slate-500 font-medium">
+                                        <span>المجموع الفرعي</span>
+                                        <span dir="ltr">{formatCurrency(orderSummary.subTotal, store.currency_preference)}</span>
+                                    </div>
+                                    {orderSummary.orderType !== 'pickup' && (
+                                        <div className="flex justify-between text-slate-500 font-medium">
+                                            <span>رسوم التوصيل</span>
+                                            <span dir="ltr">{formatCurrency(orderSummary.deliveryFee, store.currency_preference)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between font-black text-lg text-slate-800 pt-3 border-t border-slate-100">
+                                        <span>الإجمالي النهائي</span>
+                                        <span dir="ltr">{formatCurrency(orderSummary.totalPrice, store.currency_preference)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p className="text-center text-sm text-slate-500 font-medium">التقط صورة للشاشة لحفظ الفاتورة</p>
+                        </div>
+                    )}
 
                     {/* Buttons */}
                     <div className="mx-5 mt-6 space-y-3 pb-10">
@@ -275,6 +338,7 @@ function StorefrontInner({ store, products, sections }: { store: Store, products
                         onAddToCart={handleAddToCart}
                         storeLogo={store.logo_url}
                         storeCurrency={store.currency_preference}
+                        canReceiveOrders={canReceiveOrders}
                     />
                 ) : null;
             case 'cart':
@@ -298,6 +362,9 @@ function StorefrontInner({ store, products, sections }: { store: Store, products
                         isOrdering={isOrdering}
                         deliveryFees={store.delivery_fees}
                         storeCurrency={store.currency_preference}
+                        offersDelivery={store.offers_delivery}
+                        offersPickup={store.offers_pickup}
+                        storeAddress={store.address}
                     />
                 );
             case 'about':
@@ -351,6 +418,7 @@ function StorefrontInner({ store, products, sections }: { store: Store, products
                             }
                         }}
                         storeCurrency={store.currency_preference}
+                        canReceiveOrders={canReceiveOrders}
                     />
                 );
         }
@@ -372,7 +440,7 @@ function StorefrontInner({ store, products, sections }: { store: Store, products
                 activeView={view}
             />
 
-            {!orderSuccess && view === 'home' && (
+            {!orderSuccess && view === 'home' && canReceiveOrders && (
                 <FloatingCart
                     totalItems={totalItems}
                     onClick={() => setView('cart')}

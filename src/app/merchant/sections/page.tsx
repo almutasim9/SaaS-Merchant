@@ -18,6 +18,7 @@ export default function MerchantSectionsPage() {
     const [storeId, setStoreId] = useState<string>('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSection, setSelectedSection] = useState<Section | null>(null);
+    const [maxSections, setMaxSections] = useState<number>(99999);
 
     useEffect(() => {
         fetchData();
@@ -31,12 +32,14 @@ export default function MerchantSectionsPage() {
 
             const { data: storeData } = await supabase
                 .from('stores')
-                .select('id')
+                .select('id, subscription_plans(max_categories)')
                 .eq('merchant_id', user.id)
                 .single();
 
             if (storeData) {
                 setStoreId(storeData.id);
+                const sp = (storeData as any).subscription_plans;
+                if (sp?.max_categories) setMaxSections(sp.max_categories);
                 const sectionsData = await getSections(storeData.id);
                 setSections(sectionsData as Section[]);
             }
@@ -85,7 +88,13 @@ export default function MerchantSectionsPage() {
                     <p className="text-slate-400 font-medium mt-1 uppercase text-[10px] tracking-widest">تحكم في أقسام متجرك، قم بتعديلها أو حذفها بسهولة من خلال هذا المعرض.</p>
                 </div>
                 <button
-                    onClick={openAddModal}
+                    onClick={() => {
+                        if (sections.length >= maxSections) {
+                            alert(`لقد وصلت للحد الأقصى للأقسام (${maxSections}). يرجى الترقية لإضافة المزيد.`);
+                            return;
+                        }
+                        openAddModal();
+                    }}
                     className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 lg:px-8 py-3 lg:py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-600/20 hover:bg-slate-900 transition-all active:scale-95"
                 >
                     <svg className="w-5 h-5 font-bold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -99,7 +108,7 @@ export default function MerchantSectionsPage() {
             <div className="space-y-4">
                 <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
                     <div className="p-6 lg:p-8 border-b border-slate-50 bg-slate-50/20 flex items-center justify-between">
-                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">الأقسام الحالية ({sections.length})</h3>
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">الأقسام الحالية ({sections.length}/{maxSections === 99999 ? '∞' : maxSections})</h3>
                         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                     </div>
                     <div className="divide-y divide-slate-50">

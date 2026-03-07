@@ -17,6 +17,15 @@ export interface SubscriptionPlan {
     custom_theme: boolean;
     remove_branding: boolean;
     advanced_reports: boolean;
+    allow_variants: boolean;
+    allow_excel_import: boolean;
+    allow_social_links: boolean;
+    allow_banner: boolean;
+    allow_thermal_printing: boolean;
+    allow_category_images: boolean;
+    allow_multiple_product_images: boolean;
+    allow_about_page: boolean;
+    allow_order_reception_options: boolean;
     features_ar: string[];
     features_en: string[];
     features_ku: string[];

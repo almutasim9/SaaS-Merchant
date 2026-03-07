@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { addSection, updateSection, uploadSectionImageAction } from '../sections/actions';
+import { useFeatureGate } from '@/hooks/useFeatureGate';
+import { toast } from 'sonner';
 
 interface Section {
     id: string;
@@ -27,6 +29,8 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
     const [imageUrl, setImageUrl] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
+
+    const { plan } = useFeatureGate(storeId);
 
     // Sync state if initialData changes
     useEffect(() => {
@@ -170,8 +174,13 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
                             </div>
                         </div>
 
-                        <div className="space-y-4">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">صورة القسم (اختياري)</label>
+                        <div className={`space-y-4 ${!plan.allow_category_images ? 'opacity-50 grayscale select-none' : ''}`}>
+                            <div className="flex items-center justify-between">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">صورة القسم (اختياري)</label>
+                                {!plan.allow_category_images && (
+                                    <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md">ميزة حصرية للذهبي</span>
+                                )}
+                            </div>
                             <div className="flex items-center gap-6">
                                 <div className="relative group">
                                     <div className="w-24 h-24 lg:w-28 lg:h-28 bg-white rounded-[2rem] border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden transition-all group-hover:border-indigo-400 shadow-sm">
@@ -188,7 +197,16 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
                                             </div>
                                         )}
                                     </div>
-                                    <input type="file" accept="image/*" onChange={handleUpload} disabled={uploading} className="absolute inset-0 opacity-0_cursor-pointer" />
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleUpload}
+                                        disabled={uploading || !plan.allow_category_images}
+                                        className={`absolute inset-0 opacity-0 ${plan.allow_category_images ? 'cursor-pointer' : 'cursor-not-allowed hidden'}`}
+                                    />
+                                    {!plan.allow_category_images && (
+                                        <div className="absolute inset-0 cursor-not-allowed" onClick={() => toast.error('رفع صور للأقسام متاح فقط في الباقة الذهبية.')} />
+                                    )}
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-sm font-black text-slate-700">{initialData ? 'تغيير صورة القسم' : 'رفع صورة القسم'}</p>

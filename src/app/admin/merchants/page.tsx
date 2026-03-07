@@ -298,7 +298,7 @@ export default function AdminMerchantsPage() {
                                                     : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-indigo-200'
                                                     }`}
                                             >
-                                                {t === 'Free' ? 'مجاني' : t === 'Silver' ? 'احترافي' : 'متميز'}
+                                                {t === 'Free' ? 'مجانية' : t === 'Silver' ? 'فضية' : 'ذهبية'}
                                             </button>
                                         ))}
                                     </div>
@@ -368,7 +368,7 @@ export default function AdminMerchantsPage() {
                             </button>
                             <button
                                 onClick={handlePlanUpdate}
-                                disabled={updatingPlan || !newStartDate}
+                                disabled={updatingPlan || (modalMode === 'renew' && !newStartDate)}
                                 className="flex-[2] py-3 bg-indigo-600 text-white font-bold rounded-xl text-sm hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-600/20 disabled:opacity-50"
                             >
                                 {updatingPlan ? (
