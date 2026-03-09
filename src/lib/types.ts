@@ -90,10 +90,20 @@ export interface SubscriptionPlan {
     allow_custom_slug: boolean;
     max_monthly_orders: number;
     enable_ordering?: boolean;
+    allow_variants?: boolean;
+    allow_excel_import?: boolean;
+    allow_social_links?: boolean;
+    allow_banner?: boolean;
+    allow_thermal_printing?: boolean;
+    allow_category_images?: boolean;
+    allow_multiple_product_images?: boolean;
+    allow_about_page?: boolean;
+    allow_order_reception_options?: boolean;
     description_ar?: string;
     description_en?: string;
     description_ku?: string;
     yearly_discount_percent?: number;
+    price_yearly?: number;
     created_at: string;
 }
 
