@@ -100,7 +100,7 @@ export default function MerchantProductsPage() {
                 getSections(storeData.id),
                 supabase
                     .from('products')
-                    .select('id, name, description, section_id, price, image_url, created_at, attributes, stock_quantity')
+                    .select('id, name, name_en, name_ku, description, description_en, description_ku, section_id, price, image_url, created_at, attributes, stock_quantity')
                     .eq('store_id', storeData.id)
                     .order('created_at', { ascending: false })
                     .limit(20),
@@ -170,7 +170,7 @@ export default function MerchantProductsPage() {
 
         const { data, error } = await supabase
             .from('products')
-            .select('id, name, description, section_id, price, image_url, created_at, attributes, stock_quantity')
+            .select('id, name, name_en, name_ku, description, description_en, description_ku, section_id, price, image_url, created_at, attributes, stock_quantity')
             .eq('store_id', storeId)
             .order('created_at', { ascending: false })
             .range(from, to);

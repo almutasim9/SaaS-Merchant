@@ -14,7 +14,13 @@ export const supabaseAdmin = createAdminClient(
 )
 
 export async function createClient() {
-    const cookieStore = await cookies()
+    let cookieStore: Awaited<ReturnType<typeof cookies>> | undefined;
+    try {
+        cookieStore = await cookies();
+    } catch {
+        // Fallback for static generation (build-time) contexts 
+        // where cookies() is not available.
+    }
 
     return createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,27 +28,25 @@ export async function createClient() {
         {
             cookies: {
                 get(name: string) {
-                    return cookieStore.get(name)?.value
+                    return cookieStore?.get(name)?.value;
                 },
                 set(name: string, value: string, options: CookieOptions) {
+                    if (!cookieStore) return;
                     try {
-                        cookieStore.set({ name, value, ...options })
+                        cookieStore.set({ name, value, ...options });
                     } catch (error) {
                         // The `set` method was called from a Server Component.
-                        // This can be ignored if you have middleware refreshing
-                        // user sessions.
                     }
                 },
                 remove(name: string, options: CookieOptions) {
+                    if (!cookieStore) return;
                     try {
-                        cookieStore.set({ name, value: '', ...options })
+                        cookieStore.set({ name, value: '', ...options });
                     } catch (error) {
                         // The `remove` method was called from a Server Component.
-                        // This can be ignored if you have middleware refreshing
-                        // user sessions.
                     }
                 },
             },
         }
-    )
+    );
 }

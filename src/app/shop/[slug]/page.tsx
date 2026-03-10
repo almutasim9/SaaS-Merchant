@@ -1,23 +1,40 @@
-import { createClient } from '@/lib/supabase-server';
+import { createClient, supabaseAdmin } from '@/lib/supabase-server';
 import { Metadata } from 'next';
 import { CartProvider } from '@/context/CartContext';
 import StorefrontContent from './StorefrontContent';
+import { cache } from 'react';
 
-export const revalidate = 60;
+// Cache for 1 hour — store data rarely changes, eliminates most cold-start delays
+export const revalidate = 3600;
 
 interface Props {
     params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { slug } = await params;
+// Deduplicate the store fetch — generateMetadata and ShopPage share one query
+const getStoreBySlug = cache(async (slug: string) => {
     const supabase = await createClient();
-
-    const { data: store } = await supabase
+    return supabase
         .from('stores')
-        .select('name')
+        .select('id, name, description, phone, email, address, logo_url, social_links, delivery_fees, storefront_config, currency_preference, accepts_orders, offers_delivery, offers_pickup, subscription_plans (enable_ordering, custom_theme, remove_branding)')
         .eq('slug', slug)
         .single();
+});
+
+// Pre-render popular stores at build time — eliminates cold starts entirely
+export async function generateStaticParams() {
+    // Use admin client here because generateStaticParams runs outside request scope
+    // and createClient() would fail due to cookies() call
+    const { data: stores } = await supabaseAdmin
+        .from('stores')
+        .select('slug');
+
+    return (stores || []).map((s) => ({ slug: s.slug }));
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { slug } = await params;
+    const { data: store } = await getStoreBySlug(slug);
 
     return {
         title: store ? `${store.name} | Proudly Powered by Platform` : 'Store Not Found',
@@ -27,14 +44,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ShopPage({ params }: Props) {
     const { slug } = await params;
-    const supabase = await createClient();
 
-    // 1. Fetch Store Details
-    const { data: store, error: storeError } = await supabase
-        .from('stores')
-        .select('id, name, description, phone, email, address, logo_url, social_links, delivery_fees, storefront_config, currency_preference, accepts_orders, offers_delivery, offers_pickup, subscription_plans (enable_ordering, custom_theme, remove_branding)')
-        .eq('slug', slug)
-        .single();
+    // 1. Fetch Store Details (deduplicated with generateMetadata via cache())
+    const { data: store, error: storeError } = await getStoreBySlug(slug);
 
     if (storeError || !store) {
         return (
@@ -51,6 +63,7 @@ export default async function ShopPage({ params }: Props) {
     }
 
     // 2. Fetch Sections and Products in Parallel
+    const supabase = await createClient();
     const [sectionsRes, productsRes] = await Promise.all([
         supabase
             .from('sections')

@@ -368,13 +368,15 @@ function StorefrontInner({ store, products, sections, canReceiveOrders }: { stor
                     />
                 );
             case 'about':
-                <AboutView
-                    onBack={() => handleNavigate('home')}
-                    storeName={store.name}
-                    storeDescription={store.description}
-                    storeLogo={store.logo_url}
-                    aboutConfig={store.storefront_config?.about}
-                />
+                return (
+                    <AboutView
+                        onBack={() => handleNavigate('home')}
+                        storeName={store.name}
+                        storeDescription={store.description}
+                        storeLogo={store.logo_url}
+                        aboutConfig={store.storefront_config?.about}
+                    />
+                );
             case 'contact':
                 return (
                     <ContactView
