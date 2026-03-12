@@ -5,7 +5,16 @@ import { adminMessaging } from '@/lib/firebase-server';
 // This is a secure webhook endpoint called by Supabase when a new order is created.
 export async function POST(req: Request) {
     try {
-        // Parse the Supabase payload
+        // 1. Verify Webhook Secret to prevent unauthorized calls
+        const authHeader = req.headers.get('x-webhook-secret');
+        const secret = process.env.SUPABASE_WEBHOOK_SECRET;
+
+        if (!secret || authHeader !== secret) {
+            console.error('Webhook: Unauthorized attempt or SECRET not configured');
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // 2. Parse the Supabase payload
         // Example payload: { type: 'INSERT', table: 'orders', record: { ...orderData } }
         const payload = await req.json();
 
