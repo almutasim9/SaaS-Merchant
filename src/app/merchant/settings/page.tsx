@@ -31,6 +31,7 @@ import { BannerSection } from '@/components/merchant/settings/BannerSection';
 import { AboutUsSection } from '@/components/merchant/settings/AboutUsSection';
 import { CurrencySection } from '@/components/merchant/settings/CurrencySection';
 import { OrderingPreferencesSection } from '@/components/merchant/settings/OrderingPreferencesSection';
+import { NotificationDebugSection } from '@/components/merchant/settings/NotificationDebugSection';
 
 interface Store {
     id: string;
@@ -345,6 +346,8 @@ export default function MerchantSettingsPage() {
                     onSave={() => handleSaveStorefront('about')}
                     plan={plan}
                 />
+
+                {store && <NotificationDebugSection storeId={store.id} />}
             </div>
 
             <footer className="text-center pt-10 lg:pt-20 border-t border-slate-100">

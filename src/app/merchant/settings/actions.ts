@@ -245,3 +245,45 @@ export async function updateSlugAction(storeId: string, merchantId: string, newS
     if (updateError) return { success: false, error: 'حدث خطأ أثناء تحديث الرابط: ' + updateError.message };
     return { success: true };
 }
+
+// ─── Test Notification ────────────────────────────────────────────────────────
+export async function sendTestNotificationAction(storeId: string) {
+    const auth = await verifyStoreOwnership(storeId);
+    if (auth.error) return { success: false, error: auth.error };
+
+    // Fetch tokens for this merchant
+    const { data: tokensData } = await supabaseAdmin
+        .from('merchant_fcm_tokens')
+        .select('token')
+        .eq('merchant_id', auth.userId);
+
+    if (!tokensData || tokensData.length === 0) {
+        return { 
+            success: false, 
+            error: 'لم يتم العثور على أجهزة مسجلة. يرجى فتح الموقع من المتصفح وتفعيل الإشعارات أولاً عند ظهور الرسالة.' 
+        };
+    }
+
+    const tokens = tokensData.map(t => t.token);
+    const { adminMessaging } = await import('@/lib/firebase-server');
+
+    try {
+        const response = await adminMessaging.sendEachForMulticast({
+            notification: {
+                title: '🔔 إشعار تجريبي - تاجِر زون',
+                body: 'مبروك! نظام الإشعارات يعمل بنجاح على هذا الجهاز. 🎉',
+            },
+            tokens: tokens,
+        });
+
+        console.log('Firebase test response:', response);
+        return { 
+            success: true, 
+            sentCount: response.successCount, 
+            failureCount: response.failureCount 
+        };
+    } catch (err: any) {
+        console.error('Firebase test error:', err);
+        return { success: false, error: 'خطأ في إرسال الإشعار: ' + err.message };
+    }
+}

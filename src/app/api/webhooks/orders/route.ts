@@ -15,11 +15,25 @@ export async function POST(req: Request) {
         }
 
         const order = payload.record;
-        const merchantId = order.merchant_id;
+        const storeId = order.store_id;
 
-        if (!merchantId) {
-            return NextResponse.json({ error: 'No merchant_id found in order record' }, { status: 400 });
+        if (!storeId) {
+            return NextResponse.json({ error: 'No store_id found in order record' }, { status: 400 });
         }
+
+        // Fetch the merchant_id associated with this store
+        const { data: storeData, error: storeError } = await supabaseAdmin
+            .from('stores')
+            .select('merchant_id')
+            .eq('id', storeId)
+            .single();
+
+        if (storeError || !storeData) {
+            console.error('Error fetching merchant_id from store:', storeError);
+            return NextResponse.json({ error: 'Failed to resolve merchant' }, { status: 500 });
+        }
+
+        const merchantId = storeData.merchant_id;
 
         // Fetch FCM tokens for this merchant from the database
         const { data: tokensData, error } = await supabaseAdmin

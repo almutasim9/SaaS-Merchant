@@ -29,18 +29,21 @@ export default function PushNotificationManager({ merchantId }: { merchantId: st
             try {
                 const token = await requestForToken();
                 if (token) {
+                    console.log('PushNotificationManager: Token obtained:', token);
                     // Try to insert the token. RLS constraints handle the rest.
                     // Upsert handles adding it safely without duplicates if we defined the table nicely
                     const { error } = await supabase
                         .from('merchant_fcm_tokens')
-                        .insert([{ merchant_id: merchantId, token: token }])
-                        .select();
+                        .insert([{ merchant_id: merchantId, token: token }]);
                     
                     // Ignore 23505 (unique constraint violation) which just means we already registered this token
                     if (error && error.code !== '23505') {
-                        console.error('Error saving FCM token:', error);
+                        console.error('PushNotificationManager: Error saving FCM token:', error);
                     } else if (!error) {
+                        console.log('PushNotificationManager: Token saved successfully to Supabase');
                         toast.success('تم تفعيل إشعارات المتجر بنجاح!');
+                    } else {
+                        console.log('PushNotificationManager: Token already registered (23505)');
                     }
                 }
             } catch (err) {
