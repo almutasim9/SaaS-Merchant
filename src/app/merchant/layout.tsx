@@ -7,12 +7,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import Link from 'next/link';
 import SectionsModal from './products/SectionsModal';
+import PushNotificationManager from '@/components/merchant/PushNotificationManager';
 
 interface Store {
     id: string;
     name: string;
     slug: string;
     logo_url?: string;
+    merchant_id: string;
 }
 
 interface NavigationItem {
@@ -91,7 +93,7 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
         try {
             const { data } = await supabase
                 .from('stores')
-                .select('id, name, slug, logo_url')
+                .select('id, name, slug, logo_url, merchant_id')
                 .eq('merchant_id', userId)
                 .single();
 
@@ -307,11 +309,14 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
                     </main>
 
                     {store && (
-                        <SectionsModal
-                            isOpen={isSectionsModalOpen}
-                            onClose={() => setIsSectionsModalOpen(false)}
-                            storeId={store.id}
-                        />
+                        <>
+                            <SectionsModal
+                                isOpen={isSectionsModalOpen}
+                                onClose={() => setIsSectionsModalOpen(false)}
+                                storeId={store.id}
+                            />
+                            <PushNotificationManager merchantId={store.merchant_id || store.id} />
+                        </>
                     )}
                 </div>
 

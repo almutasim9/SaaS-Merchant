@@ -89,7 +89,7 @@ export default function LoginPage() {
                     </Link>
                     <div>
                         <h1 className="text-4xl font-bold text-slate-800 tracking-tight">دخول المنصة</h1>
-                        <p className="text-slate-400 font-medium text-[10px] uppercase tracking-[0.3em] mt-2">SaaS Merchant Platform</p>
+                        <p className="text-slate-400 font-medium text-[10px] uppercase tracking-[0.3em] mt-2">TajirZone Merchant Platform</p>
                     </div>
                 </div>
 
@@ -180,7 +180,7 @@ export default function LoginPage() {
                     </p>
                     <div className="pt-6 border-t border-slate-100">
                         <p className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.3em] leading-relaxed">
-                            © 2026 SaaS-Plus Platform <br />
+                            © 2026 TajirZone Platform <br />
                             جميع الحقوق محفوظة لنظام إدارة التجار
                         </p>
                     </div>

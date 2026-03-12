@@ -1,7 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase-server';
 
 export const metadata = {
-    title: 'نظام الإدارة | MenuPlus',
+    title: 'نظام الإدارة | TajirZone',
 };
 
 // Types for Admin Dashboard

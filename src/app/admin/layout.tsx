@@ -45,7 +45,7 @@ export default async function AdminLayout({
             <aside className="w-72 bg-slate-900 text-white flex flex-col shadow-2xl z-20">
                 <div className="p-8 border-b border-slate-800">
                     <h1 className="text-2xl font-black bg-gradient-to-l from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                        SaaS Admin
+                        TajirZone Admin
                     </h1>
                     <p className="text-slate-400 text-sm mt-1 font-medium">لوحة تحكم مدير المنصة</p>
                 </div>

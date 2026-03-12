@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans_Arabic } from "next/font/google";
+import { Cairo } from "next/font/google";
 import { Toaster } from "sonner";
 import NumeralNormalizer from "@/components/NumeralNormalizer";
 import "./globals.css";
 
-const ibmPlexArabic = IBM_Plex_Sans_Arabic({
+const cairo = Cairo({
   subsets: ["arabic", "latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700"],
-  variable: "--font-ibm-plex-arabic",
+  weight: ["200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-cairo",
 });
 
 export const metadata: Metadata = {
-  title: "SaaS Merchant Platform",
+  title: "TajirZone Platform",
   description: "Advanced multi-tenant SaaS for merchants",
 };
 
@@ -21,8 +21,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl">
-      <body className={`${ibmPlexArabic.variable} antialiased font-sans flex flex-col min-h-screen`}>
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <body className={`${cairo.variable} antialiased font-sans flex flex-col min-h-screen`} suppressHydrationWarning>
         <NumeralNormalizer />
         {children}
         <Toaster position="top-center" richColors />
