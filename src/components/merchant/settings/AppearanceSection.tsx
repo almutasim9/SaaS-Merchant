@@ -21,16 +21,17 @@ export function AppearanceSection({
 
     return (
         <Card
+            compact
             className={!hasCustomTheme ? 'opacity-80' : ''}
             title="مظهر المتجر"
             subtitle="تخصيص الألوان والمظهر العام للمتجر"
             icon={
-                <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
                 </svg>
             }
             headerAction={hasCustomTheme && (
-                <Button loading={saving} onClick={onSave} leftIcon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}>
+                <Button size="sm" loading={saving} onClick={onSave} leftIcon={<svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}>
                     حفظ
                 </Button>
             )}
@@ -49,21 +50,21 @@ export function AppearanceSection({
                 )}
 
                 <div className={!hasCustomTheme ? 'pointer-events-none' : ''}>
-                    <div className="space-y-3">
-                        <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">اللون الأساسي</label>
-                        <div className="flex items-center gap-4">
+                    <div className="space-y-1">
+                        <label className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest pr-1">اللون الأساسي</label>
+                        <div className="flex items-center gap-2">
                             <input
                                 type="color"
                                 value={store?.storefront_config?.theme_color || '#00D084'}
                                 onChange={(e) => setStore((prev: any) => prev ? { ...prev, storefront_config: { ...prev.storefront_config, theme_color: e.target.value } } : null)}
-                                className="w-14 h-14 rounded-xl cursor-pointer border-0 p-0 bg-transparent flex-shrink-0"
+                                className="w-10 h-10 lg:w-12 lg:h-12 rounded-lg lg:rounded-xl cursor-pointer border-0 p-0 bg-transparent flex-shrink-0"
                             />
-                            <div className="flex-1 bg-[#FBFBFF] border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-600 flex items-center justify-between" dir="ltr">
+                            <div className="flex-1 bg-[#FBFBFF] border border-slate-100 rounded-lg lg:rounded-xl px-4 py-2 text-xs lg:text-sm font-bold text-slate-600 flex items-center justify-between" dir="ltr">
                                 <span>{store?.storefront_config?.theme_color || '#00D084'}</span>
-                                <div className="w-6 h-6 rounded-md shadow-sm border border-black/10" style={{ backgroundColor: store?.storefront_config?.theme_color || '#00D084' }} />
+                                <div className="w-5 h-5 rounded shadow-sm border border-black/10" style={{ backgroundColor: store?.storefront_config?.theme_color || '#00D084' }} />
                             </div>
                         </div>
-                        <p className="text-[10px] text-slate-400 mt-2">هذا اللون سيستخدم في الأزرار، والروابط، والعناصر البارزة في متجرك.</p>
+                        <p className="text-[9px] text-slate-400">سيستخدم هذا اللون في الأزرار والعناصر البارزة.</p>
                     </div>
                 </div>
             </div>

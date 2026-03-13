@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useLanguage } from './LanguageContext';
+import { useI18n } from '@/components/providers/I18nProvider';
 import { formatCurrency, CurrencyPreference } from '@/lib/format-currency';
 
 interface CheckoutViewProps {
@@ -24,7 +24,7 @@ const normalizeNumbers = (str: string) => {
 };
 
 export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrdering, deliveryFees, storeCurrency, offersDelivery, offersPickup, storeAddress }: CheckoutViewProps) {
-    const { t, dir } = useLanguage();
+    const { t, dir } = useI18n();
 
     // Choose initial order type based on what is offered. Default to delivery if both or only delivery.
     const initialOrderType = offersDelivery !== false ? 'delivery' : 'pickup';
@@ -37,6 +37,36 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
         landmark: '',
         notes: ''
     });
+
+    // Load saved customer info
+    React.useEffect(() => {
+        const savedInfo = localStorage.getItem('tajerzone_customer_info');
+        if (savedInfo) {
+            try {
+                const parsed = JSON.parse(savedInfo);
+                setInfo(prev => ({
+                    ...prev,
+                    name: parsed.name || '',
+                    phone: parsed.phone || '',
+                    city: parsed.city || '',
+                    landmark: parsed.landmark || ''
+                }));
+            } catch (e) {
+                console.error('Failed to load customer info', e);
+            }
+        }
+    }, []);
+
+    // Helper to save info locally
+    const saveInfo = (data: any) => {
+        const toSave = {
+            name: data.name,
+            phone: data.phone,
+            city: data.city,
+            landmark: data.landmark
+        };
+        localStorage.setItem('tajerzone_customer_info', JSON.stringify(toSave));
+    };
 
     // Process delivery fees
     let processedFees: Record<string, { fee: number, enabled: boolean }> = {};
@@ -296,7 +326,13 @@ export default function CheckoutView({ totalPrice, onBack, onPlaceOrder, isOrder
             {/* Fixed Bottom */}
             <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-xl border-t border-slate-100 px-5 py-4 z-50 safe-area-bottom">
                 <button
-                    onClick={() => { if (isValid) onPlaceOrder({ ...info, orderType, __deliveryFee: deliveryFee, __finalTotal: finalTotal, __subTotal: totalPrice }); }}
+                    onClick={() => { 
+                        if (isValid) {
+                            const orderData = { ...info, orderType, __deliveryFee: deliveryFee, __finalTotal: finalTotal, __subTotal: totalPrice };
+                            saveInfo(info);
+                            onPlaceOrder(orderData); 
+                        }
+                    }}
                     disabled={!isValid || isOrdering}
                     className={`w-full h-13 py-3.5 rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2 ${!isValid || isOrdering
                         ? 'bg-slate-200 text-slate-400 cursor-not-allowed'

@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import Image from 'next/image';
-import { useLanguage } from './LanguageContext';
+import { useI18n } from '@/components/providers/I18nProvider';
 import { formatCurrency, CurrencyPreference } from '@/lib/format-currency';
 
 interface Product {
@@ -39,7 +39,7 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product, onAddToCart, onClick, storeCurrency, canReceiveOrders = true }: ProductCardProps) {
-    const { language, t, dir } = useLanguage();
+    const { language, t, dir } = useI18n();
     const isUnavailable = product.attributes?.isAvailable === false || product.isAvailable === false;
     const hasVariants = product.attributes?.hasVariants || product.hasVariants;
 
@@ -195,6 +195,19 @@ interface HomeViewProps {
     };
     storeCurrency?: CurrencyPreference;
     canReceiveOrders?: boolean;
+    isLoading?: boolean;
+}
+
+function ProductSkeleton() {
+    return (
+        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex-shrink-0 w-[160px] sm:w-[180px]">
+            <div className="relative aspect-square bg-slate-100 animate-pulse" />
+            <div className="p-3 space-y-2">
+                <div className="h-4 bg-slate-100 rounded animate-pulse w-3/4" />
+                <div className="h-3 bg-slate-100 rounded animate-pulse w-1/2" />
+            </div>
+        </div>
+    );
 }
 
 export default function HomeView({
@@ -215,10 +228,11 @@ export default function HomeView({
     storefrontConfig,
     storeCurrency,
     canReceiveOrders = true,
+    isLoading = false,
 }: HomeViewProps) {
 
     const sectionsRef = useRef<HTMLDivElement>(null);
-    const { t, language, setLanguage, dir } = useLanguage();
+    const { t, language, setLanguage, dir } = useI18n();
 
     // Group products by section/category
     const productsBySection = useMemo(() => {
@@ -388,51 +402,62 @@ export default function HomeView({
 
                 {/* ─── Categories Section ─── */}
                 {
-                    !isSearching && sections.length > 0 && (
+                    !isSearching && (isLoading || sections.length > 0) && (
                         <div ref={sectionsRef} className="py-5">
                             <h2 className="text-lg font-bold text-slate-800 text-center mb-4">{t('store.categories') || 'الأقسام'}</h2>
                             <div className="flex justify-center gap-4 px-4 overflow-x-auto no-scrollbar pb-2">
-                                {/* All */}
-                                <button
-                                    onClick={() => setSelectedSection(null)}
-                                    className={`flex flex-col items-center gap-2 min-w-[64px] transition-all ${!selectedSection ? 'opacity-100' : 'opacity-60 hover:opacity-100'
-                                        }`}
-                                >
-                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${!selectedSection ? 'ring-2 shadow-sm' : 'bg-slate-100'
-                                        }`} style={!selectedSection ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)', '--tw-ring-color': 'var(--theme-primary)' } as any : {}}>
-                                        <svg className={`w-6 h-6 ${!selectedSection ? '' : 'text-slate-400'}`} style={!selectedSection ? { color: 'var(--theme-primary)' } : {}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zm0 9.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zm0 9.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                                        </svg>
-                                    </div>
-                                    <span className="text-xs font-medium text-slate-600">{t('store.all') || 'الكل'}</span>
-                                </button>
-
-                                {sections.map((section) => {
-                                    const sectionName = language === 'en' && section.name_en ? section.name_en :
-                                        language === 'ku' && section.name_ku ? section.name_ku :
-                                            section.name;
-                                    return (
+                                {isLoading ? (
+                                    [1, 2, 3, 4].map((i) => (
+                                        <div key={i} className="flex flex-col items-center gap-2 min-w-[64px]">
+                                            <div className="w-14 h-14 rounded-2xl bg-slate-100 animate-pulse" />
+                                            <div className="w-10 h-3 bg-slate-100 rounded animate-pulse" />
+                                        </div>
+                                    ))
+                                ) : (
+                                    <>
+                                        {/* All */}
                                         <button
-                                            key={section.id}
-                                            onClick={() => setSelectedSection(selectedSection === section.id ? null : section.id)}
-                                            className={`flex flex-col items-center gap-2 min-w-[64px] transition-all ${selectedSection === section.id ? 'opacity-100' : 'opacity-60 hover:opacity-100'
+                                            onClick={() => setSelectedSection(null)}
+                                            className={`flex flex-col items-center gap-2 min-w-[64px] transition-all ${!selectedSection ? 'opacity-100' : 'opacity-60 hover:opacity-100'
                                                 }`}
                                         >
-                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all overflow-hidden ${selectedSection === section.id ? 'ring-2 shadow-sm' : 'bg-slate-100'
-                                                }`} style={selectedSection === section.id ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)', '--tw-ring-color': 'var(--theme-primary)' } as any : {}}>
-                                                {section.image_url ? (
-                                                    <img src={section.image_url} alt={sectionName} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <svg className={`w-6 h-6 ${selectedSection === section.id ? '' : 'text-slate-400'}`} style={selectedSection === section.id ? { color: 'var(--theme-primary)' } : {}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
-                                                    </svg>
-                                                )}
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${!selectedSection ? 'ring-2 shadow-sm' : 'bg-slate-100'
+                                                }`} style={!selectedSection ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)', '--tw-ring-color': 'var(--theme-primary)' } as any : {}}>
+                                                <svg className={`w-6 h-6 ${!selectedSection ? '' : 'text-slate-400'}`} style={!selectedSection ? { color: 'var(--theme-primary)' } : {}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zm0 9.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zm0 9.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                                                </svg>
                                             </div>
-                                            <span className={`text-xs font-medium line-clamp-1 ${selectedSection === section.id ? 'font-bold' : 'text-slate-600'}`} style={selectedSection === section.id ? { color: 'var(--theme-primary)' } : {}}>{sectionName}</span>
+                                            <span className="text-xs font-medium text-slate-600">{t('store.all') || 'الكل'}</span>
                                         </button>
-                                    )
-                                })}
+
+                                        {sections.map((section) => {
+                                            const sectionName = language === 'en' && section.name_en ? section.name_en :
+                                                language === 'ku' && section.name_ku ? section.name_ku :
+                                                    section.name;
+                                            return (
+                                                <button
+                                                    key={section.id}
+                                                    onClick={() => setSelectedSection(selectedSection === section.id ? null : section.id)}
+                                                    className={`flex flex-col items-center gap-2 min-w-[64px] transition-all ${selectedSection === section.id ? 'opacity-100' : 'opacity-60 hover:opacity-100'
+                                                        }`}
+                                                >
+                                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all overflow-hidden ${selectedSection === section.id ? 'ring-2 shadow-sm' : 'bg-slate-100'
+                                                        }`} style={selectedSection === section.id ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)', '--tw-ring-color': 'var(--theme-primary)' } as any : {}}>
+                                                        {section.image_url ? (
+                                                            <img src={section.image_url} alt={sectionName} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <svg className={`w-6 h-6 ${selectedSection === section.id ? '' : 'text-slate-400'}`} style={selectedSection === section.id ? { color: 'var(--theme-primary)' } : {}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
+                                                            </svg>
+                                                        )}
+                                                    </div>
+                                                    <span className={`text-xs font-medium line-clamp-1 ${selectedSection === section.id ? 'font-bold' : 'text-slate-600'}`} style={selectedSection === section.id ? { color: 'var(--theme-primary)' } : {}}>{sectionName}</span>
+                                                </button>
+                                            )
+                                        })}
+                                    </>
+                                )}
                             </div>
                         </div>
                     )
@@ -466,15 +491,19 @@ export default function HomeView({
 
                                         {/* Horizontal Scroll */}
                                         <div className="flex gap-3 px-4 overflow-x-auto no-scrollbar pb-2" dir={dir}>
-                                            {sectionProducts.slice(0, 8).map(product => (
-                                                <ProductCard
-                                                    key={product.id}
-                                                    product={product}
-                                                    onAddToCart={onAddToCart}
-                                                    onClick={onProductClick}
-                                                    storeCurrency={storeCurrency}
-                                                />
-                                            ))}
+                                            {isLoading ? (
+                                                [1, 2, 3].map(i => <ProductSkeleton key={i} />)
+                                            ) : (
+                                                sectionProducts.slice(0, 8).map(product => (
+                                                    <ProductCard
+                                                        key={product.id}
+                                                        product={product}
+                                                        onAddToCart={onAddToCart}
+                                                        onClick={onProductClick}
+                                                        storeCurrency={storeCurrency}
+                                                    />
+                                                ))
+                                            )}
                                         </div>
                                     </div>
                                 );

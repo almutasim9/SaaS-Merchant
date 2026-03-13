@@ -46,6 +46,7 @@ interface Product {
     image_url?: string;
     attributes?: ProductAttributes;
     stock_quantity: number;
+    display_order?: number;
 }
 
 interface AddProductModalProps {
@@ -76,6 +77,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
     const [imageUrl, setImageUrl] = useState('');
     const [additionalImages, setAdditionalImages] = useState<string[]>([]);
     const [isAvailable, setIsAvailable] = useState(true);
+    const [displayOrder, setDisplayOrder] = useState('0');
 
     // Variants
     const [hasVariants, setHasVariants] = useState(false);
@@ -101,6 +103,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                 setHasVariants(attrs?.hasVariants || false);
                 setVariantOptions(attrs?.variantOptions || []);
                 setVariantCombinations(attrs?.variantCombinations || []);
+                setDisplayOrder(initialData.display_order?.toString() || '0');
             } else {
                 resetForm();
             }
@@ -203,8 +206,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
     };
 
     // --- Media Upload ---
-    // If we have a subscription object, we check the plan ID or max_products as an indicator if it's free.
-    // Assuming `free` plan has `id === 'free'` or missing subscription.
     const { plan } = useFeatureGate(storeId);
     const MAX_IMAGES = plan.allow_multiple_product_images ? 5 : 1;
     const allImages = [imageUrl, ...additionalImages].filter(Boolean);
@@ -292,6 +293,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
         setHasVariants(false);
         setVariantOptions([]);
         setVariantCombinations([]);
+        setDisplayOrder('0');
         setError(null);
     };
 
@@ -322,8 +324,9 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                 description_ku: descriptionKu.trim() || null,
                 price: parseFloat(price || '0'),
                 section_id: sectionId,
-                stock_quantity: isAvailable ? 999 : 0, // Mock stock as requested
+                stock_quantity: isAvailable ? 999 : 0, 
                 image_url: imageUrl,
+                display_order: parseInt(displayOrder) || 0,
                 attributes
             };
 
@@ -629,8 +632,6 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                         {/* Left Column: Organization (RTL) */}
                         <div className="w-full lg:w-72 space-y-6 flex-shrink-0">
 
-
-
                             {/* Organization Card */}
                             <div className="bg-white rounded-[2rem] p-5 lg:p-6 border border-slate-200/60 shadow-sm space-y-5">
                                 <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">التنظيم</h3>
@@ -642,6 +643,18 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, storeId, s
                                             <option key={sec.id} value={sec.id}>{sec.name}</option>
                                         ))}
                                     </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-700">ترتيب العرض (اختياري)</label>
+                                    <input 
+                                        type="number" 
+                                        value={displayOrder} 
+                                        onChange={(e) => setDisplayOrder(e.target.value)} 
+                                        placeholder="مثال: 1" 
+                                        className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl px-4 text-sm font-bold text-slate-800 outline-none focus:bg-white focus:border-indigo-500 transition-colors" 
+                                    />
+                                    <p className="text-[10px] text-slate-400 font-medium px-1">الرقم الأصغر يظهر أولاً في المتجر.</p>
                                 </div>
                             </div>
 

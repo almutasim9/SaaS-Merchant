@@ -24,6 +24,7 @@ export async function getSections(storeId: string) {
         .from('sections')
         .select('*')
         .eq('store_id', storeId)
+        .order('display_order', { ascending: true })
         .order('created_at', { ascending: true });
 
     if (error) {
@@ -33,7 +34,7 @@ export async function getSections(storeId: string) {
     return data;
 }
 
-export async function addSection(storeId: string, name: string, imageUrl?: string, name_en?: string, name_ku?: string) {
+export async function addSection(storeId: string, name: string, imageUrl?: string, name_en?: string, name_ku?: string, display_order: number = 0) {
     const supabase = await createServerClient();
     const secureStoreId = await getSecureStoreId(supabase);
 
@@ -60,7 +61,8 @@ export async function addSection(storeId: string, name: string, imageUrl?: strin
             name: name.trim(),
             name_en: name_en?.trim() || null,
             name_ku: name_ku?.trim() || null,
-            image_url: imageUrl
+            image_url: imageUrl,
+            display_order
         })
         .select()
         .single();
@@ -74,7 +76,7 @@ export async function addSection(storeId: string, name: string, imageUrl?: strin
     return data;
 }
 
-export async function updateSection(id: string, name: string, imageUrl?: string, name_en?: string, name_ku?: string) {
+export async function updateSection(id: string, name: string, imageUrl?: string, name_en?: string, name_ku?: string, display_order: number = 0) {
     const supabase = await createServerClient();
     const secureStoreId = await getSecureStoreId(supabase);
 
@@ -84,7 +86,8 @@ export async function updateSection(id: string, name: string, imageUrl?: string,
             name: name.trim(),
             name_en: name_en?.trim() || null,
             name_ku: name_ku?.trim() || null,
-            image_url: imageUrl
+            image_url: imageUrl,
+            display_order
         })
         .eq('id', id)
         .eq('store_id', secureStoreId) // Critical: Tenant Isolation

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
-import { useLanguage } from './LanguageContext';
+import { useI18n } from '@/components/providers/I18nProvider';
 import { formatCurrency, CurrencyPreference } from '@/lib/format-currency';
+import { toast } from 'sonner';
 
 interface VariantOption {
     id: string;
@@ -66,6 +67,8 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
     const [isAdded, setIsAdded] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [touchStart, setTouchStart] = useState<number | null>(null);
+    const [isSharing, setIsSharing] = useState(false);
+    const [showFeedback, setShowFeedback] = useState(false);
 
     // Build gallery
     const galleryImages = useMemo(() => {
@@ -121,7 +124,7 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
         setTimeout(() => setIsAdded(false), 2000);
     };
 
-    const { language, t, dir } = useLanguage();
+    const { language, t, dir } = useI18n();
 
     const productName = language === 'en' && product.name_en ? product.name_en :
         language === 'ku' && product.name_ku ? product.name_ku :
@@ -130,6 +133,38 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
     const productDescription = language === 'en' && product.description_en ? product.description_en :
         language === 'ku' && product.description_ku ? product.description_ku :
             product.description;
+
+    const handleShare = async () => {
+        if (isSharing) return;
+        setIsSharing(true);
+
+        const shareData = {
+            title: productName,
+            text: productDescription,
+            url: window.location.href,
+        };
+
+        try {
+            if (typeof navigator !== 'undefined' && navigator.share) {
+                await navigator.share(shareData);
+                setShowFeedback(true);
+                setTimeout(() => setShowFeedback(false), 2000);
+            } else {
+                await navigator.clipboard.writeText(window.location.href);
+                toast.success(t('product.linkCopied') || 'تم نسخ الرابط!');
+                setShowFeedback(true);
+                setTimeout(() => setShowFeedback(false), 2000);
+            }
+        } catch (err) {
+            if (err instanceof Error && err.name === 'InvalidStateError') {
+                console.warn('Share already in progress');
+            } else if (err instanceof Error && err.name !== 'AbortError') {
+                console.error('Error sharing:', err);
+            }
+        } finally {
+            setIsSharing(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-white" dir={dir}>
@@ -168,15 +203,21 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                 {/* Floating Controls */}
                 <div className="absolute top-4 inset-x-4 flex items-center justify-between z-20">
                     <div className="flex gap-2">
-                        <button className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:bg-white transition-all">
-                            <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                            </svg>
-                        </button>
-                        <button className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:bg-white transition-all">
-                            <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                            </svg>
+                        <button
+                            onClick={handleShare}
+                            disabled={isSharing}
+                            className={`w-10 h-10 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm transition-all active:scale-95 ${isSharing ? 'opacity-50 cursor-not-allowed text-slate-400' : ''
+                                } ${showFeedback ? 'bg-green-500 text-white' : 'bg-white/80 text-slate-600 hover:bg-white'}`}
+                        >
+                            {showFeedback ? (
+                                <svg className="w-5 h-5 animate-in zoom-in duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            ) : (
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                </svg>
+                            )}
                         </button>
                     </div>
                     <button

@@ -65,7 +65,6 @@ export async function seedProductsAction(userId: string) {
             name: p.name,
             description: p.desc,
             price: p.price,
-            category: p.category,
             stock_quantity: p.stock,
             image_url: p.img
         }));

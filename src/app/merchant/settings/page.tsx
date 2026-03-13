@@ -1,6 +1,5 @@
 'use client';
-
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -100,6 +99,7 @@ export default function MerchantSettingsPage() {
     const [slugSaving, setSlugSaving] = useState(false);
     const [showSlugConfirm, setShowSlugConfirm] = useState(false);
 
+    // Independent saving states for storefront config sections
     // Independent saving states for storefront config sections
     const [savingAppearance, setSavingAppearance] = useState(false);
     const [savingBanner, setSavingBanner] = useState(false);
@@ -251,6 +251,8 @@ export default function MerchantSettingsPage() {
         toast.success('تم حذف الصورة');
     };
 
+    const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'ordering'>('general');
+
     if (loading) {
         return (
             <div className="p-10 flex items-center justify-center min-h-[60vh]">
@@ -259,99 +261,138 @@ export default function MerchantSettingsPage() {
         );
     }
 
+    const tabs = [
+        { id: 'general', label: 'المعلومات العامة', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+        { id: 'appearance', label: 'الواجهة والتصميم', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 01.3-.7l7-7a1 1 0 011.4 0l7 7a1 1 0 01.3.7v4a1 1 0 01-1 1h-2a1 1 0 01-1-1V7a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20v-2a2 2 0 012-2h6a2 2 0 012 2v2" /><rect x="4" y="10" width="16" height="10" rx="2" strokeWidth={2} /></svg> },
+        { id: 'ordering', label: 'إعدادات الطلبات', icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg> },
+    ];
+
     return (
-        <div className="px-4 lg:px-10 pb-20 space-y-8 lg:space-y-10 pt-6 lg:pt-0" dir="rtl">
+        <div className="px-4 lg:px-10 pb-20 space-y-4 lg:space-y-5 pt-6 lg:pt-0" dir="rtl">
             {/* Header */}
-            <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">إعدادات المتجر</h1>
-                <nav className="flex items-center gap-2 mt-1 text-slate-400 font-medium text-[10px] lg:text-xs">
-                    <span>الرئيسية</span>
-                    <span>/</span>
-                    <span className="text-indigo-600">الإعدادات</span>
-                </nav>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">إعدادات المتجر</h1>
+                    <nav className="flex items-center gap-2 mt-1 text-slate-400 font-medium text-[10px] lg:text-xs">
+                        <span>الرئيسية</span>
+                        <span>/</span>
+                        <span className="text-indigo-600">الإعدادات</span>
+                    </nav>
+                </div>
+                
+                {/* Modern Tabs */}
+                <div className="flex bg-slate-100 p-1 rounded-xl w-full md:w-auto overflow-x-auto no-scrollbar">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as any)}
+                            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs lg:text-sm font-bold transition-all whitespace-nowrap ${
+                                activeTab === tab.id 
+                                ? 'bg-white text-indigo-600 shadow-sm' 
+                                : 'text-slate-500 hover:text-slate-700'
+                            }`}
+                        >
+                            {React.cloneElement(tab.icon as any, { className: 'w-4 h-4' })}
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-8 lg:gap-10">
-                <GeneralInfoSection
-                    store={store}
-                    setStore={setStore}
-                    saving={savingGeneral}
-                    onSave={handleSaveGeneral}
-                    onLogoUpload={handleLogoUpload}
-                    savingLogo={savingLogo}
-                />
+            <div className="grid grid-cols-1 gap-5 lg:gap-6">
+                {activeTab === 'general' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 items-start">
+                        <div className="lg:col-span-2">
+                            <GeneralInfoSection
+                                store={store}
+                                setStore={setStore}
+                                saving={savingGeneral}
+                                onSave={handleSaveGeneral}
+                                onLogoUpload={handleLogoUpload}
+                                savingLogo={savingLogo}
+                            />
+                        </div>
 
-                <ContactInfoSection
-                    store={store}
-                    setStore={setStore}
-                    saving={savingContact}
-                    onSave={handleSaveContact}
-                />
+                        <ContactInfoSection
+                            store={store}
+                            setStore={setStore}
+                            saving={savingContact}
+                            onSave={handleSaveContact}
+                        />
 
-                <SocialLinksSection
-                    store={store}
-                    setStore={setStore}
-                    saving={savingSocial}
-                    onSave={handleSaveSocial}
-                />
+                        <SocialLinksSection
+                            store={store}
+                            setStore={setStore}
+                            saving={savingSocial}
+                            onSave={handleSaveSocial}
+                        />
 
-                <StoreURLSection
-                    store={store}
-                    setStore={setStore}
-                    slugEditing={slugEditing}
-                    setSlugEditing={setSlugEditing}
-                    newSlug={newSlug}
-                    setNewSlug={setNewSlug}
-                    onSaveClick={() => setShowSlugConfirm(true)}
-                    onCancel={() => setSlugEditing(false)}
-                    plan={plan}
-                />
+                        <StoreURLSection
+                            store={store}
+                            setStore={setStore}
+                            slugEditing={slugEditing}
+                            setSlugEditing={setSlugEditing}
+                            newSlug={newSlug}
+                            setNewSlug={setNewSlug}
+                            onSaveClick={() => setShowSlugConfirm(true)}
+                            onCancel={() => setSlugEditing(false)}
+                            plan={plan}
+                        />
 
-                <CurrencySection
-                    store={store}
-                    setStore={setStore}
-                    saving={savingCurrency}
-                    onSave={handleSaveCurrency}
-                />
+                        <CurrencySection
+                            store={store}
+                            setStore={setStore}
+                            saving={savingCurrency}
+                            onSave={handleSaveCurrency}
+                        />
+                    </div>
+                )}
 
-                <OrderingPreferencesSection
-                    store={store}
-                    setStore={setStore}
-                    saving={savingOrdering}
-                    onSave={handleSaveOrdering}
-                    plan={plan}
-                />
+                {activeTab === 'appearance' && (
+                    <>
+                        <AppearanceSection
+                            store={store}
+                            setStore={setStore}
+                            saving={savingAppearance}
+                            onSave={() => handleSaveStorefront('appearance')}
+                        />
 
-                <AppearanceSection
-                    store={store}
-                    setStore={setStore}
-                    saving={savingAppearance}
-                    onSave={() => handleSaveStorefront('appearance')}
-                />
+                        <BannerSection
+                            store={store}
+                            setStore={setStore}
+                            saving={savingBanner}
+                            onSave={() => handleSaveStorefront('banner')}
+                            onUpload={handleBannerUpload}
+                            onDelete={handleBannerDelete}
+                            plan={plan}
+                        />
 
-                <BannerSection
-                    store={store}
-                    setStore={setStore}
-                    saving={savingBanner}
-                    onSave={() => handleSaveStorefront('banner')}
-                    onUpload={handleBannerUpload}
-                    onDelete={handleBannerDelete}
-                    plan={plan}
-                />
+                        <AboutUsSection
+                            store={store}
+                            setStore={setStore}
+                            saving={savingAbout}
+                            onSave={() => handleSaveStorefront('about')}
+                            plan={plan}
+                        />
+                    </>
+                )}
 
-                <AboutUsSection
-                    store={store}
-                    setStore={setStore}
-                    saving={savingAbout}
-                    onSave={() => handleSaveStorefront('about')}
-                    plan={plan}
-                />
-
-                {store && <NotificationDebugSection storeId={store.id} />}
+                {activeTab === 'ordering' && (
+                    <>
+                        <OrderingPreferencesSection
+                            store={store}
+                            setStore={setStore}
+                            saving={savingOrdering}
+                            onSave={handleSaveOrdering}
+                            plan={plan}
+                        />
+                        {store && <NotificationDebugSection storeId={store.id} />}
+                    </>
+                )}
             </div>
 
-            <footer className="text-center pt-10 lg:pt-20 border-t border-slate-100">
-                <p className="text-[9px] lg:text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] mt-8 lg:mt-12 bg-slate-50 py-3 lg:py-4 rounded-full inline-block px-6 lg:px-10 border border-slate-100">&copy; {new Date().getFullYear()} SaaSPlus. جميع الحقوق محفوظة.</p>
+            <footer className="text-center pt-10 border-t border-slate-100">
+                <p className="text-[9px] lg:text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] mt-8 bg-slate-50 py-3 rounded-full inline-block px-6 border border-slate-100">&copy; {new Date().getFullYear()} TajerZone. جميع الحقوق محفوظة.</p>
             </footer>
 
             <Modal

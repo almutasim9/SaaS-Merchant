@@ -37,16 +37,17 @@ export function AboutUsSection({
 
     return (
         <Card
+            compact
             className={!allowAboutPage ? 'opacity-80' : ''}
             title="صفحة من نحن"
             subtitle="وصف تفصيلي عن المتجر وقصته وقيمه الأساسية."
             icon={
-                <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             }
             headerAction={allowAboutPage && (
-                <Button loading={saving} onClick={onSave} leftIcon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}>
+                <Button size="sm" loading={saving} onClick={onSave} leftIcon={<svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}>
                     حفظ
                 </Button>
             )}
@@ -64,16 +65,18 @@ export function AboutUsSection({
                     </div>
                 )}
 
-                <div className={!allowAboutPage ? 'pointer-events-none' : 'space-y-8'}>
-                    <div className="p-6 bg-slate-50 border border-slate-100 rounded-2xl space-y-5">
-                        <h4 className="text-sm font-bold text-slate-800">القسم العلوي (البانر)</h4>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div className={!allowAboutPage ? 'pointer-events-none' : 'space-y-4'}>
+                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-3">
+                        <h4 className="text-[10px] font-bold text-slate-800">القسم العلوي (البانر)</h4>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                             <Input
+                                compact
                                 label="النص الصغير (الوسم)"
                                 value={store?.storefront_config?.about?.heroSubtitle ?? 'قصتنا'}
                                 onChange={(e) => updateAbout('heroSubtitle', e.target.value)}
                             />
                             <Input
+                                compact
                                 label="العنوان الرئيسي"
                                 value={store?.storefront_config?.about?.heroTitle ?? 'نبني المستقبل لبناء تجربة تسوق أفضل'}
                                 onChange={(e) => updateAbout('heroTitle', e.target.value)}
@@ -82,33 +85,36 @@ export function AboutUsSection({
                     </div>
 
                     <Textarea
+                        compact
                         label="وصف المتجر التفصيلي"
-                        rows={4}
+                        rows={3}
                         value={store?.storefront_config?.about?.content || ''}
                         onChange={(e) => updateAbout('content', e.target.value)}
                         placeholder="نحن متجر إلكتروني رائد نسعى لتقديم أفضل المنتجات..."
                     />
 
-                    <div className="space-y-5">
-                        <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <span className="w-1.5 h-4 bg-cyan-500 rounded-full"></span>
+                    <div className="space-y-3">
+                        <h4 className="text-[10px] font-bold text-slate-800 flex items-center gap-2">
+                            <span className="w-1 h-3 bg-cyan-500 rounded-full"></span>
                             قيم ومميزات المتجر
                         </h4>
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                             {[1, 2, 3].map((num) => (
-                                <div key={num} className="p-5 bg-white border border-slate-200 rounded-2xl space-y-4 shadow-sm hover:border-cyan-300 transition-colors">
+                                <div key={num} className="p-3 bg-white border border-slate-100 rounded-xl space-y-2 shadow-sm hover:border-cyan-200 transition-colors">
                                     <Input
+                                        compact
                                         label={`عنوان الميزة ${num}`}
                                         value={store?.storefront_config?.about?.[`value${num}Title`] ?? ''}
                                         onChange={(e) => updateAbout(`value${num}Title`, e.target.value)}
-                                        className="bg-slate-50 py-2 border-slate-200"
+                                        className="bg-slate-50 border-slate-100"
                                     />
                                     <Textarea
+                                        compact
                                         label="الوصف"
                                         rows={2}
                                         value={store?.storefront_config?.about?.[`value${num}Desc`] ?? ''}
                                         onChange={(e) => updateAbout(`value${num}Desc`, e.target.value)}
-                                        className="bg-slate-50 py-2 border-slate-200 text-xs"
+                                        className="bg-slate-50 border-slate-100 text-[11px]"
                                     />
                                 </div>
                             ))}

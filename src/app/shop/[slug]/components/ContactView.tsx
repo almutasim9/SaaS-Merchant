@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useLanguage } from './LanguageContext';
+import { useI18n } from '@/components/providers/I18nProvider';
 
 interface ContactViewProps {
     onBack: () => void;
@@ -16,7 +16,7 @@ interface ContactViewProps {
 }
 
 export default function ContactView({ onBack, storePhone, storeEmail, socialLinks }: ContactViewProps) {
-    const { t, dir } = useLanguage();
+    const { t, dir } = useI18n();
 
     return (
         <div className="min-h-screen bg-white" dir={dir}>

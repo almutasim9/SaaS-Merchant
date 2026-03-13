@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { useCart } from '@/context/CartContext';
 import { placeOrderAction } from '../actions';
 import { recordVisitAction } from './actions';
 import { formatCurrency } from '@/lib/format-currency';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 // Components
 import HomeView from './components/HomeView';
@@ -17,7 +18,7 @@ import FloatingCart from './components/FloatingCart';
 import SideMenu from './components/SideMenu';
 import AboutView from './components/AboutView';
 import ContactView from './components/ContactView';
-import { LanguageProvider, useLanguage } from './components/LanguageContext';
+import { I18nProvider, useI18n } from '@/components/providers/I18nProvider';
 
 interface Product {
     id: string;
@@ -96,15 +97,15 @@ interface Section {
 
 export default function StorefrontContent(props: { store: Store, products: Product[], sections: Section[], canReceiveOrders: boolean }) {
     return (
-        <LanguageProvider>
+        <I18nProvider storageKey="app_lang">
             <StorefrontInner {...props} />
-        </LanguageProvider>
+        </I18nProvider>
     );
 }
 
 function StorefrontInner({ store, products, sections, canReceiveOrders }: { store: Store, products: Product[], sections: Section[], canReceiveOrders: boolean }) {
     const { cart, addToCart, removeFromCart, updateQuantity, totalPrice, totalItems, clearCart } = useCart();
-    const { t, dir } = useLanguage();
+    const { t, dir } = useI18n();
 
     // UI State
     const [view, setView] = useState<'home' | 'product' | 'cart' | 'checkout' | 'about' | 'contact'>('home');
@@ -116,14 +117,37 @@ function StorefrontInner({ store, products, sections, canReceiveOrders }: { stor
     const [orderNumber, setOrderNumber] = useState<string>('');
     const [orderSummary, setOrderSummary] = useState<any>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    // Deep Linking: Sync state with URL on load
+    useEffect(() => {
+        const productId = searchParams.get('product');
+        if (productId) {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                setSelectedProduct(product);
+                setView('product');
+            }
+        } else if (view === 'product') {
+            // If we are in product view but no productId in URL, go home
+            setView('home');
+            setSelectedProduct(null);
+        }
+    }, [searchParams, products]);
 
     // Track Visit
     React.useEffect(() => {
         const sourceParam = searchParams.get('ref') === 'qr' ? 'qr' : 'link';
         // Fire and forget
         recordVisitAction(store.id, sourceParam).catch(err => console.error('Failed to record visit', err));
+
+        // Simulate initial load for skeleton
+        const timer = setTimeout(() => setIsLoading(false), 1200);
+        return () => clearTimeout(timer);
     }, [store.id, searchParams]);
 
     // Unified filtering logic
@@ -154,7 +178,11 @@ function StorefrontInner({ store, products, sections, canReceiveOrders }: { stor
     const handleProductClick = (product: Product) => {
         setSelectedProduct(product);
         setView('product');
-        window.scrollTo(0, 0);
+        // Update URL
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('product', product.id);
+        router.push(`${pathname}?${params.toString()}`, { scroll: false });
+        // window.scrollTo(0, 0); // router.push handles scroll behavior usually, but scroll: false keeps it stable
     };
 
     const handleAddToCart = (item: any) => {
@@ -193,7 +221,7 @@ function StorefrontInner({ store, products, sections, canReceiveOrders }: { stor
             });
 
             clearCart();
-            setOrderNumber(result.orderId ? `#${String(result.orderId).slice(-5)}` : `#${Math.floor(10000 + Math.random() * 90000)}`);
+            setOrderNumber(result.orderId ? `#${String(result.orderId).slice(0, 6).toUpperCase()}` : `#${Math.floor(100000 + Math.random() * 900000)}`);
             setOrderSuccess(true);
         } catch (err: any) {
             alert('حدث خطأ غير متوقع أثناء إرسال الطلب.\n\nError: ' + err.message);
@@ -311,18 +339,28 @@ function StorefrontInner({ store, products, sections, canReceiveOrders }: { stor
                             </svg>
                         </button>
 
-                        {store.social_links?.whatsapp && (
-                            <a
-                                href={`https://wa.me/${store.social_links.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent((t('success.whatsappMessage') || 'مرحباً، أريد الاستفسار عن طلبي رقم') + ' ' + orderNumber)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full py-3.5 bg-white text-slate-700 font-bold rounded-xl border-2 border-slate-200 hover:border-green-300 hover:bg-green-50 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                        {/* WhatsApp Sharing Button */}
+                        {store.social_links?.whatsapp && orderSummary && (
+                            <button
+                                onClick={() => {
+                                    const itemsList = orderSummary.items.map((item: any) => `• ${item.quantity}x ${item.name}`).join('\n');
+                                    const message = `*طلب جديد من متجر ${store.name}*\n\n` +
+                                        `*رقم الطلب:* ${orderNumber}\n` +
+                                        `*التاريخ:* ${new Date().toLocaleDateString('ar-IQ')}\n\n` +
+                                        `*المنتجات:*\n${itemsList}\n\n` +
+                                        `*المجموع النهائي:* ${formatCurrency(orderSummary.totalPrice, store.currency_preference)}\n\n` +
+                                        `شكراً لتسوقكم معنا! ✨`;
+                                    
+                                    const whatsappUrl = `https://wa.me/${store.social_links?.whatsapp?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+                                    window.open(whatsappUrl, '_blank');
+                                }}
+                                className="w-full py-3.5 bg-[#25D366] text-white font-bold rounded-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg"
                             >
-                                <svg className="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="currentColor">
+                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                                 </svg>
-                                {t('success.contactWhatsapp') || 'تواصل معنا عبر واتساب'}
-                            </a>
+                                {t('success.shareViaWhatsapp') || 'مشاركة الفاتورة عبر واتساب'}
+                            </button>
                         )}
                     </div>
                 </div>
@@ -334,7 +372,13 @@ function StorefrontInner({ store, products, sections, canReceiveOrders }: { stor
                 return selectedProduct ? (
                     <ProductDetailsView
                         product={selectedProduct}
-                        onBack={() => setView('home')}
+                        onBack={() => {
+                            setView('home');
+                            setSelectedProduct(null);
+                            const params = new URLSearchParams(searchParams.toString());
+                            params.delete('product');
+                            router.push(pathname, { scroll: false });
+                        }}
                         onAddToCart={handleAddToCart}
                         storeLogo={store.logo_url}
                         storeCurrency={store.currency_preference}
@@ -407,6 +451,7 @@ function StorefrontInner({ store, products, sections, canReceiveOrders }: { stor
                         onMenuOpen={() => setIsMenuOpen(true)}
                         onCartOpen={() => setView('cart')}
                         totalItems={totalItems}
+                        isLoading={isLoading}
                         storefrontConfig={{
                             ...store.storefront_config,
                             banner: {
@@ -429,9 +474,21 @@ function StorefrontInner({ store, products, sections, canReceiveOrders }: { stor
     // Always apply theme color from database — the plan gate is handled in settings UI
     const themeColor = store.storefront_config?.theme_color || '#00D084';
 
+// ... (existing helper definitions)
+
     return (
         <div className="min-h-screen bg-[#F8F9FB] font-sans" dir={dir} style={{ '--theme-primary': themeColor } as any}>
-            {renderView()}
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={orderSuccess ? 'success' : view}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                    {renderView()}
+                </motion.div>
+            </AnimatePresence>
 
             <SideMenu
                 isOpen={isMenuOpen}

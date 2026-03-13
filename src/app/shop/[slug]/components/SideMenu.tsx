@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import Image from 'next/image';
-import { useLanguage } from './LanguageContext';
+import { useI18n } from '@/components/providers/I18nProvider';
 
 interface SideMenuProps {
     isOpen: boolean;
@@ -24,7 +24,7 @@ export default function SideMenu({ isOpen, onClose, onNavigate, storeName, store
         return () => { document.body.style.overflow = ''; };
     }, [isOpen]);
 
-    const { t, dir } = useLanguage();
+    const { t, dir } = useI18n();
 
     const navItems = [
         {

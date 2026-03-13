@@ -49,7 +49,7 @@ export default function MerchantOrdersPage() {
 
             const { data: storeData } = await supabase
                 .from('stores')
-                .select('id, currency, currency_preference')
+                .select('id, currency_preference')
                 .eq('merchant_id', user.id)
                 .single();
 

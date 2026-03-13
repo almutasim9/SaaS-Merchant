@@ -80,6 +80,31 @@ export async function POST(req: Request) {
         const response = await adminMessaging.sendEachForMulticast(message);
         console.log(`FCM Notifications sent. Success: ${response.successCount}, Failures: ${response.failureCount}`);
 
+        // 3. PERSIST NOTIFICATION IN DATABASE for history
+        try {
+            const { error: notifError } = await supabaseAdmin
+                .from('merchant_notifications')
+                .insert({
+                    merchant_id: merchantId,
+                    title: message.notification.title,
+                    body: message.notification.body,
+                    type: 'order',
+                    metadata: {
+                        order_id: order.id,
+                        total_amount: order.total_amount,
+                        url: message.data.url
+                    }
+                });
+
+            if (notifError) {
+                console.error('Error persisting notification to DB:', notifError);
+            } else {
+                console.log('Notification persisted to DB for history.');
+            }
+        } catch (dbErr) {
+            console.error('Exception during notification persistence:', dbErr);
+        }
+
         // Cleanup stale tokens if any failed (e.g., user uninstalled PWA)
         if (response.failureCount > 0) {
             const failedTokens: string[] = [];

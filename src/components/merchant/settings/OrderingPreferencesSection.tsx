@@ -23,20 +23,21 @@ export function OrderingPreferencesSection({
 }: OrderingPreferencesSectionProps) {
     return (
         <Card
+            compact
             title="خيارات استقبال الطلبات"
             subtitle="التحكم في تفعيل سلة المشتريات وخيارات التوصيل والاستلام"
             icon={
-                <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
             }
             headerAction={
-                <Button loading={saving} onClick={onSave} leftIcon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}>
+                <Button size="sm" loading={saving} onClick={onSave} leftIcon={<svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>}>
                     حفظ
                 </Button>
             }
         >
-            <div className="space-y-6 lg:space-y-8">
+            <div className="space-y-3 lg:space-y-4">
                 <Toggle
                     label="استقبال الطلبات (سلة المشتريات)"
                     description='عند الإغلاق، سيتحول متجرك إلى "كتالوج" لاستعراض المنتجات فقط دون إمكانية الطلب.'
@@ -88,11 +89,11 @@ export function OrderingPreferencesSection({
                 </div>
 
                 {store?.accepts_orders && !store?.offers_delivery && !store?.offers_pickup && (
-                    <div className="p-4 bg-rose-50 text-rose-600 font-bold text-xs rounded-xl border border-rose-200 flex items-center gap-2">
-                        <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="p-3 bg-rose-50 text-rose-600 font-bold text-[10px] rounded-lg border border-rose-200 flex items-center gap-2">
+                        <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
-                        يجب إتاحة خيار واحد على الأقل (نوصيل أو استلام) للسماح للعملاء بالطلب.
+                        يجب إتاحة خيار واحد على الأقل للسماح للعملاء بالطلب.
                     </div>
                 )}
             </div>

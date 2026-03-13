@@ -442,7 +442,7 @@ export default function MerchantDashboard() {
                                 {recentOrders.length > 0 ? recentOrders.map((order: any, idx) => (
                                     <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
                                         <td className="px-6 lg:px-10 py-6">
-                                            <span className="text-sm font-bold text-slate-800">#ORD-{idx + 7342}</span>
+                                            <span className="text-sm font-bold text-slate-800">#{order.id.slice(0, 6).toUpperCase()}</span>
                                         </td>
                                         <td className="px-6 lg:px-10 py-6">
                                             <div className="flex items-center gap-3">

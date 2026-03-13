@@ -16,31 +16,37 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 export const requestForToken = async () => {
-  try {
-    const isReady = await isSupported();
-    if (!isReady) {
-      console.warn("Firebase Messaging is not supported in this browser.");
-      return null;
-    }
+    try {
+        const isReady = await isSupported();
+        if (!isReady) {
+            console.warn("Firebase Messaging is not supported in this browser.");
+            return null;
+        }
 
-    const messaging = getMessaging(app);
-    // Request permission from the user
-    // The VAPID key is optional for basic setup but Highly Recommended to prevent abuse
-    const currentToken = await getToken(messaging, { 
-        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY 
-    });
+        const messaging = getMessaging(app);
+        
+        // Request token - this will trigger the permission prompt if not already granted/denied
+        const currentToken = await getToken(messaging, {
+            vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY
+        });
 
-    if (currentToken) {
-      console.log('FCM Token generated successfully');
-      return currentToken;
-    } else {
-      console.log('No registration token available. Request permission to generate one.');
-      return null;
+        if (currentToken) {
+            console.log('FCM Token generated successfully');
+            return currentToken;
+        } else {
+            console.log('No registration token available.');
+            return null;
+        }
+    } catch (err: any) {
+        // Handle the case where the user blocked notifications
+        if (err?.code === 'messaging/permission-blocked' || err?.message?.includes('permission was not granted')) {
+            console.log('Push Notifications: Permission blocked by user.');
+            return null;
+        }
+        
+        console.error('An error occurred while retrieving token: ', err);
+        return null;
     }
-  } catch (err) {
-    console.error('An error occurred while retrieving token. ', err);
-    return null;
-  }
 };
 
 export const onMessageListener = () =>

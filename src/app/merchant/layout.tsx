@@ -8,6 +8,9 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import Link from 'next/link';
 import SectionsModal from './products/SectionsModal';
 import PushNotificationManager from '@/components/merchant/PushNotificationManager';
+import { I18nProvider, useI18n } from '@/components/providers/I18nProvider';
+import NotificationBell from './notifications/NotificationBell';
+import LanguageSwitcher from './components/LanguageSwitcher';
 
 interface Store {
     id: string;
@@ -32,6 +35,15 @@ interface NavigationGroup {
 }
 
 export default function MerchantLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <I18nProvider storageKey="merchant_lang">
+            <MerchantLayoutContent>{children}</MerchantLayoutContent>
+        </I18nProvider>
+    );
+}
+
+function MerchantLayoutContent({ children }: { children: React.ReactNode }) {
+    const { t, language, dir } = useI18n();
     const [store, setStore] = useState<Store | null>(null);
     const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -52,7 +64,6 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
         let cleanup: (() => void) | undefined;
 
         const init = async () => {
-            // Middleware already verified auth + role. Just fetch store data.
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) { router.push('/login'); return; }
             cleanup = await fetchStore(user.id);
@@ -63,12 +74,10 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
         return () => { cleanup?.(); };
     }, []);
 
-    // Close mobile menu on route change
     useEffect(() => {
         setIsMobileMenuOpen(false);
     }, [pathname]);
 
-    // Listen to custom event from orders page for instant badge updates
     useEffect(() => {
         const handleStatusUpdate = () => {
             if (store?.id) {
@@ -129,7 +138,7 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+            <div className={`min-h-screen bg-slate-50 flex items-center justify-center ${language === 'en' ? 'font-sans' : 'font-cairo'}`} dir={dir}>
                 <div className="w-12 h-12 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
             </div>
         );
@@ -137,39 +146,39 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
 
     const navigation: NavigationGroup[] = [
         {
-            group: 'الرئيسية',
+            group: t('nav.home'),
             items: [
-                { id: 'dashboard', label: 'لوحة التحكم', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', href: '/merchant/dashboard' },
+                { id: 'dashboard', label: t('nav.dashboard'), icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', href: '/merchant/dashboard' },
             ]
         },
         {
-            group: 'إدارة المتجر',
+            group: t('nav.storeManagement'),
             items: [
-                { id: 'products', label: 'إدارة المنتجات', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', href: '/merchant/products' },
-                { id: 'sections', label: 'إدارة الأقسام', icon: 'M4 6h16M4 12h16m-7 6h7', href: '/merchant/sections' },
-                { id: 'delivery', label: 'إدارة التوصيل', icon: 'M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12', href: '/merchant/delivery' },
+                { id: 'products', label: t('nav.products'), icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', href: '/merchant/products' },
+                { id: 'sections', label: t('nav.sections'), icon: 'M4 6h16M4 12h16m-7 6h7', href: '/merchant/sections' },
+                { id: 'delivery', label: t('nav.delivery'), icon: 'M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12', href: '/merchant/delivery' },
             ]
         },
         {
-            group: 'المبيعات',
+            group: t('nav.sales'),
             items: [
-                { id: 'analytics', label: 'الإحصائيات', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', href: '/merchant/analytics' },
-                { id: 'orders', label: 'الطلبات', icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z', href: '/merchant/orders', badge: pendingOrdersCount > 0 ? pendingOrdersCount : null },
-                { id: 'sales-history', label: 'سجل المبيعات', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4', href: '/merchant/sales-history' },
+                { id: 'analytics', label: t('nav.analytics'), icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', href: '/merchant/analytics' },
+                { id: 'orders', label: t('nav.orders'), icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z', href: '/merchant/orders', badge: pendingOrdersCount > 0 ? pendingOrdersCount : null },
+                { id: 'sales-history', label: t('nav.salesHistory'), icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4', href: '/merchant/sales-history' },
             ]
         },
         {
-            group: 'الإعدادات',
+            group: t('nav.settingsGroup'),
             items: [
-                { id: 'billing', label: 'الباقة والاشتراك', icon: 'M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z', href: '/merchant/billing' },
-                { id: 'settings', label: 'إعدادات المتجر', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z', href: '/merchant/settings' }
+                { id: 'billing', label: t('nav.billing'), icon: 'M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z', href: '/merchant/billing' },
+                { id: 'settings', label: t('nav.settings'), icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z', href: '/merchant/settings' }
             ]
         }
     ];
 
     return (
         <QueryClientProvider client={queryClient}>
-            <div className="min-h-screen bg-[#F8F9FB] flex font-sans" dir="rtl">
+            <div className={`min-h-screen bg-[#F8F9FB] flex font-sans ${language === 'en' ? 'font-sans' : 'font-cairo'}`} dir={dir}>
                 {/* Mobile Overlay */}
                 {isMobileMenuOpen && (
                     <div
@@ -180,9 +189,9 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
 
                 {/* Sidebar */}
                 <aside className={`
-                fixed lg:sticky top-0 right-0 h-screen bg-white border-l border-slate-100 flex flex-col p-8 z-[70] transition-transform duration-500
+                fixed lg:sticky top-0 ${dir === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'} h-screen bg-white border-slate-100 flex flex-col p-8 z-[70] transition-transform duration-500
                 w-[280px] lg:w-[300px]
-                ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+                ${isMobileMenuOpen ? 'translate-x-0' : (dir === 'rtl' ? 'translate-x-full' : '-translate-x-full') + ' lg:translate-x-0'}
             `}>
                     <div className="flex items-center justify-between mb-16 px-2 lg:block">
                         <div className="flex items-center gap-4">
@@ -261,10 +270,10 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
                             onClick={handleLogout}
                             className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-rose-500 hover:bg-rose-50 transition-all group font-bold text-sm"
                         >
-                            <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className={`w-5 h-5 transition-transform ${dir === 'rtl' ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
-                            تسجيل الخروج
+                            {t('nav.logout')}
                         </button>
                     </div>
                 </aside>
@@ -288,18 +297,19 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
                                 <div className="relative w-full">
                                     <input
                                         type="text"
-                                        placeholder="البحث هنا..."
-                                        className="w-full bg-white border border-slate-100 rounded-2xl px-6 py-3 pr-12 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-100/50 transition-all font-bold shadow-sm"
+                                        placeholder={t('header.search')}
+                                        className={`w-full bg-white border border-slate-100 rounded-2xl px-6 py-3 ${dir === 'rtl' ? 'pr-12' : 'pl-12'} text-sm focus:outline-none focus:ring-4 focus:ring-indigo-100/50 transition-all font-bold shadow-sm`}
                                     />
-                                    <svg className="w-5 h-5 text-slate-300 absolute right-4 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className={`w-5 h-5 text-slate-300 absolute ${dir === 'rtl' ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 lg:gap-6">
-                            {/* Removed notifications and user avatar */}
+                        <div className="flex items-center gap-2 lg:gap-4">
+                            {store?.id && <NotificationBell storeId={store.id} />}
+                            <LanguageSwitcher />
                         </div>
                     </header>
 
@@ -337,15 +347,15 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
             `}</style>
 
                 {/* Mobile Bottom Navigation Bar */}
-                <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-100 shadow-lg shadow-slate-900/5" dir="rtl">
+                <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-100 shadow-lg shadow-slate-900/5" dir={dir}>
                     <div className="flex items-center justify-around px-2 py-2 safe-area-bottom">
                         {[
-                            { href: '/merchant/dashboard', label: 'الرئيسية', badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> },
-                            { href: '/merchant/products', label: 'المنتجات', badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg> },
-                            { href: '/merchant/orders', label: 'الطلبات', badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg> },
-                            { href: '/merchant/analytics', label: 'الإحصائيات', badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
-                            { href: '/merchant/sales-history', label: 'المبيعات', badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg> },
-                            { href: '/merchant/settings', label: 'الإعدادات', badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
+                            { href: '/merchant/dashboard', label: t('nav.home'), badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> },
+                            { href: '/merchant/products', label: t('nav.products'), badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg> },
+                            { href: '/merchant/orders', label: t('nav.orders'), badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg> },
+                            { href: '/merchant/analytics', label: t('nav.analytics'), badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
+                            { href: '/merchant/sales-history', label: t('nav.salesHistory'), badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg> },
+                            { href: '/merchant/settings', label: t('nav.settings'), badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
                         ].map((tab) => {
                             const isActive = (pathname.startsWith(tab.href) && tab.href !== '/merchant/dashboard') || (pathname === '/merchant/dashboard' && tab.href === '/merchant/dashboard');
                             return (

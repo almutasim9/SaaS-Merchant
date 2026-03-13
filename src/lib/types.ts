@@ -51,12 +51,10 @@ export interface DeliveryFees {
 export interface Store {
     id: string;
     merchant_id: string;
-    subdomain?: string;
     logo_url?: string;
     is_active: boolean;
     name: string;
     slug: string;
-    currency: string;
     phone?: string;
     address?: string;
     description?: string;
@@ -70,6 +68,7 @@ export interface Store {
     plan_id: string;
     plan_expires_at?: string;
     plan_started_at?: string;
+    currency_preference?: 'IQD' | 'USD';
     created_at: string;
 }
 

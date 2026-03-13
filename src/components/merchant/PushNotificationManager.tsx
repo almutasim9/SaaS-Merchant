@@ -11,6 +11,8 @@ export default function PushNotificationManager({ merchantId }: { merchantId: st
             if (typeof window !== 'undefined' && 'Notification' in window) {
                 if (Notification.permission === 'granted') {
                     await registerToken();
+                } else if (Notification.permission === 'denied') {
+                    console.log('PushNotificationManager: Notifications are denied by the user.');
                 } else if (Notification.permission === 'default') {
                     // Show a subtle toast asking them to enable notifications
                     toast('تنبيهات الطلبات الفورية 🛎️', {

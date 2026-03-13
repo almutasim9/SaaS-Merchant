@@ -8,6 +8,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     icon?: React.ReactNode;
     error?: string;
     containerClassName?: string;
+    compact?: boolean;
 }
 
 export function Input({
@@ -16,10 +17,11 @@ export function Input({
     error,
     className,
     containerClassName,
+    compact,
     ...props
 }: InputProps) {
     return (
-        <div className={cn("space-y-3", containerClassName)}>
+        <div className={cn(compact ? "space-y-1" : "space-y-3", containerClassName)}>
             {label && (
                 <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">
                     {label}
@@ -28,8 +30,9 @@ export function Input({
             <div className="relative">
                 <input
                     className={cn(
-                        "w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-2xl px-5 lg:px-6 py-3.5 lg:py-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all",
-                        icon && "pl-12 lg:pl-14",
+                        "w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-2xl px-5 lg:px-6 py-3.5 lg:py-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all leading-tight",
+                        compact && "py-2 lg:py-2.5 px-4 lg:px-5 lg:rounded-xl",
+                        icon && (compact ? "pl-10 lg:pl-12" : "pl-12 lg:pl-14"),
                         error && "border-rose-300 focus:ring-rose-100",
                         className
                     )}
@@ -50,6 +53,7 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
     label?: string;
     error?: string;
     containerClassName?: string;
+    compact?: boolean;
 }
 
 export function Textarea({
@@ -57,10 +61,11 @@ export function Textarea({
     error,
     className,
     containerClassName,
+    compact,
     ...props
 }: TextareaProps) {
     return (
-        <div className={cn("space-y-3", containerClassName)}>
+        <div className={cn(compact ? "space-y-1" : "space-y-3", containerClassName)}>
             {label && (
                 <label className="text-[10px] lg:text-xs font-bold text-slate-500 uppercase tracking-widest pr-1">
                     {label}
@@ -68,7 +73,8 @@ export function Textarea({
             )}
             <textarea
                 className={cn(
-                    "w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-2xl px-5 lg:px-6 py-3.5 lg:py-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all resize-none",
+                    "w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-2xl px-5 lg:px-6 py-3.5 lg:py-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all resize-none leading-tight",
+                    compact && "py-2.5 lg:py-3 px-4 lg:px-5 lg:rounded-xl",
                     error && "border-rose-300 focus:ring-rose-100",
                     className
                 )}

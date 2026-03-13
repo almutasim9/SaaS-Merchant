@@ -12,6 +12,7 @@ interface Section {
     name_en?: string;
     name_ku?: string;
     image_url?: string;
+    display_order?: number;
 }
 
 interface SectionsModalProps {
@@ -29,6 +30,7 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
     const [imageUrl, setImageUrl] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [displayOrder, setDisplayOrder] = useState('0');
 
     const { plan } = useFeatureGate(storeId);
 
@@ -39,11 +41,13 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
             setNewNameEn(initialData.name_en || '');
             setNewNameKu(initialData.name_ku || '');
             setImageUrl(initialData.image_url || '');
+            setDisplayOrder(initialData.display_order?.toString() || '0');
         } else if (!initialData && isOpen) {
             setNewName('');
             setNewNameEn('');
             setNewNameKu('');
             setImageUrl('');
+            setDisplayOrder('0');
         }
     }, [initialData, isOpen]);
 
@@ -87,14 +91,15 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
         setActionLoading(true);
         try {
             if (initialData) {
-                await updateSection(initialData.id, newName.trim(), imageUrl, newNameEn.trim(), newNameKu.trim());
+                await updateSection(initialData.id, newName.trim(), imageUrl, newNameEn.trim(), newNameKu.trim(), parseInt(displayOrder) || 0);
             } else {
-                await addSection(storeId, newName.trim(), imageUrl, newNameEn.trim(), newNameKu.trim());
+                await addSection(storeId, newName.trim(), imageUrl, newNameEn.trim(), newNameKu.trim(), parseInt(displayOrder) || 0);
             }
             setNewName('');
             setNewNameEn('');
             setNewNameKu('');
             setImageUrl('');
+            setDisplayOrder('0');
             onSuccess?.();
             onClose();
         } catch (err: any) {
@@ -172,6 +177,18 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
                                     className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-black shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none text-right"
                                 />
                             </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">ترتيب العرض (اختياري)</label>
+                            <input
+                                type="number"
+                                value={displayOrder}
+                                onChange={(e) => setDisplayOrder(e.target.value)}
+                                placeholder="مثال: 1"
+                                className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-black shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
+                            />
+                            <p className="text-[10px] text-slate-400 font-medium px-1">الرقم الأصغر يظهر أولاً.</p>
                         </div>
 
                         <div className={`space-y-4 ${!plan.allow_category_images ? 'opacity-50 grayscale select-none' : ''}`}>

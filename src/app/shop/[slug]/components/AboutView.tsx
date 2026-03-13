@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useLanguage } from './LanguageContext';
+import { useI18n } from '@/components/providers/I18nProvider';
 
 interface AboutViewProps {
     onBack: () => void;
@@ -22,7 +22,7 @@ interface AboutViewProps {
 }
 
 export default function AboutView({ onBack, storeName, storeDescription, aboutConfig }: AboutViewProps) {
-    const { t, dir } = useLanguage();
+    const { t, dir } = useI18n();
 
     return (
         <div className="min-h-screen bg-white" dir={dir}>

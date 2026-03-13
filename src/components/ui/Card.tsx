@@ -12,6 +12,7 @@ interface CardProps {
     className?: string;
     headerClassName?: string;
     contentClassName?: string;
+    compact?: boolean;
 }
 
 export function Card({
@@ -22,7 +23,8 @@ export function Card({
     headerAction,
     className,
     headerClassName,
-    contentClassName
+    contentClassName,
+    compact
 }: CardProps) {
     return (
         <div className={cn(
@@ -30,22 +32,29 @@ export function Card({
             className
         )}>
             {(title || icon || headerAction) && (
-                <div className={cn("p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between", headerClassName)}>
+                <div className={cn(
+                    compact ? "p-3.5 lg:p-4" : "p-6 lg:p-8",
+                    "border-b border-slate-50 flex items-center justify-between", 
+                    headerClassName
+                )}>
                     <div className="flex items-center gap-4">
                         {icon && (
-                            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-slate-50 text-slate-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
+                            <div className={cn(
+                                compact ? "w-7 h-7 lg:w-8 lg:h-8" : "w-10 h-10 lg:w-12 lg:h-12",
+                                "bg-slate-50 text-slate-600 rounded-lg lg:rounded-xl flex items-center justify-center shadow-sm"
+                            )}>
                                 {icon}
                             </div>
                         )}
                         <div>
-                            {title && <h3 className="text-lg lg:text-xl font-bold text-slate-800">{title}</h3>}
-                            {subtitle && <p className="text-slate-400 text-[10px] lg:text-xs font-medium">{subtitle}</p>}
+                            {title && <h3 className={cn(compact ? "text-sm lg:text-base" : "text-lg lg:text-xl", "font-bold text-slate-800")}>{title}</h3>}
+                            {subtitle && <p className="text-slate-400 text-[9px] lg:text-[10px] font-medium">{subtitle}</p>}
                         </div>
                     </div>
                     {headerAction && <div>{headerAction}</div>}
                 </div>
             )}
-            <div className={cn("p-6 lg:p-10", contentClassName)}>
+            <div className={cn(compact ? "p-3.5 lg:p-5" : "p-6 lg:p-10", contentClassName)}>
                 {children}
             </div>
         </div>

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { useLanguage } from './LanguageContext';
+import { useI18n } from '@/components/providers/I18nProvider';
 import { formatCurrency, CurrencyPreference } from '@/lib/format-currency';
 
 interface CartItem {
@@ -28,7 +28,7 @@ interface CartViewProps {
 }
 
 export default function CartView({ items, onUpdateQuantity, onRemoveItem, onContinue, onBack, totalPrice, storeCurrency }: CartViewProps) {
-    const { language, t, dir } = useLanguage();
+    const { language, t, dir } = useI18n();
     return (
         <div className="min-h-screen bg-white" dir={dir}>
             {/* Header */}
