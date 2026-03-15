@@ -88,8 +88,8 @@ export default function LoginPage() {
                         </div>
                     </Link>
                     <div>
-                        <h1 className="text-4xl font-bold text-slate-800 tracking-tight">دخول المنصة</h1>
-                        <p className="text-slate-400 font-medium text-[10px] uppercase tracking-[0.3em] mt-2">TajirZone Merchant Platform</p>
+                        <h1 className="text-4xl font-bold text-black tracking-tight">دخول المنصة</h1>
+                        <p className="text-black font-medium text-[10px] uppercase tracking-[0.3em] mt-2">TajirZone Merchant Platform</p>
                     </div>
                 </div>
 
@@ -100,14 +100,14 @@ export default function LoginPage() {
                     <form onSubmit={handleLogin} className="space-y-8 relative z-10">
                         <div className="space-y-6">
                             <div className="space-y-3">
-                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">البريد الإلكتروني</label>
+                                <label className="text-[10px] font-bold text-black uppercase tracking-widest px-1">البريد الإلكتروني</label>
                                 <div className="relative">
                                     <input
                                         type="email"
                                         required
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-6 py-5 text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium text-sm"
+                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-6 py-5 text-black placeholder-slate-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium text-sm"
                                         placeholder="your@email.com"
                                     />
                                     <svg className="w-5 h-5 text-slate-200 absolute left-6 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -118,8 +118,8 @@ export default function LoginPage() {
 
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between px-1">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">كلمة المرور</label>
-                                    <Link href="/forgot-password" className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors">نسيت كلمة المرور؟</Link>
+                                    <label className="text-[10px] font-bold text-black uppercase tracking-widest">كلمة المرور</label>
+                                    <Link href="/forgot-password" className="text-[10px] font-bold text-black hover:text-indigo-800 transition-colors">نسيت كلمة المرور؟</Link>
                                 </div>
                                 <div className="relative">
                                     <input
@@ -127,7 +127,7 @@ export default function LoginPage() {
                                         required
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-6 py-5 text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium text-sm"
+                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-6 py-5 text-black placeholder-slate-300 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium text-sm"
                                         placeholder="••••••••"
                                     />
                                     <svg className="w-5 h-5 text-slate-200 absolute left-6 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -175,11 +175,11 @@ export default function LoginPage() {
                 </div>
 
                 <div className="mt-10 text-center space-y-6">
-                    <p className="text-xs font-bold text-slate-400">
-                        ليس لديك حساب؟ <a href="https://wa.me/9647703854913" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">تواصل معنا</a>
+                    <p className="text-xs font-bold text-black">
+                        ليس لديك حساب؟ <a href="https://wa.me/9647703854913" target="_blank" rel="noopener noreferrer" className="text-black hover:underline">تواصل معنا</a>
                     </p>
                     <div className="pt-6 border-t border-slate-100">
-                        <p className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.3em] leading-relaxed">
+                        <p className="text-[10px] font-bold text-slate-900 uppercase tracking-[0.3em] leading-relaxed">
                             © 2026 TajirZone Platform <br />
                             جميع الحقوق محفوظة لنظام إدارة التجار
                         </p>

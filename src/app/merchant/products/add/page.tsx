@@ -286,17 +286,17 @@ export default function AddProductPage() {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-0">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <span className="text-slate-400 text-[10px] lg:text-xs font-bold">المنتجات</span>
-                        <svg className="w-3 h-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
-                        <span className="text-slate-400 text-[10px] lg:text-xs font-bold">إضافة منتج جديد</span>
+                        <span className="text-black text-[10px] lg:text-xs font-bold">المنتجات</span>
+                        <svg className="w-3 h-3 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
+                        <span className="text-black text-[10px] lg:text-xs font-bold">إضافة منتج جديد</span>
                     </div>
-                    <h1 className="text-2xl lg:text-4xl font-black text-slate-800 tracking-tight">إضافة منتج جديد</h1>
+                    <h1 className="text-2xl lg:text-4xl font-black text-black tracking-tight">إضافة منتج جديد</h1>
                 </div>
 
                 <div className="flex items-center gap-3 lg:gap-4">
                     <button
                         onClick={() => router.push('/merchant/products')}
-                        className="flex-1 lg:flex-none px-6 lg:px-8 py-3 lg:py-4 text-slate-500 font-black text-xs lg:text-sm hover:text-slate-800 transition-all"
+                        className="flex-1 lg:flex-none px-6 lg:px-8 py-3 lg:py-4 text-black font-black text-xs lg:text-sm hover:text-black transition-all"
                     >
                         إلغاء
                     </button>
@@ -368,42 +368,42 @@ export default function AddProductPage() {
                     {/* Basic Info Card */}
                     <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
                         <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center gap-4">
-                            <div className="w-9 h-9 lg:w-10 lg:h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                            <div className="w-9 h-9 lg:w-10 lg:h-10 bg-indigo-50 text-black rounded-xl flex items-center justify-center">
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <h2 className="text-lg lg:text-xl font-black text-slate-800">المعلومات الأساسية</h2>
+                            <h2 className="text-lg lg:text-xl font-black text-black">المعلومات الأساسية</h2>
                         </div>
 
                         <div className="p-6 lg:p-10 space-y-6 lg:space-y-8">
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">اسم المنتج <span className="text-rose-500">*</span></label>
+                                <label className="text-[10px] font-black text-black uppercase tracking-widest px-1">اسم المنتج <span className="text-rose-500">*</span></label>
                                 <input
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     placeholder="مثال: فستان صيفي قطني"
-                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-xl lg:rounded-2xl px-5 lg:px-6 py-4 lg:py-5 text-sm lg:text-base text-slate-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold"
+                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-xl lg:rounded-2xl px-5 lg:px-6 py-4 lg:py-5 text-sm lg:text-base text-black focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold"
                                 />
                             </div>
 
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">وصف المنتج</label>
+                                <label className="text-[10px] font-black text-black uppercase tracking-widest px-1">وصف المنتج</label>
                                 <div className="bg-slate-50/50 border border-slate-100 rounded-xl lg:rounded-2xl overflow-hidden focus-within:ring-4 focus-within:ring-indigo-500/10 focus-within:border-indigo-500 transition-all">
                                     <div className="flex items-center gap-4 px-5 lg:px-6 py-3 border-b border-slate-100 bg-white/50">
-                                        <button type="button" className="text-slate-400 hover:text-indigo-600 transition-all"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" /></svg></button>
-                                        <button type="button" className="text-slate-800 font-black">B</button>
-                                        <button type="button" className="text-slate-400 font-black">I</button>
+                                        <button type="button" className="text-black hover:text-black transition-all"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" /></svg></button>
+                                        <button type="button" className="text-black font-black">B</button>
+                                        <button type="button" className="text-black font-black">I</button>
                                         <div className="w-px h-4 bg-slate-200" />
-                                        <button type="button" className="text-slate-400 hover:text-indigo-600 transition-all"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg></button>
+                                        <button type="button" className="text-black hover:text-black transition-all"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg></button>
                                     </div>
                                     <textarea
                                         rows={6}
                                         value={formData.description}
                                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                         placeholder="اكتب وصفاً تفصيلياً لمنتجك هنا..."
-                                        className="w-full bg-transparent px-5 lg:px-6 py-4 lg:py-5 text-sm lg:text-base text-slate-800 focus:outline-none font-bold resize-none"
+                                        className="w-full bg-transparent px-5 lg:px-6 py-4 lg:py-5 text-sm lg:text-base text-black focus:outline-none font-bold resize-none"
                                     />
                                 </div>
                             </div>
@@ -414,15 +414,15 @@ export default function AddProductPage() {
                     <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
                         <div className="p-8 border-b border-slate-50 flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                                <div className="w-10 h-10 bg-indigo-50 text-black rounded-xl flex items-center justify-center">
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                     </svg>
                                 </div>
-                                <h2 className="text-xl font-black text-slate-800">المتغيرات (Variants)</h2>
+                                <h2 className="text-xl font-black text-black">المتغيرات (Variants)</h2>
                             </div>
                             <div className="flex items-center gap-4">
-                                <span className="text-xs font-bold text-slate-400">تفعيل المتغيرات</span>
+                                <span className="text-xs font-bold text-black">تفعيل المتغيرات</span>
                                 <button
                                     type="button"
                                     onClick={() => setFormData(prev => ({ ...prev, hasVariants: !prev.hasVariants }))}
@@ -438,7 +438,7 @@ export default function AddProductPage() {
                                 {/* Size Variant */}
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الأحجام العالمية (Global Sizes)</label>
+                                        <label className="text-[10px] font-black text-black uppercase tracking-widest">الأحجام العالمية (Global Sizes)</label>
                                     </div>
                                     <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
                                         {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map((size) => {
@@ -455,7 +455,7 @@ export default function AddProductPage() {
                                                             addOptionValue('sizes', size);
                                                         }
                                                     }}
-                                                    className={`h-12 flex items-center justify-center rounded-xl font-black text-xs border transition-all ${isActive ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-600/20' : 'bg-white text-slate-400 border-slate-100 hover:border-indigo-100'}`}
+                                                    className={`h-12 flex items-center justify-center rounded-xl font-black text-xs border transition-all ${isActive ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-600/20' : 'bg-white text-black border-slate-100 hover:border-indigo-100'}`}
                                                 >
                                                     {size}
                                                 </button>
@@ -473,7 +473,7 @@ export default function AddProductPage() {
                                                     e.currentTarget.value = '';
                                                 }
                                             }}
-                                            className="h-12 w-full border border-slate-100 border-dashed rounded-xl px-4 text-slate-400 font-black text-[10px] focus:outline-none focus:border-indigo-100 hover:border-indigo-100 transition-all"
+                                            className="h-12 w-full border border-slate-100 border-dashed rounded-xl px-4 text-black font-black text-[10px] focus:outline-none focus:border-indigo-100 hover:border-indigo-100 transition-all"
                                         />
                                     </div>
                                 </div>
@@ -481,8 +481,8 @@ export default function AddProductPage() {
                                 {/* Color Variant */}
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الألوان (Colors)</label>
-                                        <span className="text-[10px] font-bold text-slate-300">اختر لوناً سريعاً أو أضف لوناً مخصصاً</span>
+                                        <label className="text-[10px] font-black text-black uppercase tracking-widest">الألوان (Colors)</label>
+                                        <span className="text-[10px] font-bold text-slate-900">اختر لوناً سريعاً أو أضف لوناً مخصصاً</span>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-4">
                                         {/* Color Presets */}
@@ -512,7 +512,7 @@ export default function AddProductPage() {
                                             </div>
                                         ))}
                                         <div className="relative group">
-                                            <div className="w-10 h-10 rounded-full border-2 border-slate-100 border-dashed flex items-center justify-center text-slate-300 group-hover:border-indigo-400 group-hover:text-indigo-500 transition-all cursor-pointer">
+                                            <div className="w-10 h-10 rounded-full border-2 border-slate-100 border-dashed flex items-center justify-center text-slate-900 group-hover:border-indigo-400 group-hover:text-indigo-500 transition-all cursor-pointer">
                                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
                                                 </svg>
@@ -528,11 +528,11 @@ export default function AddProductPage() {
 
                                 {/* Weight Variant */}
                                 <div className="space-y-4">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الأوزان والأحجام (Weights/Volumes)</label>
+                                    <label className="text-[10px] font-black text-black uppercase tracking-widest">الأوزان والأحجام (Weights/Volumes)</label>
                                     <div className="flex flex-wrap gap-3">
                                         {formData.options.weights.map((w, idx) => (
                                             <div key={idx} className="group relative">
-                                                <div className="min-w-[80px] h-12 flex items-center justify-center bg-indigo-50 text-indigo-600 rounded-xl font-black text-xs border border-indigo-100 shadow-sm px-4">
+                                                <div className="min-w-[80px] h-12 flex items-center justify-center bg-indigo-50 text-black rounded-xl font-black text-xs border border-indigo-100 shadow-sm px-4">
                                                     {w.value} {w.unit}
                                                 </div>
                                                 <button
@@ -548,11 +548,11 @@ export default function AddProductPage() {
                                             id="weight-value"
                                             type="text"
                                             placeholder="الكمية (مثال: 500)"
-                                            className="h-12 flex-1 border border-slate-100 rounded-xl px-4 text-slate-800 font-bold text-sm focus:outline-none focus:border-indigo-100"
+                                            className="h-12 flex-1 border border-slate-100 rounded-xl px-4 text-black font-bold text-sm focus:outline-none focus:border-indigo-100"
                                         />
                                         <select
                                             id="weight-unit"
-                                            className="h-12 w-24 border border-slate-100 rounded-xl px-2 text-slate-800 font-bold text-sm focus:outline-none focus:border-indigo-100"
+                                            className="h-12 w-24 border border-slate-100 rounded-xl px-2 text-black font-bold text-sm focus:outline-none focus:border-indigo-100"
                                         >
                                             <option value="g">جم (g)</option>
                                             <option value="kg">كجم (kg)</option>
@@ -579,13 +579,13 @@ export default function AddProductPage() {
                                 {/* Weight Price Overrides */}
                                 {formData.options.weights.length > 0 && (
                                     <div className="pt-6 border-t border-slate-50 space-y-6">
-                                        <h3 className="text-sm font-black text-slate-800">أسعار الأوزان المخصصة</h3>
+                                        <h3 className="text-sm font-black text-black">أسعار الأوزان المخصصة</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {formData.options.weights.map((w, idx) => {
                                                 const weightKey = `${w.value}${w.unit}`;
                                                 return (
                                                     <div key={idx} className="flex items-center gap-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
-                                                        <span className="text-xs font-black text-slate-400 min-w-[60px]">{w.value} {w.unit}</span>
+                                                        <span className="text-xs font-black text-black min-w-[60px]">{w.value} {w.unit}</span>
                                                         <div className="relative flex-1">
                                                             <input
                                                                 type="text"
@@ -594,7 +594,7 @@ export default function AddProductPage() {
                                                                 onChange={(e) => setWeightPrice(weightKey, e.target.value)}
                                                                 className="w-full bg-white border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                                                             />
-                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-300 font-black">د.ع</span>
+                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-900 font-black">د.ع</span>
                                                         </div>
                                                     </div>
                                                 );
@@ -608,11 +608,11 @@ export default function AddProductPage() {
                         {!formData.hasVariants && (
                             <div className="p-20 text-center space-y-4 opacity-40">
                                 <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <svg className="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="w-10 h-10 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10" />
                                     </svg>
                                 </div>
-                                <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">لا توجد متغيرات لهذا المنتج حالياً</p>
+                                <p className="text-xs font-black text-black uppercase tracking-[0.2em]">لا توجد متغيرات لهذا المنتج حالياً</p>
                             </div>
                         )}
                     </div>
@@ -624,18 +624,18 @@ export default function AddProductPage() {
                     <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
                         <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-9 h-9 lg:w-10 lg:h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                                <div className="w-9 h-9 lg:w-10 lg:h-10 bg-indigo-50 text-black rounded-xl flex items-center justify-center">
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                 </div>
-                                <h2 className="text-lg lg:text-xl font-black text-slate-800">صور المنتج</h2>
+                                <h2 className="text-lg lg:text-xl font-black text-black">صور المنتج</h2>
                             </div>
                             <div className="flex items-center gap-3">
                                 {!plan.allow_multiple_product_images && (
                                     <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md">صور متعددة في الذهبي</span>
                                 )}
-                                <span className="text-xs font-bold text-slate-400">{allImages.length}/{MAX_IMAGES}</span>
+                                <span className="text-xs font-bold text-black">{allImages.length}/{MAX_IMAGES}</span>
                             </div>
                         </div>
 
@@ -660,10 +660,10 @@ export default function AddProductPage() {
                                             <div className="w-8 h-8 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
                                         ) : (
                                             <>
-                                                <svg className="w-7 h-7 text-slate-300 group-hover:text-indigo-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <svg className="w-7 h-7 text-slate-900 group-hover:text-indigo-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                                 </svg>
-                                                <span className="text-[9px] font-bold text-slate-400 mt-1">أضف صورة</span>
+                                                <span className="text-[9px] font-bold text-black mt-1">أضف صورة</span>
                                             </>
                                         )}
                                         <input
@@ -676,58 +676,58 @@ export default function AddProductPage() {
                                     </div>
                                 )}
                             </div>
-                            <p className="text-[10px] text-slate-400 font-medium mt-4">الصورة الأولى هي الرئيسية في الكتالوج. أضف حتى {MAX_IMAGES} صور (PNG, JPG).</p>
+                            <p className="text-[10px] text-black font-medium mt-4">الصورة الأولى هي الرئيسية في الكتالوج. أضف حتى {MAX_IMAGES} صور (PNG, JPG).</p>
                         </div>
                     </div>
 
                     {/* Pricing & Category Card */}
                     <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
                         <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center gap-4">
-                            <div className="w-9 h-9 lg:w-10 lg:h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                            <div className="w-9 h-9 lg:w-10 lg:h-10 bg-indigo-50 text-black rounded-xl flex items-center justify-center">
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                 </svg>
                             </div>
-                            <h2 className="text-lg lg:text-xl font-black text-slate-800">السعر والقسم</h2>
+                            <h2 className="text-lg lg:text-xl font-black text-black">السعر والقسم</h2>
                         </div>
 
                         <div className="p-6 lg:p-10 space-y-6 lg:space-y-8">
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">سعر المنتج <span className="text-rose-500">*</span></label>
+                                <label className="text-[10px] font-black text-black uppercase tracking-widest px-1">سعر المنتج <span className="text-rose-500">*</span></label>
                                 <div className="relative group">
-                                    <div className="absolute left-5 lg:left-6 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs lg:text-sm">د.ع</div>
+                                    <div className="absolute left-5 lg:left-6 top-1/2 -translate-y-1/2 text-black font-black text-xs lg:text-sm">د.ع</div>
                                     <input
                                         type="text"
                                         value={formData.price}
                                         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                                         placeholder="0.00"
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-xl lg:rounded-2xl pl-14 lg:pl-16 pr-5 lg:pr-6 py-4 lg:py-5 text-slate-800 text-left focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-black tracking-wider text-xl lg:text-3xl"
+                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-xl lg:rounded-2xl pl-14 lg:pl-16 pr-5 lg:pr-6 py-4 lg:py-5 text-black text-left focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-black tracking-wider text-xl lg:text-3xl"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">القسم <span className="text-rose-500">*</span></label>
+                                <label className="text-[10px] font-black text-black uppercase tracking-widest px-1">القسم <span className="text-rose-500">*</span></label>
                                 <div className="relative">
                                     <select
                                         value={formData.section_id}
                                         onChange={(e) => setFormData({ ...formData, section_id: e.target.value })}
-                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-xl lg:rounded-2xl px-5 lg:px-6 py-4 lg:py-5 text-sm lg:text-base text-slate-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold appearance-none"
+                                        className="w-full bg-slate-50/50 border border-slate-100 rounded-xl lg:rounded-2xl px-5 lg:px-6 py-4 lg:py-5 text-sm lg:text-base text-black focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold appearance-none"
                                     >
                                         <option value="">اختر القسم</option>
                                         {sections.map(section => (
                                             <option key={section.id} value={section.id}>{section.name}</option>
                                         ))}
                                     </select>
-                                    <svg className="w-5 h-5 text-slate-300 absolute left-5 lg:left-6 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                                    <svg className="w-5 h-5 text-slate-900 absolute left-5 lg:left-6 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
                                 </div>
                             </div>
 
                             <div className="space-y-6 pt-4">
                                 <div className="flex items-center justify-between">
                                     <div className="space-y-0.5">
-                                        <span className="text-sm font-black text-slate-800">حالة توفر المنتج</span>
-                                        <p className="text-[10px] text-slate-400 font-bold">هل المنتج متاح للطلب؟</p>
+                                        <span className="text-sm font-black text-black">حالة توفر المنتج</span>
+                                        <p className="text-[10px] text-black font-bold">هل المنتج متاح للطلب؟</p>
                                     </div>
                                     <button
                                         type="button"
@@ -739,23 +739,23 @@ export default function AddProductPage() {
                                 </div>
 
                                 <div className="space-y-3 pt-4 border-t border-slate-50">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">سلوك المنتج عند نفاذ الكمية</label>
+                                    <label className="text-[10px] font-black text-black uppercase tracking-widest px-1">سلوك المنتج عند نفاذ الكمية</label>
                                     <div className="grid grid-cols-2 gap-2 lg:gap-3">
                                         <button
                                             type="button"
                                             onClick={() => setFormData({ ...formData, outOfStockBehavior: 'hide' })}
                                             className={`p-3 lg:p-4 rounded-xl lg:rounded-2xl border-2 text-right transition-all ${formData.outOfStockBehavior === 'hide' ? 'border-indigo-600 bg-indigo-50/50' : 'border-slate-100 hover:border-slate-200'}`}
                                         >
-                                            <span className="block text-[10px] lg:text-xs font-black text-slate-800 mb-0.5">إخفاء</span>
-                                            <span className="block text-[8px] lg:text-[10px] text-slate-400 font-bold leading-tight">سيختفي المنتج تماماً.</span>
+                                            <span className="block text-[10px] lg:text-xs font-black text-black mb-0.5">إخفاء</span>
+                                            <span className="block text-[8px] lg:text-[10px] text-black font-bold leading-tight">سيختفي المنتج تماماً.</span>
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setFormData({ ...formData, outOfStockBehavior: 'show_badge' })}
                                             className={`p-3 lg:p-4 rounded-xl lg:rounded-2xl border-2 text-right transition-all ${formData.outOfStockBehavior === 'show_badge' ? 'border-indigo-600 bg-indigo-50/50' : 'border-slate-100 hover:border-slate-200'}`}
                                         >
-                                            <span className="block text-[10px] lg:text-xs font-black text-slate-800 mb-0.5">إظهار علامة</span>
-                                            <span className="block text-[8px] lg:text-[10px] text-slate-400 font-bold leading-tight">سيظهر كمنتهي.</span>
+                                            <span className="block text-[10px] lg:text-xs font-black text-black mb-0.5">إظهار علامة</span>
+                                            <span className="block text-[8px] lg:text-[10px] text-black font-bold leading-tight">سيظهر كمنتهي.</span>
                                         </button>
                                     </div>
                                 </div>

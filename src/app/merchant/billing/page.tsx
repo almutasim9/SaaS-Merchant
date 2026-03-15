@@ -77,27 +77,27 @@ export default function MerchantBillingPage() {
             {/* Header Content */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-0">
                 <div>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tighter">الباقة والاشتراك</h1>
-                    <p className="text-slate-400 font-medium mt-1 uppercase text-[10px] tracking-widest">إدارة باقة متجرك ومميزات حسابك.</p>
+                    <h1 className="text-2xl lg:text-3xl font-bold text-black tracking-tighter">الباقة والاشتراك</h1>
+                    <p className="text-black font-medium mt-1 uppercase text-[10px] tracking-widest">إدارة باقة متجرك ومميزات حسابك.</p>
                 </div>
             </div>
 
             {/* Current Plan Overview */}
             <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-6 lg:p-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shadow-sm">
+                    <div className="w-16 h-16 bg-indigo-50 text-black rounded-2xl flex items-center justify-center shadow-sm">
                         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                         </svg>
                     </div>
                     <div>
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">باقتك الحالية</h3>
+                        <h3 className="text-xs font-bold text-black uppercase tracking-widest mb-1">باقتك الحالية</h3>
                         <div className="flex items-center gap-3">
-                            <h2 className="text-2xl lg:text-3xl font-black text-slate-800 tracking-tighter">
+                            <h2 className="text-2xl lg:text-3xl font-black text-black tracking-tighter">
                                 {currentPlan?.name_ar || subscriptionType || 'غير محدد'}
                             </h2>
                             {(() => {
-                                if (!planExpiresAt) return <span className="px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-lg">غير محدد</span>;
+                                if (!planExpiresAt) return <span className="px-3 py-1 bg-slate-100 text-black text-[10px] font-bold rounded-lg">غير محدد</span>;
                                 const diff = Math.ceil((new Date(planExpiresAt).getTime() - Date.now()) / 86400000);
                                 if (diff < 0) return <span className="px-3 py-1 bg-rose-50 text-rose-600 text-[10px] font-bold rounded-lg border border-rose-100">⚠️ منتهي</span>;
                                 if (diff <= 14) return <span className="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold rounded-lg border border-amber-100">⏳ ينتهي خلال {diff} يوم</span>;
@@ -106,17 +106,17 @@ export default function MerchantBillingPage() {
                         </div>
                         <div className="flex flex-wrap gap-4 mt-3">
                             {planStartedAt && (
-                                <p className="text-xs text-slate-500 font-medium">
-                                    بدأ: <span className="text-slate-700 font-bold">{new Date(planStartedAt).toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                <p className="text-xs text-black font-medium">
+                                    بدأ: <span className="text-black font-bold">{new Date(planStartedAt).toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                                 </p>
                             )}
                             {planExpiresAt && (
-                                <p className="text-xs text-slate-500 font-medium">
-                                    ينتهي: <span className="text-slate-700 font-bold">{new Date(planExpiresAt).toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                <p className="text-xs text-black font-medium">
+                                    ينتهي: <span className="text-black font-bold">{new Date(planExpiresAt).toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                                 </p>
                             )}
                             {!planExpiresAt && (
-                                <p className="text-xs text-slate-500 font-medium">لا يوجد تاريخ انتهاء محدد لهذه الباقة.</p>
+                                <p className="text-xs text-black font-medium">لا يوجد تاريخ انتهاء محدد لهذه الباقة.</p>
                             )}
                         </div>
                     </div>
@@ -142,7 +142,7 @@ export default function MerchantBillingPage() {
             </div>
 
             {/* Plans List */}
-            <h2 className="text-xl font-bold text-slate-800 mb-6 mt-12 pb-2 border-b border-slate-100">خيارات الترقية والباقات المتاحة</h2>
+            <h2 className="text-xl font-bold text-black mb-6 mt-12 pb-2 border-b border-slate-100">خيارات الترقية والباقات المتاحة</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
                 {allPlans.map((plan) => (
                     <div
@@ -155,10 +155,10 @@ export default function MerchantBillingPage() {
                             </div>
                         )}
                         <div className="text-center mb-8">
-                            <h3 className="text-xl font-black text-slate-800 mb-2">{plan.name_ar}</h3>
+                            <h3 className="text-xl font-black text-black mb-2">{plan.name_ar}</h3>
                             <div className="flex items-end justify-center gap-1">
-                                <span className="text-4xl font-black text-slate-900">{plan.price_monthly}</span>
-                                <span className="text-sm font-bold text-slate-400 mb-1">د.ع / شهرياً</span>
+                                <span className="text-4xl font-black text-black">{plan.price_monthly}</span>
+                                <span className="text-sm font-bold text-black mb-1">د.ع / شهرياً</span>
                             </div>
                         </div>
 
@@ -166,7 +166,7 @@ export default function MerchantBillingPage() {
                             {plan.features_ar?.map((feature: string, idx: number) => (
                                 <li key={idx} className="flex items-start gap-3">
                                     <svg className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                                    <span className="text-sm font-bold text-slate-600 leading-relaxed">
+                                    <span className="text-sm font-bold text-black leading-relaxed">
                                         {feature}
                                     </span>
                                 </li>
@@ -177,7 +177,7 @@ export default function MerchantBillingPage() {
                             onClick={() => handleUpgradeContact(plan.name_ar)}
                             disabled={currentPlan?.id === plan.id}
                             className={`w-full py-4 rounded-xl font-bold transition-all text-sm ${currentPlan?.id === plan.id
-                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                ? 'bg-slate-100 text-black cursor-not-allowed'
                                 : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl shadow-indigo-600/20 active:scale-95'
                                 }`}
                         >

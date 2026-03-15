@@ -258,8 +258,8 @@ function StorefrontInner({ store, products, sections, canReceiveOrders }: { stor
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-black text-slate-800 mb-2">{t('success.title') || 'تم استلام طلبك بنجاح! 🎉'}</h2>
-                        <p className="text-sm text-slate-500 leading-6 whitespace-pre-wrap">
+                        <h2 className="text-2xl font-black text-black mb-2">{t('success.title') || 'تم استلام طلبك بنجاح! 🎉'}</h2>
+                        <p className="text-sm text-black leading-6 whitespace-pre-wrap">
                             {orderSummary?.orderType === 'pickup'
                                 ? 'سنقوم بالتواصل معك قريباً لتأكيد الطلب وترتيب عملية الاستلام.'
                                 : 'سنقوم بالتواصل معك قريباً لتأكيد الطلب وترتيب عملية التوصيل.'}
@@ -268,22 +268,22 @@ function StorefrontInner({ store, products, sections, canReceiveOrders }: { stor
 
                     {/* Order Info Card */}
                     <div className="mx-5 -mt-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
-                        <p className="text-xs text-slate-400 mb-1">{t('success.orderId') || 'رقم الطلب'}</p>
+                        <p className="text-xs text-black mb-1">{t('success.orderId') || 'رقم الطلب'}</p>
                         <div className="flex items-center justify-center gap-2 mb-4">
-                            <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
                             </svg>
-                            <span className="text-2xl font-black text-slate-800" dir="ltr">{orderNumber}</span>
+                            <span className="text-2xl font-black text-black" dir="ltr">{orderNumber}</span>
                         </div>
                         <div className="flex items-center justify-around border-t border-slate-100 pt-4">
                             <div>
-                                <p className="text-xs text-slate-400">{t('success.paymentMethod') || 'طريقة الدفع'}</p>
-                                <p className="text-sm font-bold text-slate-700">{t('success.cod') || 'دفع عند الاستلام'}</p>
+                                <p className="text-xs text-black">{t('success.paymentMethod') || 'طريقة الدفع'}</p>
+                                <p className="text-sm font-bold text-black">{t('success.cod') || 'دفع عند الاستلام'}</p>
                             </div>
                             <div className="w-px h-8 bg-slate-100" />
                             <div>
-                                <p className="text-xs text-slate-400">{t('success.orderDate') || 'تاريخ الطلب'}</p>
-                                <p className="text-sm font-bold text-slate-700">{new Date().toLocaleDateString(dir === 'ltr' ? 'en-US' : 'ar-IQ', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                                <p className="text-xs text-black">{t('success.orderDate') || 'تاريخ الطلب'}</p>
+                                <p className="text-sm font-bold text-black">{new Date().toLocaleDateString(dir === 'ltr' ? 'en-US' : 'ar-IQ', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
                             </div>
                         </div>
                     </div>
@@ -291,39 +291,39 @@ function StorefrontInner({ store, products, sections, canReceiveOrders }: { stor
                     {orderSummary && (
                         <div className="mx-5 mt-4">
                             <div id="invoice-capture-area" className="bg-white rounded-2xl border border-slate-100 p-6 text-right mb-4">
-                                <h3 className="text-xl font-bold text-slate-800 mb-1 border-b border-slate-100 pb-3">{store.name}</h3>
-                                <p className="text-xs text-slate-400 mb-6 uppercase tracking-widest font-bold">رقم الطلب: {orderNumber}</p>
+                                <h3 className="text-xl font-bold text-black mb-1 border-b border-slate-100 pb-3">{store.name}</h3>
+                                <p className="text-xs text-black mb-6 uppercase tracking-widest font-bold">رقم الطلب: {orderNumber}</p>
 
                                 <div className="space-y-3 mb-4">
                                     {orderSummary.items.map((item: any, idx: number) => (
                                         <div key={idx} className="flex justify-between items-start text-sm">
                                             <div className="flex flex-col pe-4">
-                                                <span className="text-slate-800 font-semibold">{item.quantity} × {item.name}</span>
+                                                <span className="text-black font-semibold">{item.quantity} × {item.name}</span>
                                             </div>
-                                            <span className="font-bold text-slate-800 whitespace-nowrap" dir="ltr">{formatCurrency(item.price * item.quantity, store.currency_preference)}</span>
+                                            <span className="font-bold text-black whitespace-nowrap" dir="ltr">{formatCurrency(item.price * item.quantity, store.currency_preference)}</span>
                                         </div>
                                     ))}
                                 </div>
 
                                 <div className="border-t border-slate-100 pt-4 space-y-3 text-sm">
-                                    <div className="flex justify-between text-slate-500 font-medium">
+                                    <div className="flex justify-between text-black font-medium">
                                         <span>المجموع الفرعي</span>
                                         <span dir="ltr">{formatCurrency(orderSummary.subTotal, store.currency_preference)}</span>
                                     </div>
                                     {orderSummary.orderType !== 'pickup' && (
-                                        <div className="flex justify-between text-slate-500 font-medium">
+                                        <div className="flex justify-between text-black font-medium">
                                             <span>رسوم التوصيل</span>
                                             <span dir="ltr">{formatCurrency(orderSummary.deliveryFee, store.currency_preference)}</span>
                                         </div>
                                     )}
-                                    <div className="flex justify-between font-black text-lg text-slate-800 pt-3 border-t border-slate-100">
+                                    <div className="flex justify-between font-black text-lg text-black pt-3 border-t border-slate-100">
                                         <span>الإجمالي النهائي</span>
                                         <span dir="ltr">{formatCurrency(orderSummary.totalPrice, store.currency_preference)}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <p className="text-center text-sm text-slate-500 font-medium">التقط صورة للشاشة لحفظ الفاتورة</p>
+                            <p className="text-center text-sm text-black font-medium">التقط صورة للشاشة لحفظ الفاتورة</p>
                         </div>
                     )}
 

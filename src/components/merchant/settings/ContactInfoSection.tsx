@@ -51,9 +51,9 @@ export function ContactInfoSection({
                 />
 
                 <div className="space-y-1">
-                    <label className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest pr-1">رقم الهاتف</label>
+                    <label className="text-[9px] lg:text-[10px] font-bold text-black uppercase tracking-widest pr-1">رقم الهاتف</label>
                     <div className="flex gap-2" dir="ltr">
-                        <div className="w-14 lg:w-16 bg-[#FBFBFF] border border-slate-100 rounded-lg lg:rounded-xl px-2 py-2 lg:py-2.5 text-xs lg:text-sm font-bold text-slate-400 flex items-center justify-center leading-tight">+964</div>
+                        <div className="w-14 lg:w-16 bg-[#FBFBFF] border border-slate-100 rounded-lg lg:rounded-xl px-2 py-2 lg:py-2.5 text-xs lg:text-sm font-bold text-black flex items-center justify-center leading-tight">+964</div>
                         <Input
                             compact
                             containerClassName="flex-1"

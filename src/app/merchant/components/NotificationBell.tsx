@@ -100,7 +100,7 @@ export default function NotificationBell() {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={toggleDropdown}
-                className="relative w-11 h-11 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-all shadow-sm"
+                className="relative w-11 h-11 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-black hover:text-black hover:bg-slate-50 transition-all shadow-sm"
             >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -115,7 +115,7 @@ export default function NotificationBell() {
             {isOpen && (
                 <div className="absolute left-0 mt-3 w-80 bg-white border border-slate-100 rounded-[2rem] shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
                     <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-slate-800">{t('header.notifications')}</h3>
+                        <h3 className="text-sm font-bold text-black">{t('header.notifications')}</h3>
                         {unreadCount > 0 && (
                             <span className="px-2 py-0.5 bg-rose-50 text-rose-500 text-[10px] font-bold rounded-full">
                                 {unreadCount} جديد
@@ -129,7 +129,7 @@ export default function NotificationBell() {
                                 <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-200">
                                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                                 </div>
-                                <p className="text-xs font-bold text-slate-400">{t('header.noNotifications')}</p>
+                                <p className="text-xs font-bold text-black">{t('header.noNotifications')}</p>
                             </div>
                         ) : (
                             <div className="divide-y divide-slate-50">
@@ -141,7 +141,7 @@ export default function NotificationBell() {
                                         className={`block p-5 transition-all hover:bg-slate-50 ${!notif.is_read ? 'bg-indigo-50/30' : ''}`}
                                     >
                                         <div className="flex gap-4">
-                                            <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center ${notif.type === 'order' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                                            <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center ${notif.type === 'order' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-black'}`}>
                                                 {notif.type === 'order' ? (
                                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
                                                 ) : (
@@ -149,9 +149,9 @@ export default function NotificationBell() {
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-bold text-slate-800 mb-0.5 truncate">{notif.title}</p>
-                                                <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">{notif.body}</p>
-                                                <p className="text-[9px] text-slate-400 mt-2 font-medium">
+                                                <p className="text-xs font-bold text-black mb-0.5 truncate">{notif.title}</p>
+                                                <p className="text-[11px] text-black line-clamp-2 leading-relaxed">{notif.body}</p>
+                                                <p className="text-[9px] text-black mt-2 font-medium">
                                                     {new Date(notif.created_at).toLocaleTimeString('ar-IQ', { hour: 'numeric', minute: '2-digit' })}
                                                 </p>
                                             </div>
@@ -165,7 +165,7 @@ export default function NotificationBell() {
                     <Link
                         href="/merchant/notifications"
                         onClick={() => setIsOpen(false)}
-                        className="block p-4 bg-slate-50 text-center text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-all border-t border-slate-100"
+                        className="block p-4 bg-slate-50 text-center text-xs font-bold text-black hover:text-indigo-700 transition-all border-t border-slate-100"
                     >
                         {t('header.viewAll')}
                     </Link>

@@ -261,8 +261,8 @@ export default function MerchantDashboard() {
                     </span>
                 </div>
                 <div>
-                    <h3 className="text-slate-400 text-xs lg:text-sm font-bold tracking-widest uppercase mb-2 pr-1">{title}</h3>
-                    <div className="text-3xl lg:text-4xl font-black text-slate-800 tracking-tighter">
+                    <h3 className="text-black text-xs lg:text-sm font-bold tracking-widest uppercase mb-2 pr-1">{title}</h3>
+                    <div className="text-3xl lg:text-4xl font-black text-black tracking-tighter">
                         {typeof value === 'number' && (title.includes('المبيعات') || title.includes('متوسط'))
                             ? formatCurrency(value, store?.currency_preference)
                             : value}
@@ -276,8 +276,8 @@ export default function MerchantDashboard() {
         <div className="px-4 lg:px-10 pb-10 space-y-8 lg:space-y-10 pt-6 lg:pt-0" dir="rtl">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-0">
                 <div>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">لوحة التحكم</h1>
-                    <p className="text-slate-400 font-medium mt-1 text-sm">مرحباً بك مجدداً، إليك ملخص أداء متجرك اليوم.</p>
+                    <h1 className="text-2xl lg:text-3xl font-bold text-black">لوحة التحكم</h1>
+                    <p className="text-black font-medium mt-1 text-sm">مرحباً بك مجدداً، إليك ملخص أداء متجرك اليوم.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 lg:gap-4">
                     <a
@@ -291,7 +291,7 @@ export default function MerchantDashboard() {
                         </svg>
                         زيارة المتجر
                     </a>
-                    <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-3 bg-white border border-slate-100 rounded-2xl text-slate-600 font-bold text-sm shadow-sm hover:shadow-md transition-all">
+                    <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 lg:px-6 py-3 bg-white border border-slate-100 rounded-2xl text-black font-bold text-sm shadow-sm hover:shadow-md transition-all">
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
@@ -332,17 +332,17 @@ export default function MerchantDashboard() {
                 <div className="lg:col-span-2 bg-white rounded-[2rem] lg:rounded-[2.5rem] p-6 lg:p-10 border border-slate-100 shadow-sm space-y-8">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
-                            <h3 className="text-lg lg:text-xl font-bold text-slate-800 tracking-tight">نظرة عامة على المبيعات</h3>
-                            <p className="text-slate-400 text-[10px] lg:text-xs font-medium">أداء المبيعات للأسبوع الحالي</p>
+                            <h3 className="text-lg lg:text-xl font-bold text-black tracking-tight">نظرة عامة على المبيعات</h3>
+                            <p className="text-black text-[10px] lg:text-xs font-medium">أداء المبيعات للأسبوع الحالي</p>
                         </div>
                         <div className="flex items-center gap-6">
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
-                                <span className="text-[10px] font-bold text-slate-400">المبيعات</span>
+                                <span className="text-[10px] font-bold text-black">المبيعات</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 bg-slate-200 rounded-full"></div>
-                                <span className="text-[10px] font-bold text-slate-400">المتوقع</span>
+                                <span className="text-[10px] font-bold text-black">المتوقع</span>
                             </div>
                         </div>
                     </div>
@@ -387,7 +387,7 @@ export default function MerchantDashboard() {
                             );
                         })()}
 
-                        <div className="absolute inset-x-0 bottom-0 flex justify-between text-[10px] font-bold text-slate-300 px-2" dir="ltr">
+                        <div className="absolute inset-x-0 bottom-0 flex justify-between text-[10px] font-bold text-slate-900 px-2" dir="ltr">
                             {stats.dailyLabels.map((lbl, idx) => (
                                 <span key={idx}>{lbl}</span>
                             ))}
@@ -396,7 +396,7 @@ export default function MerchantDashboard() {
                 </div>
 
                 <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] p-6 lg:p-10 border border-slate-100 shadow-sm flex flex-col">
-                    <h3 className="text-xl font-bold text-slate-800 tracking-tight mb-8">الأكثر مبيعاً</h3>
+                    <h3 className="text-xl font-bold text-black tracking-tight mb-8">الأكثر مبيعاً</h3>
                     <div className="flex-1 space-y-6">
                         {products.map((p, idx) => (
                             <div key={p.id} className="flex items-center justify-between group cursor-pointer">
@@ -405,15 +405,15 @@ export default function MerchantDashboard() {
                                         <img src={p.image_url || '/placeholder-product.png'} alt="" className="w-full h-full object-cover" />
                                     </div>
                                     <div>
-                                        <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{p.name || 'منتج محذوف'}</h4>
-                                        <p className="text-[10px] font-medium text-slate-400 mt-0.5">{p.orders_count || 0} طلب هذا الشهر</p>
+                                        <h4 className="text-sm font-bold text-black line-clamp-1">{p.name || 'منتج محذوف'}</h4>
+                                        <p className="text-[10px] font-medium text-black mt-0.5">{p.orders_count || 0} طلب هذا الشهر</p>
                                     </div>
                                 </div>
-                                <span className="text-sm font-bold text-indigo-600">{formatCurrency(p.price, store?.currency_preference)}</span>
+                                <span className="text-sm font-bold text-black">{formatCurrency(p.price, store?.currency_preference)}</span>
                             </div>
                         ))}
                     </div>
-                    <button className="mt-8 py-4 w-full border border-slate-100 rounded-2xl text-[11px] font-bold text-slate-400 uppercase tracking-widest hover:bg-slate-50 hover:text-indigo-600 transition-all">
+                    <button className="mt-8 py-4 w-full border border-slate-100 rounded-2xl text-[11px] font-bold text-black uppercase tracking-widest hover:bg-slate-50 hover:text-black transition-all">
                         عرض جميع المنتجات
                     </button>
                 </div>
@@ -421,8 +421,8 @@ export default function MerchantDashboard() {
 
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl lg:text-2xl font-bold text-slate-800">أحدث الطلبات</h2>
-                    <button className="text-sm font-bold text-indigo-600 hover:underline">عرض الكل</button>
+                    <h2 className="text-xl lg:text-2xl font-bold text-black">أحدث الطلبات</h2>
+                    <button className="text-sm font-bold text-black hover:underline">عرض الكل</button>
                 </div>
 
                 <div className="bg-white rounded-[2rem] lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
@@ -430,42 +430,42 @@ export default function MerchantDashboard() {
                         <table className="w-full text-right border-collapse min-w-[800px] lg:min-w-0">
                             <thead className="bg-[#FBFBFF] border-b border-slate-50">
                                 <tr>
-                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">رقم الطلب</th>
-                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">العميل</th>
-                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">التاريخ</th>
-                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">المبلغ</th>
-                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">الحالة</th>
-                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">الإجراءات</th>
+                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-black uppercase tracking-widest text-right">رقم الطلب</th>
+                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-black uppercase tracking-widest text-right">العميل</th>
+                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-black uppercase tracking-widest text-right">التاريخ</th>
+                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-black uppercase tracking-widest text-right">المبلغ</th>
+                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-black uppercase tracking-widest text-right">الحالة</th>
+                                    <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-black uppercase tracking-widest text-right">الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
                                 {recentOrders.length > 0 ? recentOrders.map((order: any, idx) => (
                                     <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
                                         <td className="px-6 lg:px-10 py-6">
-                                            <span className="text-sm font-bold text-slate-800">#{order.id.slice(0, 6).toUpperCase()}</span>
+                                            <span className="text-sm font-bold text-black">#{order.id.slice(0, 6).toUpperCase()}</span>
                                         </td>
                                         <td className="px-6 lg:px-10 py-6">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center text-xs font-bold text-slate-400">
+                                                <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center text-xs font-bold text-black">
                                                     {order.customer_info?.name?.charAt(0)}
                                                 </div>
-                                                <span className="text-sm font-bold text-slate-800">{order.customer_info?.name}</span>
+                                                <span className="text-sm font-bold text-black">{order.customer_info?.name}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 lg:px-10 py-6 text-sm font-medium text-slate-400">
+                                        <td className="px-6 lg:px-10 py-6 text-sm font-medium text-black">
                                             {new Date(order.created_at).toLocaleDateString('ar-IQ', { day: 'numeric', month: 'long', year: 'numeric' })}
                                         </td>
-                                        <td className="px-6 lg:px-10 py-6 text-sm font-bold text-slate-800">{formatCurrency(order.total_price, store?.currency_preference)}</td>
+                                        <td className="px-6 lg:px-10 py-6 text-sm font-bold text-black">{formatCurrency(order.total_price, store?.currency_preference)}</td>
                                         <td className="px-6 lg:px-10 py-6">
                                             <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-bold
                                                 ${order.status === 'completed' ? 'bg-emerald-50 text-emerald-600' :
-                                                    order.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-500'}
+                                                    order.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-black'}
                                             `}>
                                                 {order.status === 'completed' ? 'مكتمل' : order.status === 'pending' ? 'فيد التنفيذ' : 'ملغي'}
                                             </span>
                                         </td>
                                         <td className="px-6 lg:px-10 py-6">
-                                            <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:text-slate-800 transition-all">
+                                            <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 text-black hover:text-black transition-all">
                                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
                                                 </svg>
@@ -474,7 +474,7 @@ export default function MerchantDashboard() {
                                     </tr>
                                 )) : (
                                     <tr>
-                                        <td colSpan={6} className="px-6 lg:px-10 py-16 text-center text-slate-400 font-bold">لا توجد طلبات حديثة حالياً.</td>
+                                        <td colSpan={6} className="px-6 lg:px-10 py-16 text-center text-black font-bold">لا توجد طلبات حديثة حالياً.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -490,21 +490,21 @@ export default function MerchantDashboard() {
 
                         <button
                             onClick={() => setIsQrModalOpen(false)}
-                            className="absolute top-6 left-6 w-10 h-10 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-700 rounded-full flex items-center justify-center transition-colors"
+                            className="absolute top-6 left-6 w-10 h-10 bg-slate-50 hover:bg-slate-100 text-black hover:text-black rounded-full flex items-center justify-center transition-colors"
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
 
-                        <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6">
+                        <div className="w-16 h-16 bg-indigo-50 text-black rounded-2xl flex items-center justify-center mb-6">
                             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                             </svg>
                         </div>
 
-                        <h3 className="text-2xl font-black text-slate-800 mb-2">مشاركة متجرك</h3>
-                        <p className="text-slate-500 font-medium text-center text-sm mb-8">
+                        <h3 className="text-2xl font-black text-black mb-2">مشاركة متجرك</h3>
+                        <p className="text-black font-medium text-center text-sm mb-8">
                             دع عملائك يزورون متجرك بسهولة عبر رمز QR أو عن طريق الرابط المباشر.
                         </p>
 
@@ -527,13 +527,13 @@ export default function MerchantDashboard() {
                         </button>
 
                         <div className="w-full">
-                            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-2 mb-2 block">رابط المتجر</label>
+                            <label className="text-xs font-bold text-black uppercase tracking-widest pl-2 mb-2 block">رابط المتجر</label>
                             <div className="flex bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden p-1.5 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
                                 <input
                                     type="text"
                                     readOnly
                                     value={typeof window !== 'undefined' ? `${window.location.origin}/shop/${store.slug}` : ''}
-                                    className="flex-1 bg-transparent px-3 text-sm font-medium text-slate-600 outline-none w-full"
+                                    className="flex-1 bg-transparent px-3 text-sm font-medium text-black outline-none w-full"
                                     dir="ltr"
                                 />
                                 <button
@@ -560,7 +560,7 @@ export default function MerchantDashboard() {
                                             }
                                         }
                                     }}
-                                    className="bg-white hover:bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs border border-slate-200 transition-colors shadow-sm"
+                                    className="bg-white hover:bg-slate-100 text-black font-bold px-4 py-2 rounded-xl text-xs border border-slate-200 transition-colors shadow-sm"
                                 >
                                     نسخ
                                 </button>

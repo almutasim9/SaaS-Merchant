@@ -56,8 +56,8 @@ export default async function ShopPage({ params }: Props) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 9.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                <h1 className="text-4xl font-bold text-slate-900 mb-2">404 - Store Not Found</h1>
-                <p className="text-slate-500 max-w-sm mb-8 font-medium">Ops! We couldn&apos;t find any store matching this link. It might have been moved or renamed.</p>
+                <h1 className="text-4xl font-bold text-black mb-2">404 - Store Not Found</h1>
+                <p className="text-black max-w-sm mb-8 font-medium">Ops! We couldn&apos;t find any store matching this link. It might have been moved or renamed.</p>
             </div>
         );
     }
@@ -81,7 +81,31 @@ export default async function ShopPage({ params }: Props) {
     ]);
 
     const sections = sectionsRes.data || [];
-    const products = productsRes.data || [];
+    const products = (productsRes.data || []).map(p => {
+        const attrs = p.attributes as any || {};
+        const combos = attrs.variantCombinations || [];
+        const hasVariants = attrs.hasVariants || (combos.length > 0);
+        
+        // Recalculate total stock from variants if they exist
+        const totalStock = hasVariants 
+            ? combos.reduce((acc: number, c: any) => acc + (parseInt(c.stock_quantity) || 0), 0)
+            : p.stock_quantity;
+
+        return { ...p, stock_quantity: totalStock };
+    }).filter(p => {
+        if (p.stock_quantity > 0) return true;
+        
+        const attrs = p.attributes as any || {};
+        // If stock is 0, check how long it's been out of stock
+        if (attrs?.out_of_stock_since) {
+            const since = new Date(attrs.out_of_stock_since);
+            const now = new Date();
+            const diffDays = (now.getTime() - since.getTime()) / (1000 * 3600 * 24);
+            // Hide if it's been out of stock for more than 14 days
+            if (diffDays > 14) return false;
+        }
+        return true;
+    });
 
     // Calculate if the store can receive orders
     const acceptsOrdersFlag = store.accepts_orders !== false; // Default true

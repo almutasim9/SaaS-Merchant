@@ -176,50 +176,80 @@ export async function placeOrderAction(orderData: OrderData) {
             if (!product) throw new Error(`المنتج ذو المعرف ${item.id} غير متوفر.`);
 
             let unitPrice = Number(product.price); // Default: base price
+            const attrs = product.attributes as any;
 
             // Check if this item has variant selections → look up the correct price
-            const attrs = product.attributes as any;
+            // 3a. Variant-specific Stock Check & Deduction
             if (item.selections && Object.keys(item.selections).length > 0 && attrs?.variantCombinations?.length > 0) {
                 const variantOptions = attrs.variantOptions || [];
                 const variantCombinations = attrs.variantCombinations || [];
 
-                // Reconstruct combo ID: map human-readable names back to option IDs
-                // selections comes as { "اللون": "#000000", "المقاس": "XL" }
-                // We need to convert to "optId1:value1|optId2:value2" format
-                const optionMap: Record<string, string> = {}; // optionId -> selected value
+                const optionMap: Record<string, string> = {}; 
                 for (const [humanName, selectedValue] of Object.entries(item.selections)) {
                     const opt = variantOptions.find((o: any) => o.name === humanName);
-                    if (opt) {
-                        optionMap[opt.id] = selectedValue as string;
-                    }
+                    if (opt) optionMap[opt.id] = selectedValue as string;
                 }
 
                 if (Object.keys(optionMap).length > 0) {
                     const sortedKeys = Object.keys(optionMap).sort();
                     const comboId = sortedKeys.map(k => `${k}:${optionMap[k]}`).join('|');
-                    const combo = variantCombinations.find((c: any) => c.id === comboId);
-                    if (combo && combo.price && parseFloat(combo.price) > 0) {
-                        unitPrice = parseFloat(combo.price);
-                    } else if (combo?.isUnavailable) {
-                        throw new Error(`الخيار المحدد للمنتج "${product.name}" غير متوفر حالياً.`);
+                    const comboIndex = variantCombinations.findIndex((c: any) => c.id === comboId);
+                    
+                    if (comboIndex !== -1) {
+                        const combo = variantCombinations[comboIndex];
+                        const variantStock = parseInt(combo.stock_quantity) || 0;
+
+                        if (variantStock < item.quantity) {
+                            throw new Error(`عذراً، الخيار المختار للمنتج "${product.name}" غير متوفر بالكمية المطلوبة (المتوفر: ${variantStock}).`);
+                        }
+
+                        // Update price if available
+                        if (combo.price && parseFloat(combo.price) > 0) {
+                            unitPrice = parseFloat(combo.price);
+                        } else if (combo.isUnavailable) {
+                            throw new Error(`الخيار المحدد للمنتج "${product.name}" غير متوفر حالياً.`);
+                        }
+
+                        // DECREMENT STOCK
+                        variantCombinations[comboIndex].stock_quantity = (variantStock - item.quantity).toString();
+                        
+                        // Sync total stock
+                        const newTotalStock = variantCombinations.reduce((acc: number, c: any) => acc + (parseInt(c.stock_quantity) || 0), 0);
+                        
+                        await supabaseAdmin
+                            .from('products')
+                            .update({ 
+                                attributes: { 
+                                    ...attrs, 
+                                    variantCombinations,
+                                    out_of_stock_since: newTotalStock === 0 ? (attrs.out_of_stock_since || new Date().toISOString()) : null
+                                },
+                                stock_quantity: newTotalStock
+                            })
+                            .eq('id', item.id);
                     } else if (attrs?.hasVariants) {
-                        // Variant product but no matching combination — reject to prevent price bypass
                         throw new Error(`الخيارات المحددة للمنتج "${product.name}" غير صالحة.`);
                     }
-                } else if (attrs?.hasVariants) {
-                    // Product has variants but no selections were provided
-                    throw new Error(`يرجى اختيار الخيارات المطلوبة للمنتج "${product.name}".`);
                 }
-            }
-
-            // Also check for weight-based pricing
-            if (item.selections && attrs?.weightPrices) {
-                for (const [, selectedValue] of Object.entries(item.selections)) {
-                    const weightPrice = attrs.weightPrices[selectedValue as string];
-                    if (weightPrice && parseFloat(weightPrice) > 0) {
-                        unitPrice = parseFloat(weightPrice);
-                    }
+            } else {
+                // Simple product stock check
+                if (product.stock_quantity < item.quantity) {
+                     throw new Error(`عذراً، المنتج "${product.name}" غير متوفر بالكمية المطلوبة (المتوفر: ${product.stock_quantity}).`);
                 }
+                
+                // DECREMENT STOCK
+                const newStock = Math.max(0, product.stock_quantity - item.quantity);
+                const currentAttrs = (product.attributes as any) || {};
+                await supabaseAdmin
+                    .from('products')
+                    .update({ 
+                        stock_quantity: newStock,
+                        attributes: {
+                            ...currentAttrs,
+                            out_of_stock_since: newStock === 0 ? (currentAttrs.out_of_stock_since || new Date().toISOString()) : null
+                        }
+                    })
+                    .eq('id', item.id);
             }
 
             serverTotalPrice += unitPrice * item.quantity;
@@ -228,7 +258,7 @@ export async function placeOrderAction(orderData: OrderData) {
                 id: item.id,
                 quantity: item.quantity,
                 name: product.name,
-                price: unitPrice, // Now correctly uses variant price
+                price: unitPrice, 
                 selections: item.selections || {}
             });
         }

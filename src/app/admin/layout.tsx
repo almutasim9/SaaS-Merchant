@@ -47,7 +47,7 @@ export default async function AdminLayout({
                     <h1 className="text-2xl font-black bg-gradient-to-l from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
                         TajirZone Admin
                     </h1>
-                    <p className="text-slate-400 text-sm mt-1 font-medium">لوحة تحكم مدير المنصة</p>
+                    <p className="text-black text-sm mt-1 font-medium">لوحة تحكم مدير المنصة</p>
                 </div>
 
                 <AdminSidebarLinks />
@@ -59,7 +59,7 @@ export default async function AdminLayout({
                         </div>
                         <div className="overflow-hidden">
                             <p className="text-sm font-bold text-white block truncate">{user.email}</p>
-                            <p className="text-xs text-slate-500 font-medium mt-0.5">Super Admin</p>
+                            <p className="text-xs text-black font-medium mt-0.5">Super Admin</p>
                         </div>
                     </div>
                 </div>
@@ -69,7 +69,7 @@ export default async function AdminLayout({
             <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#F8F9FB]">
                 {/* Global Top Navbar for Admin */}
                 <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-8 shadow-sm z-10">
-                    <h2 className="text-lg font-bold text-slate-800">ملخص النظام</h2>
+                    <h2 className="text-lg font-bold text-black">ملخص النظام</h2>
                     <div className="flex items-center gap-4">
                         <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-lg border border-emerald-100">نظام محمي</span>
                     </div>

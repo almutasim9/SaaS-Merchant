@@ -34,23 +34,23 @@ export function CurrencySection({
             }
         >
             <div className="space-y-1 max-w-md">
-                <label className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest pr-1">العملة المفضلة</label>
+                <label className="text-[9px] lg:text-[10px] font-bold text-black uppercase tracking-widest pr-1">العملة المفضلة</label>
                 <div className="relative">
                     <select
                         value={store?.currency_preference || 'IQD'}
                         onChange={(e) => setStore((prev: any) => prev ? { ...prev, currency_preference: e.target.value as 'IQD' | 'USD' } : null)}
-                        className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-xl px-4 lg:px-5 py-2 lg:py-2.5 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all appearance-none cursor-pointer leading-tight"
+                        className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl lg:rounded-xl px-4 lg:px-5 py-2 lg:py-2.5 text-sm font-bold text-black focus:outline-none focus:ring-4 focus:ring-indigo-100 transition-all appearance-none cursor-pointer leading-tight"
                     >
                         <option value="IQD">الدينار العراقي (IQD - د.ع)</option>
                         <option value="USD">الدولار الأمريكي (USD - $)</option>
                     </select>
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-black pointer-events-none">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                     </div>
                 </div>
-                <p className="text-[9px] text-slate-400 leading-relaxed pt-1">
+                <p className="text-[9px] text-black leading-relaxed pt-1">
                     <span className="font-bold text-amber-500">ملاحظة:</span> تغيير العملة <span className="underline pr-1">لن يقوم</span> بتحويل أسعار منتجاتك رياضياً.
                 </p>
             </div>

@@ -43,7 +43,7 @@ export function Modal({
 
     const iconVariants = {
         default: (
-            <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-indigo-50 text-black rounded-2xl flex items-center justify-center">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
         ),
@@ -68,7 +68,7 @@ export function Modal({
             )}>
                 <div className="text-center space-y-4 mb-8">
                     <div className="flex justify-center">{iconVariants[variant]}</div>
-                    <h3 className="text-xl lg:text-2xl font-black text-slate-800">{title}</h3>
+                    <h3 className="text-xl lg:text-2xl font-black text-black">{title}</h3>
                 </div>
 
                 <div className="relative">

@@ -41,14 +41,14 @@ export function Card({
                         {icon && (
                             <div className={cn(
                                 compact ? "w-7 h-7 lg:w-8 lg:h-8" : "w-10 h-10 lg:w-12 lg:h-12",
-                                "bg-slate-50 text-slate-600 rounded-lg lg:rounded-xl flex items-center justify-center shadow-sm"
+                                "bg-slate-50 text-black rounded-lg lg:rounded-xl flex items-center justify-center shadow-sm"
                             )}>
                                 {icon}
                             </div>
                         )}
                         <div>
-                            {title && <h3 className={cn(compact ? "text-sm lg:text-base" : "text-lg lg:text-xl", "font-bold text-slate-800")}>{title}</h3>}
-                            {subtitle && <p className="text-slate-400 text-[9px] lg:text-[10px] font-medium">{subtitle}</p>}
+                            {title && <h3 className={cn(compact ? "text-sm lg:text-base" : "text-lg lg:text-xl", "font-bold text-black")}>{title}</h3>}
+                            {subtitle && <p className="text-black text-[9px] lg:text-[10px] font-medium">{subtitle}</p>}
                         </div>
                     </div>
                     {headerAction && <div>{headerAction}</div>}

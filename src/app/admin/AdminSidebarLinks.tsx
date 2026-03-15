@@ -66,10 +66,10 @@ export default function AdminSidebarLinks() {
                             href={link.href}
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${isActive
                                 ? 'bg-slate-800/50 text-white'
-                                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                                : 'text-slate-900 hover:bg-slate-800 hover:text-white'
                                 }`}
                         >
-                            <div className={isActive ? 'text-emerald-400' : 'text-slate-400'}>
+                            <div className={isActive ? 'text-emerald-400' : 'text-black'}>
                                 {link.icon}
                             </div>
                             {link.label}

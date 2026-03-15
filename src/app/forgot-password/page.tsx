@@ -34,12 +34,12 @@ export default function ForgotPasswordPage() {
             <div className="w-full max-w-md">
                 <div className="text-center mb-10">
                     <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center mx-auto mb-6">
-                        <svg className="w-8 h-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-8 h-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                         </svg>
                     </div>
-                    <h1 className="text-2xl font-black text-slate-800 tracking-tight">استعادة كلمة المرور</h1>
-                    <p className="text-sm font-bold text-slate-400 mt-2">أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة التعيين</p>
+                    <h1 className="text-2xl font-black text-black tracking-tight">استعادة كلمة المرور</h1>
+                    <p className="text-sm font-bold text-black mt-2">أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة التعيين</p>
                 </div>
 
                 <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100">
@@ -51,13 +51,13 @@ export default function ForgotPasswordPage() {
                                 </svg>
                             </div>
                             <div>
-                                <h3 className="text-lg font-black text-slate-800">تفقد بريدك الإلكتروني</h3>
-                                <p className="text-sm text-slate-500 font-medium mt-2 leading-relaxed">
+                                <h3 className="text-lg font-black text-black">تفقد بريدك الإلكتروني</h3>
+                                <p className="text-sm text-black font-medium mt-2 leading-relaxed">
                                     لقد أرسلنا رابط إعادة التعيين إلى<br />
-                                    <span className="font-bold text-indigo-600" dir="ltr">{email}</span>
+                                    <span className="font-bold text-black" dir="ltr">{email}</span>
                                 </p>
                             </div>
-                            <Link href="/login" className="block w-full py-4 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">
+                            <Link href="/login" className="block w-full py-4 text-sm font-bold text-black hover:text-black transition-colors">
                                 العودة لتسجيل الدخول
                             </Link>
                         </div>
@@ -73,14 +73,14 @@ export default function ForgotPasswordPage() {
                             )}
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">البريد الإلكتروني</label>
+                                <label className="text-[10px] font-black text-black uppercase tracking-widest px-1">البريد الإلكتروني</label>
                                 <input
                                     type="email"
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="name@example.com"
-                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-5 py-4 text-slate-800 text-left focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold"
+                                    className="w-full bg-slate-50/50 border border-slate-100 rounded-2xl px-5 py-4 text-black text-left focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold"
                                     dir="ltr"
                                 />
                             </div>
@@ -97,8 +97,8 @@ export default function ForgotPasswordPage() {
                                 )}
                             </button>
 
-                            <p className="text-center mt-6 text-sm font-bold text-slate-400">
-                                تذكرت كلمة المرور؟ <Link href="/login" className="text-indigo-600 hover:text-indigo-800 transition-colors">تسجيل الدخول</Link>
+                            <p className="text-center mt-6 text-sm font-bold text-black">
+                                تذكرت كلمة المرور؟ <Link href="/login" className="text-black hover:text-indigo-800 transition-colors">تسجيل الدخول</Link>
                             </p>
                         </form>
                     )}

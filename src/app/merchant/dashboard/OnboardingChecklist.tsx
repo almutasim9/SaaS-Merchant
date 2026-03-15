@@ -101,7 +101,7 @@ export default function OnboardingChecklist({ storeSlug, hasProducts, hasSection
             {/* Dismiss */}
             <button
                 onClick={handleDismiss}
-                className="absolute top-4 left-4 w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-white hover:text-slate-600 transition-all"
+                className="absolute top-4 left-4 w-7 h-7 flex items-center justify-center rounded-full text-black hover:bg-white hover:text-black transition-all"
             >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -116,8 +116,8 @@ export default function OnboardingChecklist({ storeSlug, hasProducts, hasSection
                     </svg>
                 </div>
                 <div>
-                    <h3 className="font-black text-slate-800 text-base">ابدأ رحلتك مع المتجر! 🚀</h3>
-                    <p className="text-xs text-slate-500 font-medium">{completedCount} من {steps.length} خطوات مكتملة</p>
+                    <h3 className="font-black text-black text-base">ابدأ رحلتك مع المتجر! 🚀</h3>
+                    <p className="text-xs text-black font-medium">{completedCount} من {steps.length} خطوات مكتملة</p>
                 </div>
             </div>
 
@@ -135,11 +135,11 @@ export default function OnboardingChecklist({ storeSlug, hasProducts, hasSection
                     <div key={step.id}>
                         {(step as any).isShare ? (
                             <div className={`flex items-center gap-3 p-3 rounded-2xl ${step.done ? 'bg-emerald-50' : 'bg-white/70'}`}>
-                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${step.done ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'
+                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${step.done ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-black'
                                     }`}>
                                     {step.icon}
                                 </div>
-                                <span className={`flex-1 text-sm font-bold ${step.done ? 'text-emerald-700 line-through' : 'text-slate-700'}`}>
+                                <span className={`flex-1 text-sm font-bold ${step.done ? 'text-emerald-700 line-through' : 'text-black'}`}>
                                     {step.label}
                                 </span>
                                 <button
@@ -152,7 +152,7 @@ export default function OnboardingChecklist({ storeSlug, hasProducts, hasSection
                         ) : step.href ? (
                             <Link href={step.href} className={`flex items-center gap-3 p-3 rounded-2xl transition-all ${step.done ? 'bg-emerald-50' : 'bg-white/70 hover:bg-white hover:shadow-sm'
                                 }`}>
-                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${step.done ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'
+                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${step.done ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-black'
                                     }`}>
                                     {step.done ? (
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -160,18 +160,18 @@ export default function OnboardingChecklist({ storeSlug, hasProducts, hasSection
                                         </svg>
                                     ) : step.icon}
                                 </div>
-                                <span className={`flex-1 text-sm font-bold ${step.done ? 'text-emerald-700 line-through' : 'text-slate-700'}`}>
+                                <span className={`flex-1 text-sm font-bold ${step.done ? 'text-emerald-700 line-through' : 'text-black'}`}>
                                     {step.label}
                                 </span>
                                 {!step.done && (
-                                    <svg className="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="w-4 h-4 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                                     </svg>
                                 )}
                             </Link>
                         ) : (
                             <div className={`flex items-center gap-3 p-3 rounded-2xl ${step.done ? 'bg-emerald-50' : 'bg-white/70'}`}>
-                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${step.done ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'
+                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${step.done ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-black'
                                     }`}>
                                     {step.done ? (
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -179,7 +179,7 @@ export default function OnboardingChecklist({ storeSlug, hasProducts, hasSection
                                         </svg>
                                     ) : step.icon}
                                 </div>
-                                <span className={`text-sm font-bold ${step.done ? 'text-emerald-700 line-through' : 'text-slate-700'}`}>
+                                <span className={`text-sm font-bold ${step.done ? 'text-emerald-700 line-through' : 'text-black'}`}>
                                     {step.label}
                                 </span>
                             </div>

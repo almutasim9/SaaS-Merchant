@@ -41,7 +41,7 @@ export const STATUS_CONFIG: Record<OrderStatus, StatusConfig> = {
         label_ar: 'قيد التجهيز',
         label_en: 'Processing',
         label_ku: 'لە ئامادەکردندایە',
-        badgeClass: 'bg-indigo-50 text-indigo-600',
+        badgeClass: 'bg-indigo-50 text-black',
         toastMessage: 'موافقة ✅ — الطلب قيد التجهيز',
     },
     shipped: {
@@ -69,7 +69,7 @@ export const STATUS_CONFIG: Record<OrderStatus, StatusConfig> = {
         label_ar: 'ملغي',
         label_en: 'Cancelled',
         label_ku: 'هەڵوەشێنراوە',
-        badgeClass: 'bg-slate-100 text-slate-600',
+        badgeClass: 'bg-slate-100 text-black',
         toastMessage: 'تم إلغاء الطلب ❌',
     },
 };

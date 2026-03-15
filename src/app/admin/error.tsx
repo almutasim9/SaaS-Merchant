@@ -16,8 +16,8 @@ export default function AdminError({
                     </svg>
                 </div>
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800 mb-2">خطأ في لوحة الإدارة</h2>
-                    <p className="text-sm text-slate-400 font-medium">حدث خطأ أثناء تحميل هذه الصفحة. يرجى إعادة المحاولة.</p>
+                    <h2 className="text-2xl font-bold text-black mb-2">خطأ في لوحة الإدارة</h2>
+                    <p className="text-sm text-black font-medium">حدث خطأ أثناء تحميل هذه الصفحة. يرجى إعادة المحاولة.</p>
                 </div>
                 <button
                     onClick={reset}

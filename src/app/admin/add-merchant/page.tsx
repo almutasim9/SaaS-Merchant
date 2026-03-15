@@ -128,15 +128,15 @@ export default function AddMerchantPage() {
                 <div className="mb-8 flex items-center gap-4">
                     <button
                         onClick={() => router.back()}
-                        className="p-2 hover:bg-white rounded-full transition-colors text-slate-400 hover:text-indigo-600 border border-transparent hover:border-slate-200"
+                        className="p-2 hover:bg-white rounded-full transition-colors text-black hover:text-black border border-transparent hover:border-slate-200"
                     >
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                     </button>
                     <div>
-                        <h1 className="text-3xl font-black text-slate-800 tracking-tight">إضافة تاجر جديد</h1>
-                        <p className="text-slate-500">قم بتعبئة البيانات لإنشاء متجر وحساب جديد للتاجر.</p>
+                        <h1 className="text-3xl font-black text-black tracking-tight">إضافة تاجر جديد</h1>
+                        <p className="text-black">قم بتعبئة البيانات لإنشاء متجر وحساب جديد للتاجر.</p>
                     </div>
                 </div>
 
@@ -145,32 +145,32 @@ export default function AddMerchantPage() {
 
                         {/* ─── Store Information ─── */}
                         <div className="space-y-6">
-                            <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-widest border-b border-indigo-50 pb-2">بيانات المتجر</h3>
+                            <h3 className="text-sm font-bold text-black uppercase tracking-widest border-b border-indigo-50 pb-2">بيانات المتجر</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">اسم المتجر</label>
+                                    <label className="text-xs font-bold text-black uppercase tracking-wider px-1">اسم المتجر</label>
                                     <input
                                         type="text" name="storeName" required
                                         value={formData.storeName} onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
                                         placeholder="مطعم السعادة"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">الرابط الفرعي (Slug)</label>
+                                    <label className="text-xs font-bold text-black uppercase tracking-wider px-1">الرابط الفرعي (Slug)</label>
                                     <input
                                         type="text" name="slug" required
                                         value={formData.slug} onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-mono text-sm"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-mono text-sm"
                                         placeholder="mat3am-alsa3ada"
                                     />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">التصنيف</label>
+                                <label className="text-xs font-bold text-black uppercase tracking-wider px-1">التصنيف</label>
                                 <select
                                     name="category" value={formData.category} onChange={handleInputChange}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
                                 >
                                     <option>Restaurants</option>
                                     <option>Electronics</option>
@@ -186,10 +186,10 @@ export default function AddMerchantPage() {
 
                             {/* Plan Type */}
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">الباقة</label>
+                                <label className="text-xs font-bold text-black uppercase tracking-wider px-1">الباقة</label>
                                 <select
                                     name="subscriptionType" value={formData.subscriptionType} onChange={handleInputChange}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
                                 >
                                     <option value="Free">مجاني (Free)</option>
                                     <option value="Silver">احترافي (Silver)</option>
@@ -199,7 +199,7 @@ export default function AddMerchantPage() {
 
                             {/* Duration Pills */}
                             <div className="space-y-3">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">مدة الاشتراك</label>
+                                <label className="text-xs font-bold text-black uppercase tracking-wider px-1">مدة الاشتراك</label>
                                 <div className="grid grid-cols-3 gap-3">
                                     {DURATION_OPTIONS.map(opt => (
                                         <button
@@ -208,7 +208,7 @@ export default function AddMerchantPage() {
                                             onClick={() => handleDurationSelect(opt.value)}
                                             className={`py-3 rounded-2xl text-sm font-bold transition-all border-2 ${formData.subscriptionDuration === opt.value
                                                 ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-md shadow-emerald-100'
-                                                : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-emerald-200 hover:text-emerald-600'
+                                                : 'border-slate-200 bg-slate-50 text-black hover:border-emerald-200 hover:text-emerald-600'
                                                 }`}
                                         >
                                             {opt.label}
@@ -220,15 +220,15 @@ export default function AddMerchantPage() {
                             {/* Start Date + Expiry */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">تاريخ بداية الاشتراك</label>
+                                    <label className="text-xs font-bold text-black uppercase tracking-wider px-1">تاريخ بداية الاشتراك</label>
                                     <input
                                         type="date" name="planStartDate"
                                         value={formData.planStartDate} onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">تاريخ الانتهاء (تلقائي)</label>
+                                    <label className="text-xs font-bold text-black uppercase tracking-wider px-1">تاريخ الانتهاء (تلقائي)</label>
                                     <div className="w-full bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3 flex items-center gap-2">
                                         <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -241,43 +241,43 @@ export default function AddMerchantPage() {
 
                         {/* ─── Owner Info ─── */}
                         <div className="space-y-6 pt-2">
-                            <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-widest border-b border-indigo-50 pb-2">بيانات المالك والحساب</h3>
+                            <h3 className="text-sm font-bold text-black uppercase tracking-widest border-b border-indigo-50 pb-2">بيانات المالك والحساب</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">اسم المالك</label>
+                                    <label className="text-xs font-bold text-black uppercase tracking-wider px-1">اسم المالك</label>
                                     <input
                                         type="text" name="ownerName" required
                                         value={formData.ownerName} onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
                                         placeholder="محمد علي"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">رقم الهاتف</label>
+                                    <label className="text-xs font-bold text-black uppercase tracking-wider px-1">رقم الهاتف</label>
                                     <input
                                         type="tel" name="phone" required
                                         value={formData.phone} onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
                                         placeholder="+964..."
                                     />
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">البريد الإلكتروني</label>
+                                    <label className="text-xs font-bold text-black uppercase tracking-wider px-1">البريد الإلكتروني</label>
                                     <input
                                         type="email" name="email" required
                                         value={formData.email} onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
                                         placeholder="merchant@example.com"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">كلمة المرور</label>
+                                    <label className="text-xs font-bold text-black uppercase tracking-wider px-1">كلمة المرور</label>
                                     <input
                                         type="password" name="password" required
                                         value={formData.password} onChange={handleInputChange}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
                                         placeholder="••••••••"
                                     />
                                 </div>

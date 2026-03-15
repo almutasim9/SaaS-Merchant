@@ -85,7 +85,7 @@ export function GeneralInfoSection({
                             </svg>
                         </div>
                     </div>
-                    <p className="text-[10px] font-medium text-slate-400 text-center leading-relaxed">يفضل استخدام صورة مربعة بدقة 512x512 بكسل</p>
+                    <p className="text-[10px] font-medium text-black text-center leading-relaxed">يفضل استخدام صورة مربعة بدقة 512x512 بكسل</p>
                 </div>
             </div>
         </Card>

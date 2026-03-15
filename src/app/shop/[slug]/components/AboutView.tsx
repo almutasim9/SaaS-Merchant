@@ -30,11 +30,11 @@ export default function AboutView({ onBack, storeName, storeDescription, aboutCo
             <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100">
                 <div className="flex items-center justify-between px-4 py-3">
                     <button onClick={onBack} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-50 transition-colors">
-                        <svg className={`w-6 h-6 text-slate-600 ${dir === 'ltr' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className={`w-6 h-6 text-black ${dir === 'ltr' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
-                    <h1 className="text-lg font-bold text-slate-800">{t('about.title') || 'من نحن'}</h1>
+                    <h1 className="text-lg font-bold text-black">{t('about.title') || 'من نحن'}</h1>
                     <div className="w-10" />
                 </div>
             </header>
@@ -56,17 +56,17 @@ export default function AboutView({ onBack, storeName, storeDescription, aboutCo
 
             {/* Welcome Text */}
             <div className={`px-5 pt-8 pb-6 ${dir === 'ltr' ? 'text-left' : 'text-right'}`}>
-                <h3 className="text-xl font-bold text-slate-800 mb-3">
+                <h3 className="text-xl font-bold text-black mb-3">
                     {t('about.welcome')} <span style={{ color: 'var(--theme-primary)' }}>{storeName}</span>
                 </h3>
-                <p className="text-sm text-slate-500 leading-7 whitespace-pre-wrap">
+                <p className="text-sm text-black leading-7 whitespace-pre-wrap">
                     {aboutConfig?.content || storeDescription || t('about.description') || `نحن متجر إلكتروني رائد نسعى لتقديم أفضل المنتجات التي تلبي احتياجاتكم اليومية بجودة عالية وأسعار منافسة. تأسس متجرنا برؤية واضحة تهدف إلى تسهيل تجربة التسوق الرقمي وجعلها أكثر متعة وسهولة.`}
                 </p>
             </div>
 
             {/* Values */}
             <div className="px-5 pb-6">
-                <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <h3 className="text-base font-bold text-black mb-4 flex items-center gap-2">
                     <span style={{ color: 'var(--theme-primary)' }}>|</span>
                     {t('about.values') || 'قيمنا ومبادئنا'}
                 </h3>
@@ -79,9 +79,9 @@ export default function AboutView({ onBack, storeName, storeDescription, aboutCo
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <h4 className="font-bold text-slate-800">{aboutConfig?.value1Title || t('about.qualityTitle') || 'جودة لا تضاهى'}</h4>
+                            <h4 className="font-bold text-black">{aboutConfig?.value1Title || t('about.qualityTitle') || 'جودة لا تضاهى'}</h4>
                         </div>
-                        <p className={`text-sm text-slate-500 leading-6 whitespace-pre-wrap ${dir === 'ltr' ? 'ml-12' : 'mr-12'}`}>
+                        <p className={`text-sm text-black leading-6 whitespace-pre-wrap ${dir === 'ltr' ? 'ml-12' : 'mr-12'}`}>
                             {aboutConfig?.value1Desc || t('about.qualityDesc') || 'نضمن لكم أفضل الخامات وأدق التفاصيل في جميع منتجاتنا المختارة بعناية فائقة.'}
                         </p>
                     </div>
@@ -94,9 +94,9 @@ export default function AboutView({ onBack, storeName, storeDescription, aboutCo
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                 </svg>
                             </div>
-                            <h4 className="font-bold text-slate-800">{aboutConfig?.value2Title || t('about.shippingTitle') || 'شحن فوري وآمن'}</h4>
+                            <h4 className="font-bold text-black">{aboutConfig?.value2Title || t('about.shippingTitle') || 'شحن فوري وآمن'}</h4>
                         </div>
-                        <p className={`text-sm text-slate-500 leading-6 whitespace-pre-wrap ${dir === 'ltr' ? 'ml-12' : 'mr-12'}`}>
+                        <p className={`text-sm text-black leading-6 whitespace-pre-wrap ${dir === 'ltr' ? 'ml-12' : 'mr-12'}`}>
                             {aboutConfig?.value2Desc || t('about.shippingDesc') || 'توصيل آمن وسريع خلال أيام معدودة لجميع المناطق مع تتبع مباشر.'}
                         </p>
                     </div>
@@ -109,9 +109,9 @@ export default function AboutView({ onBack, storeName, storeDescription, aboutCo
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                 </svg>
                             </div>
-                            <h4 className="font-bold text-slate-800">{aboutConfig?.value3Title || t('about.supportTitle') || 'دعم متواصل 24/7'}</h4>
+                            <h4 className="font-bold text-black">{aboutConfig?.value3Title || t('about.supportTitle') || 'دعم متواصل 24/7'}</h4>
                         </div>
-                        <p className={`text-sm text-slate-500 leading-6 whitespace-pre-wrap ${dir === 'ltr' ? 'ml-12' : 'mr-12'}`}>
+                        <p className={`text-sm text-black leading-6 whitespace-pre-wrap ${dir === 'ltr' ? 'ml-12' : 'mr-12'}`}>
                             {aboutConfig?.value3Desc || t('about.supportDesc') || 'فريق خدمة العملاء جاهز لخدمتكم والإجابة على استفساراتكم في أي وقت.'}
                         </p>
                     </div>
@@ -121,18 +121,18 @@ export default function AboutView({ onBack, storeName, storeDescription, aboutCo
             {/* Stats */}
             <div className="mx-5 mb-6 bg-[#F8F9FB] rounded-2xl p-4 flex items-center justify-around text-center">
                 <div>
-                    <p className="text-lg font-bold text-slate-800">50k+</p>
-                    <p className="text-[11px] text-slate-400">عميل سعيد</p>
+                    <p className="text-lg font-bold text-black">50k+</p>
+                    <p className="text-[11px] text-black">عميل سعيد</p>
                 </div>
                 <div className="w-px h-8 bg-slate-200" />
                 <div>
-                    <p className="text-lg font-bold text-slate-800">1200+</p>
-                    <p className="text-[11px] text-slate-400">منتج أصلي</p>
+                    <p className="text-lg font-bold text-black">1200+</p>
+                    <p className="text-[11px] text-black">منتج أصلي</p>
                 </div>
                 <div className="w-px h-8 bg-slate-200" />
                 <div>
-                    <p className="text-lg font-bold text-slate-800">24/7</p>
-                    <p className="text-[11px] text-slate-400">دعم فني</p>
+                    <p className="text-lg font-bold text-black">24/7</p>
+                    <p className="text-[11px] text-black">دعم فني</p>
                 </div>
             </div>
 

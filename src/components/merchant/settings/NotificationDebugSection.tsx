@@ -40,24 +40,24 @@ export function NotificationDebugSection({ storeId }: NotificationDebugSectionPr
                             <Bell className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                            <h2 className="text-xl lg:text-2xl font-bold text-slate-800">نظام الإشعارات</h2>
-                            <p className="text-slate-500 text-sm font-medium mt-1">تأكد من عمل نظام التنبيهات الفورية على أجهزتك</p>
+                            <h2 className="text-xl lg:text-2xl font-bold text-black">نظام الإشعارات</h2>
+                            <p className="text-black text-sm font-medium mt-1">تأكد من عمل نظام التنبيهات الفورية على أجهزتك</p>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                         <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3">
-                            <ShieldAlert className="w-5 h-5 text-indigo-600 mt-0.5" />
+                            <ShieldAlert className="w-5 h-5 text-black mt-0.5" />
                             <div>
-                                <h4 className="text-sm font-bold text-slate-700">تفعيل الإذن</h4>
-                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">يجب السماح بالإشعارات في المتصفح أولاً لكي يستطيع النظام إرسال التنبيهات.</p>
+                                <h4 className="text-sm font-bold text-black">تفعيل الإذن</h4>
+                                <p className="text-xs text-black mt-1 leading-relaxed">يجب السماح بالإشعارات في المتصفح أولاً لكي يستطيع النظام إرسال التنبيهات.</p>
                             </div>
                         </div>
                         <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-indigo-600 mt-0.5" />
+                            <CheckCircle2 className="w-5 h-5 text-black mt-0.5" />
                             <div>
-                                <h4 className="text-sm font-bold text-slate-700">تطبيق PWA</h4>
-                                <p className="text-xs text-slate-500 mt-1 leading-relaxed">على آيفون وأندرويد، يفضل إضافة الموقع للشاشة الرئيسية لضمان وصول الإشعارات في الخلفية.</p>
+                                <h4 className="text-sm font-bold text-black">تطبيق PWA</h4>
+                                <p className="text-xs text-black mt-1 leading-relaxed">على آيفون وأندرويد، يفضل إضافة الموقع للشاشة الرئيسية لضمان وصول الإشعارات في الخلفية.</p>
                             </div>
                         </div>
                     </div>
@@ -72,7 +72,7 @@ export function NotificationDebugSection({ storeId }: NotificationDebugSectionPr
                     >
                         إرسال إشعار تجريبي 🔔
                     </Button>
-                    <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50 py-2 rounded-xl border border-slate-100">
+                    <div className="flex items-center justify-center gap-2 text-[10px] text-black font-bold uppercase tracking-wider bg-slate-50 py-2 rounded-xl border border-slate-100">
                         <Terminal className="w-3 h-3" />
                         <span>Firebase Notification Debug</span>
                     </div>

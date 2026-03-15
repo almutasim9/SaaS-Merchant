@@ -26,6 +26,7 @@ interface VariantCombination {
     id: string;
     options: Record<string, string>;
     price: string;
+    stock_quantity: string;
 }
 
 interface ProductAttributes {
@@ -69,6 +70,8 @@ export default function MerchantProductsPage() {
     const [loadingMore, setLoadingMore] = useState(false);
     const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
     const [storePreference, setStorePreference] = useState<CurrencyPreference | undefined>(undefined);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'low_stock' | 'inactive'>('all');
 
     const router = useRouter();
 
@@ -100,24 +103,34 @@ export default function MerchantProductsPage() {
                 getSections(storeData.id),
                 supabase
                     .from('products')
-                    .select('id, name, name_en, name_ku, description, description_en, description_ku, section_id, price, image_url, created_at, attributes, stock_quantity')
+                    .select('id, name, name_en, name_ku, description, description_en, description_ku, section_id, price, image_url, created_at, attributes, stock_quantity, sku')
                     .eq('store_id', storeData.id)
                     .order('created_at', { ascending: false })
                     .limit(20),
                 supabase
                     .from('products')
-                    .select('attributes, section_id')
+                    .select('attributes, section_id, sku, name, name_en, name_ku, status:stock_quantity')
                     .eq('store_id', storeData.id)
             ]);
 
             if (productsError) throw productsError;
             if (summaryError) throw summaryError;
 
-            const mappedProducts: Product[] = (productsData || []).map((p: any) => ({
-                ...p,
-                sku: `SKU-${Math.floor(Math.random() * 9000) + 1000}`,
-                status: (p.stock_quantity === 0 ? 'inactive' : p.stock_quantity < 10 ? 'low_stock' : 'active') as 'active' | 'low_stock' | 'inactive'
-            }));
+            const mappedProducts: Product[] = (productsData || []).map((p: any) => {
+                const attrs = p.attributes || {};
+                const combos = attrs.variantCombinations || [];
+                const hasVariants = attrs.hasVariants || (combos.length > 0);
+                
+                const totalStock = hasVariants 
+                    ? combos.reduce((acc: number, c: any) => acc + (parseInt(c.stock_quantity) || 0), 0)
+                    : p.stock_quantity;
+
+                return {
+                    ...p,
+                    stock_quantity: totalStock,
+                    status: (totalStock === 0 ? 'inactive' : totalStock < 10 ? 'low_stock' : 'active') as 'active' | 'low_stock' | 'inactive'
+                };
+            });
 
             const calculatedStats = {
                 total: allProductsSummary.length,
@@ -139,7 +152,8 @@ export default function MerchantProductsPage() {
                 sections: sectionsData,
                 products: mappedProducts,
                 stats: calculatedStats,
-                sectionCounts
+                sectionCounts,
+                allProductsSummary // Store all for client-side search/filter
             };
         }
     });
@@ -176,11 +190,21 @@ export default function MerchantProductsPage() {
             .range(from, to);
 
         if (!error && data) {
-            const mappedProducts: Product[] = data.map((p: any) => ({
-                ...p,
-                sku: `SKU-${Math.floor(Math.random() * 9000) + 1000}`,
-                status: (p.stock_quantity === 0 ? 'inactive' : p.stock_quantity < 10 ? 'low_stock' : 'active') as 'active' | 'low_stock' | 'inactive'
-            }));
+            const mappedProducts: Product[] = data.map((p: any) => {
+                const attrs = p.attributes || {};
+                const combos = attrs.variantCombinations || [];
+                const hasVariants = attrs.hasVariants || (combos.length > 0);
+                
+                const totalStock = hasVariants 
+                    ? combos.reduce((acc: number, c: any) => acc + (parseInt(c.stock_quantity) || 0), 0)
+                    : p.stock_quantity;
+
+                return {
+                    ...p,
+                    stock_quantity: totalStock,
+                    status: (totalStock === 0 ? 'inactive' : totalStock < 10 ? 'low_stock' : 'active') as 'active' | 'low_stock' | 'inactive'
+                };
+            });
 
             setProducts(prev => [...prev, ...mappedProducts]);
             setHasMore(data.length === limit);
@@ -286,17 +310,23 @@ export default function MerchantProductsPage() {
         );
     }
 
-    const filteredProducts = selectedCategory === 'all'
-        ? products
-        : products.filter(p => p.section_id === selectedCategory);
+    const filteredProducts = products.filter(product => {
+        const matchesCategory = selectedCategory === 'all' || product.section_id === selectedCategory;
+        const matchesSearch = searchQuery === '' || 
+            product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            (product.sku && product.sku.toLowerCase().includes(searchQuery.toLowerCase()));
+        const matchesStatus = selectedStatus === 'all' || product.status === selectedStatus;
+        
+        return matchesCategory && matchesSearch && matchesStatus;
+    });
 
     return (
         <div className="px-4 lg:px-10 pb-10 space-y-8 lg:space-y-10 pt-6 lg:pt-0" dir="rtl">
             {/* Header Content */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-0">
                 <div>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tighter">إدارة المنتجات والأقسام</h1>
-                    <p className="text-slate-400 font-medium mt-1 uppercase text-[10px] tracking-widest">عرض وتعديل كافة المنتجات والأقسام في متجرك.</p>
+                    <h1 className="text-2xl lg:text-3xl font-bold text-black tracking-tighter">إدارة المنتجات والأقسام</h1>
+                    <p className="text-black font-medium mt-1 uppercase text-[10px] tracking-widest">عرض وتعديل كافة المنتجات والأقسام في متجرك.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 lg:gap-4">
                     <button
@@ -307,7 +337,7 @@ export default function MerchantProductsPage() {
                             }
                             setIsSectionsModalOpen(true);
                         }}
-                        className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 lg:px-8 py-3 lg:py-4 bg-indigo-50 text-indigo-600 border-2 border-indigo-100 rounded-2xl font-black text-sm shadow-sm hover:bg-indigo-600 hover:text-white transition-all"
+                        className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 lg:px-8 py-3 lg:py-4 bg-indigo-50 text-black border-2 border-indigo-100 rounded-2xl font-black text-sm shadow-sm hover:bg-indigo-600 hover:text-white transition-all"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
@@ -349,10 +379,10 @@ export default function MerchantProductsPage() {
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-8">
                 <div className="bg-white rounded-[2rem] p-6 lg:p-8 border border-slate-100 shadow-sm flex items-center justify-between">
                     <div>
-                        <h3 className="text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 lg:mb-2">إجمالي المنتجات</h3>
-                        <p className="text-2xl lg:text-3xl font-bold text-slate-800 leading-none">{stats.total.toLocaleString()}</p>
+                        <h3 className="text-[10px] lg:text-xs font-bold text-black uppercase tracking-widest mb-1 lg:mb-2">إجمالي المنتجات</h3>
+                        <p className="text-2xl lg:text-3xl font-bold text-black leading-none">{stats.total.toLocaleString()}</p>
                     </div>
-                    <div className="w-12 h-12 lg:w-14 lg:h-14 bg-indigo-50 text-indigo-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 lg:w-14 lg:h-14 bg-indigo-50 text-black rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
                         <svg className="w-6 h-6 lg:w-7 lg:h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                         </svg>
@@ -360,8 +390,8 @@ export default function MerchantProductsPage() {
                 </div>
                 <div className="bg-white rounded-[2rem] p-6 lg:p-8 border border-slate-100 shadow-sm flex items-center justify-between">
                     <div>
-                        <h3 className="text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 lg:mb-2">المنتجات النشطة</h3>
-                        <p className="text-2xl lg:text-3xl font-bold text-slate-800 leading-none">{stats.active.toLocaleString()}</p>
+                        <h3 className="text-[10px] lg:text-xs font-bold text-black uppercase tracking-widest mb-1 lg:mb-2">المنتجات النشطة</h3>
+                        <p className="text-2xl lg:text-3xl font-bold text-black leading-none">{stats.active.toLocaleString()}</p>
                     </div>
                     <div className="w-12 h-12 lg:w-14 lg:h-14 bg-emerald-50 text-emerald-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
                         <svg className="w-6 h-6 lg:w-7 lg:h-7" fill="currentColor" viewBox="0 0 20 20">
@@ -371,8 +401,8 @@ export default function MerchantProductsPage() {
                 </div>
                 <div className="bg-white rounded-[2rem] p-6 lg:p-8 border border-slate-100 shadow-sm flex items-center justify-between col-span-2 lg:col-span-2">
                     <div>
-                        <h3 className="text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 lg:mb-2">غير متوفرة / مخفية</h3>
-                        <p className="text-2xl lg:text-3xl font-bold text-slate-800 leading-none">{stats.inactive.toLocaleString()}</p>
+                        <h3 className="text-[10px] lg:text-xs font-bold text-black uppercase tracking-widest mb-1 lg:mb-2">غير متوفرة / مخفية</h3>
+                        <p className="text-2xl lg:text-3xl font-bold text-black leading-none">{stats.inactive.toLocaleString()}</p>
                     </div>
                     <div className="w-12 h-12 lg:w-14 lg:h-14 bg-rose-50 text-rose-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-sm">
                         <svg className="w-6 h-6 lg:w-7 lg:h-7" fill="currentColor" viewBox="0 0 20 20">
@@ -382,13 +412,41 @@ export default function MerchantProductsPage() {
                 </div>
             </div>
 
+            {/* Search and Filters Bar */}
+            <div className="flex flex-col md:flex-row items-center gap-4 bg-white p-4 rounded-[2rem] border border-slate-100 shadow-sm">
+                <div className="relative flex-1 w-full">
+                    <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                        type="text"
+                        placeholder="البحث بالاسم أو رمز SKU..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full h-12 bg-slate-50 border border-slate-100 rounded-2xl pr-12 pl-4 text-sm font-bold text-black placeholder:text-black focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
+                    />
+                </div>
+                <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+                    <select
+                        value={selectedStatus}
+                        onChange={(e) => setSelectedStatus(e.target.value as any)}
+                        className="h-12 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-sm font-bold text-black outline-none focus:bg-white focus:border-indigo-500 transition-all appearance-none cursor-pointer min-w-[140px]"
+                    >
+                        <option value="all">كل الحالات</option>
+                        <option value="active">نشط</option>
+                        <option value="low_stock">مخزون منخفض</option>
+                        <option value="inactive">غير نشط / مخفي</option>
+                    </select>
+                </div>
+            </div>
+
             {/* Category Pills Filter */}
             <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1">
                 <button
                     onClick={() => setSelectedCategory('all')}
                     className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ${selectedCategory === 'all'
                         ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
-                        : 'bg-white border border-slate-100 text-slate-500'
+                        : 'bg-white border border-slate-100 text-black'
                         }`}
                 >
                     الكل ({stats.total})
@@ -399,7 +457,7 @@ export default function MerchantProductsPage() {
                         onClick={() => setSelectedCategory(section.id)}
                         className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ${selectedCategory === section.id
                             ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
-                            : 'bg-white border border-slate-100 text-slate-500'
+                            : 'bg-white border border-slate-100 text-black'
                             }`}
                     >
                         {section.name} ({sectionCounts[section.id] || 0})
@@ -414,8 +472,8 @@ export default function MerchantProductsPage() {
                         <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200">
                             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                         </div>
-                        <h4 className="font-black text-slate-700">لا توجد منتجات</h4>
-                        <p className="text-xs text-slate-400">ابدأ بإضافة منتجك الأول</p>
+                        <h4 className="font-black text-black">لا توجد منتجات</h4>
+                        <p className="text-xs text-black">ابدأ بإضافة منتجك الأول</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-2 gap-3">
@@ -437,26 +495,26 @@ export default function MerchantProductsPage() {
                                             {!isAvailable && <span className="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">نفذ</span>}
                                             {isHidden && <span className="bg-slate-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">مخفي</span>}
                                         </div>
-                                        <button onClick={() => { setEditingProduct(product); setIsModalOpen(true); }} className="absolute bottom-2 left-2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-xl flex items-center justify-center text-slate-500 shadow-sm">
+                                        <button onClick={() => { setEditingProduct(product); setIsModalOpen(true); }} className="absolute bottom-2 left-2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-xl flex items-center justify-center text-black shadow-sm">
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                         </button>
                                     </div>
                                     <div className="p-3">
-                                        <h4 className="font-black text-slate-800 text-sm leading-tight line-clamp-2">{product.name}</h4>
+                                        <h4 className="font-black text-black text-sm leading-tight line-clamp-2">{product.name}</h4>
                                         <div className="flex items-center justify-between mt-2">
-                                            <span className="text-base font-black text-indigo-600">{formatCurrency(product.price, storePreference)}</span>
+                                            <span className="text-base font-black text-black">{formatCurrency(product.price, storePreference)}</span>
                                         </div>
                                         {product.section_id && <span className="inline-block mt-1.5 px-2 py-0.5 bg-slate-50 rounded-full text-[10px] font-bold text-slateate-500">{sections.find(s => s.id === product.section_id)?.name || 'غير مصنف'}</span>}
                                         <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-50">
-                                            <button onClick={() => toggleAvailability(product)} className={`flex-1 h-8 rounded-xl text-[10px] font-bold transition-all ${isAvailable ? 'bg-slate-50 text-slate-400' : 'bg-amber-50 text-amber-600'
+                                            <button onClick={() => toggleAvailability(product)} className={`flex-1 h-8 rounded-xl text-[10px] font-bold transition-all ${isAvailable ? 'bg-slate-50 text-black' : 'bg-amber-50 text-amber-600'
                                                 }`}>{isAvailable ? 'متوفر ✓' : 'نفذ'}</button>
-                                            <button onClick={() => toggleVisibility(product)} className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${isHidden ? 'bg-slate-100 text-slate-400' : 'bg-indigo-50 text-indigo-600'
+                                            <button onClick={() => toggleVisibility(product)} className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${isHidden ? 'bg-slate-100 text-black' : 'bg-indigo-50 text-black'
                                                 }`}>
                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     {isHidden ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.046m4.51-4.51A9.959 9.959 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /> : <><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></>}
                                                 </svg>
                                             </button>
-                                            <button onClick={() => handleDelete(product.id, product.name)} className="w-8 h-8 rounded-xl bg-slate-50 text-slate-300 hover:bg-rose-50 hover:text-rose-500 flex items-center justify-center transition-all">
+                                            <button onClick={() => handleDelete(product.id, product.name)} className="w-8 h-8 rounded-xl bg-slate-50 text-slate-900 hover:bg-rose-50 hover:text-rose-500 flex items-center justify-center transition-all">
                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                             </button>
                                         </div>
@@ -475,12 +533,12 @@ export default function MerchantProductsPage() {
                     <table className="w-full text-right border-collapse min-w-[900px]">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-50">
-                                <th className="px-6 lg:px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">المنتج</th>
-                                <th className="px-6 lg:px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">القسم</th>
-                                <th className="px-6 lg:px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">السعر</th>
-                                <th className="px-6 lg:px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">الحالة</th>
-                                <th className="px-6 lg:px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">التاريخ</th>
-                                <th className="px-6 lg:px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">الإجراءات</th>
+                                <th className="px-6 lg:px-8 py-5 text-[10px] font-black text-black uppercase tracking-widest text-right">المنتج</th>
+                                <th className="px-6 lg:px-8 py-5 text-[10px] font-black text-black uppercase tracking-widest text-center">القسم</th>
+                                <th className="px-6 lg:px-8 py-5 text-[10px] font-black text-black uppercase tracking-widest text-center">السعر</th>
+                                <th className="px-6 lg:px-8 py-5 text-[10px] font-black text-black uppercase tracking-widest text-center">الحالة</th>
+                                <th className="px-6 lg:px-8 py-5 text-[10px] font-black text-black uppercase tracking-widest text-center">التاريخ</th>
+                                <th className="px-6 lg:px-8 py-5 text-[10px] font-black text-black uppercase tracking-widest text-left">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
@@ -492,7 +550,7 @@ export default function MerchantProductsPage() {
                                                 {product.image_url ? (
                                                     <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                                    <div className="w-full h-full flex items-center justify-center text-slate-900">
                                                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                         </svg>
@@ -500,26 +558,53 @@ export default function MerchantProductsPage() {
                                                 )}
                                             </div>
                                             <div>
-                                                <h4 className="font-black text-slate-800 text-sm lg:text-base">{product.name}</h4>
-                                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{product.sku}</p>
+                                                <h4 className="font-black text-black text-sm lg:text-base">{product.name}</h4>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <p className="text-[9px] text-black font-bold uppercase tracking-widest">{product.sku || 'بدون SKU'}</p>
+                                                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${product.stock_quantity <= 10 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-black'}`}>
+                                                        المخزون: {product.stock_quantity}
+                                                    </span>
+                                                </div>
+                                                {product.attributes?.hasVariants && product.attributes?.variantCombinations && (
+                                                    <div className="flex flex-wrap gap-1 mt-1.5 max-w-[200px]">
+                                                        {(product.attributes.variantCombinations as any[]).map((c, i) => (
+                                                            <div key={i} className="text-[8px] bg-slate-50 border border-slate-100 px-1 rounded flex items-center gap-1">
+                                                                <div className="flex items-center gap-1">
+                                                                    {Object.values(c.options).map((val: any, idx) => {
+                                                                        const hexMatch = val.match(/#([A-Fa-f0-9]{3,6})/);
+                                                                        if (hexMatch) {
+                                                                            const hex = hexMatch[0];
+                                                                            return <div key={idx} className="w-2.5 h-2.5 rounded-full border border-slate-200" style={{ backgroundColor: hex }} title={val} />;
+                                                                        }
+                                                                        return <span key={idx} className="text-black">{val}{idx < Object.values(c.options).length - 1 ? '/' : ''}</span>;
+                                                                    })}
+                                                                </div>
+                                                                <span className="text-slate-900">|</span>
+                                                                <span className={parseInt(c.stock_quantity) <= 2 ? 'text-red-500 font-black' : 'text-black font-black'}>
+                                                                    {c.stock_quantity}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </td>
                                     <td className="px-6 lg:px-8 py-6 text-center">
-                                        <span className="px-3 lg:px-4 py-1.5 bg-slate-50 rounded-full text-[10px] font-bold text-slate-500">
+                                        <span className="px-3 lg:px-4 py-1.5 bg-slate-50 rounded-full text-[10px] font-bold text-black">
                                             {sections.find(s => s.id === product.section_id)?.name || 'غير مصنف'}
                                         </span>
                                     </td>
                                     <td className="px-6 lg:px-8 py-6 text-center">
                                         <div className="flex flex-col items-center">
-                                            <span className="text-base lg:text-lg font-black text-slate-800 tracking-tight">{formatCurrency(product.price, storePreference)}</span>
+                                            <span className="text-base lg:text-lg font-black text-black tracking-tight">{formatCurrency(product.price, storePreference)}</span>
                                         </div>
                                     </td>
                                     <td className="px-6 lg:px-8 py-6 text-center">
                                         <StatusBadge status={product.status} />
                                     </td>
                                     <td className="px-6 lg:px-8 py-6 text-center">
-                                        <span className="text-[10px] font-bold text-slate-400">
+                                        <span className="text-[10px] font-bold text-black">
                                             {new Date(product.created_at).toLocaleDateString('ar-SA')}
                                         </span>
                                     </td>
@@ -528,7 +613,7 @@ export default function MerchantProductsPage() {
                                             <button
                                                 onClick={() => toggleAvailability(product)}
                                                 title={product.attributes?.isAvailable === false ? 'تغيير كمتوفر' : 'تعيين كنفذ من المخزون'}
-                                                className={`w-9 h-9 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center transition-all ${product.attributes?.isAvailable === false ? 'bg-amber-50 text-amber-500 hover:bg-amber-100' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+                                                className={`w-9 h-9 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center transition-all ${product.attributes?.isAvailable === false ? 'bg-amber-50 text-amber-500 hover:bg-amber-100' : 'bg-slate-50 text-black hover:bg-slate-100'}`}
                                             >
                                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     {product.attributes?.isAvailable === false ? (
@@ -541,7 +626,7 @@ export default function MerchantProductsPage() {
                                             <button
                                                 onClick={() => toggleVisibility(product)}
                                                 title={product.attributes?.isHidden ? 'مخفي حالياً (اضغط للإظهار)' : 'ظاهر حالياً (اضغط للإخفاء)'}
-                                                className={`w-9 h-9 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center transition-all ${!product.attributes?.isHidden ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+                                                className={`w-9 h-9 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center transition-all ${!product.attributes?.isHidden ? 'bg-indigo-50 text-black hover:bg-indigo-100' : 'bg-slate-50 text-black hover:bg-slate-100'}`}
                                             >
                                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     {product.attributes?.isHidden ? (
@@ -559,7 +644,7 @@ export default function MerchantProductsPage() {
                                                     setEditingProduct(product);
                                                     setIsModalOpen(true);
                                                 }}
-                                                className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-indigo-50 hover:text-indigo-600 transition-all"
+                                                className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-slate-50 text-black flex items-center justify-center hover:bg-indigo-50 hover:text-black transition-all"
                                             >
                                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -567,7 +652,7 @@ export default function MerchantProductsPage() {
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(product.id, product.name)}
-                                                className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 transition-all"
+                                                className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-slate-50 text-black flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 transition-all"
                                             >
                                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -586,8 +671,8 @@ export default function MerchantProductsPage() {
                                                 </svg>
                                             </div>
                                             <div>
-                                                <h4 className="text-lg font-black text-slate-800">لا توجد منتجات بعد</h4>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">ابدأ بإضافة منتجاتك الأولى الآن.</p>
+                                                <h4 className="text-lg font-black text-black">لا توجد منتجات بعد</h4>
+                                                <p className="text-[10px] text-black font-bold uppercase tracking-widest mt-1">ابدأ بإضافة منتجاتك الأولى الآن.</p>
                                             </div>
                                         </div>
                                     </td>
@@ -605,7 +690,7 @@ export default function MerchantProductsPage() {
                     <button
                         onClick={loadMoreProducts}
                         disabled={loadingMore}
-                        className="px-6 lg:px-8 py-3 bg-white border border-slate-200 text-indigo-600 rounded-2xl font-bold text-xs lg:text-sm shadow-sm hover:shadow-md hover:border-indigo-200 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="px-6 lg:px-8 py-3 bg-white border border-slate-200 text-black rounded-2xl font-bold text-xs lg:text-sm shadow-sm hover:shadow-md hover:border-indigo-200 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                         {loadingMore && <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>}
                         {loadingMore ? 'جاري التحميل...' : 'عرض المزيد'}
@@ -631,7 +716,7 @@ export default function MerchantProductsPage() {
             </button>
 
             <footer className="text-center pt-10 pb-5">
-                <p className="text-[9px] lg:text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em]">© 2024 نظام إدارة التاجر. جميع الحقوق محفوظة لشركة النخبة للتجارة.</p>
+                <p className="text-[9px] lg:text-[10px] font-bold text-slate-900 uppercase tracking-[0.2em]">© 2024 نظام إدارة التاجر. جميع الحقوق محفوظة لشركة النخبة للتجارة.</p>
             </footer>
 
             {storeId && (

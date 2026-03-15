@@ -272,11 +272,11 @@ export default function MerchantSettingsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">إعدادات المتجر</h1>
-                    <nav className="flex items-center gap-2 mt-1 text-slate-400 font-medium text-[10px] lg:text-xs">
+                    <h1 className="text-2xl lg:text-3xl font-bold text-black">إعدادات المتجر</h1>
+                    <nav className="flex items-center gap-2 mt-1 text-black font-medium text-[10px] lg:text-xs">
                         <span>الرئيسية</span>
                         <span>/</span>
-                        <span className="text-indigo-600">الإعدادات</span>
+                        <span className="text-black">الإعدادات</span>
                     </nav>
                 </div>
                 
@@ -288,8 +288,8 @@ export default function MerchantSettingsPage() {
                             onClick={() => setActiveTab(tab.id as any)}
                             className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs lg:text-sm font-bold transition-all whitespace-nowrap ${
                                 activeTab === tab.id 
-                                ? 'bg-white text-indigo-600 shadow-sm' 
-                                : 'text-slate-500 hover:text-slate-700'
+                                ? 'bg-white text-black shadow-sm' 
+                                : 'text-black hover:text-black'
                             }`}
                         >
                             {React.cloneElement(tab.icon as any, { className: 'w-4 h-4' })}
@@ -392,7 +392,7 @@ export default function MerchantSettingsPage() {
             </div>
 
             <footer className="text-center pt-10 border-t border-slate-100">
-                <p className="text-[9px] lg:text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em] mt-8 bg-slate-50 py-3 rounded-full inline-block px-6 border border-slate-100">&copy; {new Date().getFullYear()} TajerZone. جميع الحقوق محفوظة.</p>
+                <p className="text-[9px] lg:text-[10px] font-bold text-slate-900 uppercase tracking-[0.2em] mt-8 bg-slate-50 py-3 rounded-full inline-block px-6 border border-slate-100">&copy; {new Date().getFullYear()} TajerZone. جميع الحقوق محفوظة.</p>
             </footer>
 
             <Modal

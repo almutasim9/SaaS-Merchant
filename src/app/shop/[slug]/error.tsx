@@ -16,8 +16,8 @@ export default function ShopError({
                     </svg>
                 </div>
                 <div>
-                    <h2 className="text-xl font-bold text-slate-800 mb-2">عذراً، حدث خطأ</h2>
-                    <p className="text-sm text-slate-400 font-medium">يرجى تحديث الصفحة أو المحاولة لاحقاً.</p>
+                    <h2 className="text-xl font-bold text-black mb-2">عذراً، حدث خطأ</h2>
+                    <p className="text-sm text-black font-medium">يرجى تحديث الصفحة أو المحاولة لاحقاً.</p>
                 </div>
                 <button
                     onClick={reset}

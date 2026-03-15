@@ -68,13 +68,13 @@ export default function NotificationsPage() {
         <div className="p-4 lg:p-10 max-w-4xl mx-auto pb-32">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-800 mb-2">{t('header.notifications')}</h1>
-                    <p className="text-slate-500 font-bold text-sm">سجل التنبيهات والطلبات الجديدة لمتجرك</p>
+                    <h1 className="text-3xl font-black text-black mb-2">{t('header.notifications')}</h1>
+                    <p className="text-black font-bold text-sm">سجل التنبيهات والطلبات الجديدة لمتجرك</p>
                 </div>
                 {notifications.some(n => !n.is_read) && (
                     <button
                         onClick={markAllAsRead}
-                        className="px-6 py-3 bg-white border border-slate-100 rounded-2xl text-xs font-black text-indigo-600 hover:bg-indigo-50 transition-all shadow-sm"
+                        className="px-6 py-3 bg-white border border-slate-100 rounded-2xl text-xs font-black text-black hover:bg-indigo-50 transition-all shadow-sm"
                     >
                         تحديد الكل كمقروء
                     </button>
@@ -88,8 +88,8 @@ export default function NotificationsPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
                     </div>
-                    <h3 className="text-xl font-black text-slate-800 mb-2">{t('header.noNotifications')}</h3>
-                    <p className="text-slate-400 font-bold text-sm max-w-xs mx-auto">سيظهر لك سجل الإشعارات هنا بمجرد وصول طلبات جديدة أو تنبيهات من النظام.</p>
+                    <h3 className="text-xl font-black text-black mb-2">{t('header.noNotifications')}</h3>
+                    <p className="text-black font-bold text-sm max-w-xs mx-auto">سيظهر لك سجل الإشعارات هنا بمجرد وصول طلبات جديدة أو تنبيهات من النظام.</p>
                 </div>
             ) : (
                 <div className="grid gap-3">
@@ -99,7 +99,7 @@ export default function NotificationsPage() {
                             href={notif.metadata?.url || '#'}
                             className={`group bg-white border border-slate-100 rounded-[2rem] p-6 flex flex-col sm:flex-row sm:items-center gap-6 transition-all hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-600/5 ${!notif.is_read ? 'border-indigo-100 bg-indigo-50/10' : ''}`}
                         >
-                            <div className={`w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center transition-transform group-hover:scale-110 ${notif.type === 'order' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'
+                            <div className={`w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center transition-transform group-hover:scale-110 ${notif.type === 'order' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-black'
                                 }`}>
                                 {notif.type === 'order' ? (
                                     <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -114,14 +114,14 @@ export default function NotificationsPage() {
 
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-3 mb-1">
-                                    <h3 className="text-lg font-black text-slate-800 truncate">{notif.title}</h3>
+                                    <h3 className="text-lg font-black text-black truncate">{notif.title}</h3>
                                     {!notif.is_read && (
                                         <span className="w-2 h-2 bg-indigo-600 rounded-full"></span>
                                     )}
                                 </div>
-                                <p className="text-slate-500 font-bold text-sm leading-relaxed mb-2">{notif.body}</p>
+                                <p className="text-black font-bold text-sm leading-relaxed mb-2">{notif.body}</p>
                                 <div className="flex items-center gap-4">
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-lg">
+                                    <span className="text-[10px] font-black text-black uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-lg">
                                         {new Date(notif.created_at).toLocaleDateString('ar-IQ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                                     </span>
                                     <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest bg-indigo-50/50 px-2 py-1 rounded-lg">
@@ -130,7 +130,7 @@ export default function NotificationsPage() {
                                 </div>
                             </div>
 
-                            <div className={`flex items-center justify-center w-10 h-10 rounded-full bg-slate-50 text-slate-300 transition-all ${dir === 'rtl' ? 'group-hover:-translate-x-2' : 'group-hover:translate-x-2'} group-hover:bg-indigo-600 group-hover:text-white`}>
+                            <div className={`flex items-center justify-center w-10 h-10 rounded-full bg-slate-50 text-slate-900 transition-all ${dir === 'rtl' ? 'group-hover:-translate-x-2' : 'group-hover:translate-x-2'} group-hover:bg-indigo-600 group-hover:text-white`}>
                                 <svg className={`w-5 h-5 ${dir === 'ltr' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
                                 </svg>

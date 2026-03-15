@@ -22,12 +22,13 @@ interface Product {
         hasVariants?: boolean;
         isAvailable?: boolean;
         isHidden?: boolean;
-        variantCombinations?: { price: string }[];
+        variantCombinations?: { price: string; stock_quantity?: string }[];
     };
+    stock_quantity?: number;
     hasVariants?: boolean;
     isAvailable?: boolean;
     outOfStockBehavior?: 'hide' | 'show_badge';
-    variantCombinations?: { price: string }[];
+    variantCombinations?: { price: string; stock_quantity?: string }[];
 }
 
 interface ProductCardProps {
@@ -40,7 +41,8 @@ interface ProductCardProps {
 
 function ProductCard({ product, onAddToCart, onClick, storeCurrency, canReceiveOrders = true }: ProductCardProps) {
     const { language, t, dir } = useI18n();
-    const isUnavailable = product.attributes?.isAvailable === false || product.isAvailable === false;
+    const isOutOfStock = product.stock_quantity === 0;
+    const isUnavailable = product.attributes?.isAvailable === false || product.isAvailable === false || isOutOfStock;
     const hasVariants = product.attributes?.hasVariants || product.hasVariants;
 
     const productName = language === 'en' && product.name_en ? product.name_en :
@@ -91,7 +93,7 @@ function ProductCard({ product, onAddToCart, onClick, storeCurrency, canReceiveO
                         sizes="180px"
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-300">
+                    <div className="w-full h-full flex items-center justify-center text-slate-900">
                         <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     </div>
                 )}
@@ -102,7 +104,7 @@ function ProductCard({ product, onAddToCart, onClick, storeCurrency, canReceiveO
                         onClick={handleAddToCart}
                         disabled={isUnavailable}
                         className={`absolute bottom-2 left-2 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${isUnavailable
-                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                            ? 'bg-slate-200 text-black cursor-not-allowed'
                             : 'text-white hover:brightness-95 active:scale-90'
                             }`}
                         style={!isUnavailable ? { backgroundColor: 'var(--theme-primary)' } : undefined}
@@ -122,7 +124,7 @@ function ProductCard({ product, onAddToCart, onClick, storeCurrency, canReceiveO
 
                 {/* Has Variants Badge */}
                 {hasVariants && !isUnavailable && (
-                    <div className={`absolute top-2 ${dir === 'ltr' ? 'right-2' : 'left-2'} bg-white/90 backdrop-blur-sm text-slate-700 text-[9px] font-black px-2 py-0.5 rounded-lg border border-slate-100 shadow-sm flex items-center gap-1`}>
+                    <div className={`absolute top-2 ${dir === 'ltr' ? 'right-2' : 'left-2'} bg-white/90 backdrop-blur-sm text-black text-[9px] font-black px-2 py-0.5 rounded-lg border border-slate-100 shadow-sm flex items-center gap-1`}>
                         <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: 'var(--theme-primary)' }} />
                         {t('product.selectOptions')}
                     </div>
@@ -131,24 +133,26 @@ function ProductCard({ product, onAddToCart, onClick, storeCurrency, canReceiveO
                 {/* Unavailable Badge */}
                 {isUnavailable && (
                     <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                        <span className="bg-slate-800 text-white text-[10px] font-bold px-3 py-1 rounded-full">{t('product.unavailable')}</span>
+                        <span className="bg-slate-800 text-white text-[10px] font-bold px-3 py-1 rounded-full">
+                            {isOutOfStock ? t('product.soldOut') : t('product.unavailable')}
+                        </span>
                     </div>
                 )}
             </div>
 
             {/* Info */}
             <div className="p-3">
-                <h3 className="text-sm font-semibold text-slate-800 line-clamp-2 leading-tight mb-1.5">{productName}</h3>
+                <h3 className="text-sm font-semibold text-black line-clamp-2 leading-tight mb-1.5">{productName}</h3>
                 <div className="flex flex-col gap-0.5 mt-auto">
                     {product.discount_price && product.discount_price < product.price ? (
                         <div className="flex items-center gap-1.5 min-h-[40px]">
-                            <span className="text-[11px] text-slate-400 line-through">{formatCurrency(product.price, storeCurrency)}</span>
+                            <span className="text-[11px] text-black line-through">{formatCurrency(product.price, storeCurrency)}</span>
                             <span className="text-[15px] font-bold" style={{ color: 'var(--theme-primary)' }}>{formatCurrency(product.discount_price, storeCurrency)}</span>
                         </div>
                     ) : (
                         <div className="flex flex-col min-h-[40px]">
                             {hasVariants && (
-                                <span className={`text-[10px] font-bold text-slate-400 uppercase tracking-tight -mb-1`}>
+                                <span className={`text-[10px] font-bold text-black uppercase tracking-tight -mb-1`}>
                                     {t('product.startsFrom')}
                                 </span>
                             )}
@@ -258,7 +262,7 @@ export default function HomeView({
         { bg: 'bg-amber-100', text: 'text-amber-600' },
         { bg: 'bg-rose-100', text: 'text-rose-600' },
         { bg: 'bg-cyan-100', text: 'text-cyan-600' },
-        { bg: 'bg-indigo-100', text: 'text-indigo-600' },
+        { bg: 'bg-indigo-100', text: 'text-black' },
         { bg: 'bg-teal-100', text: 'text-teal-600' },
     ];
 
@@ -269,14 +273,14 @@ export default function HomeView({
                 <div className="flex items-center justify-between px-4 py-3">
                     {/* Menu */}
                     <button onClick={onMenuOpen} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-50 transition-colors">
-                        <svg className="w-6 h-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="w-6 h-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
 
                     {/* Store Name + Logo */}
                     <div className="flex items-center gap-2">
-                        <h1 className="text-lg font-bold text-slate-800">{storeName}</h1>
+                        <h1 className="text-lg font-bold text-black">{storeName}</h1>
                         {storeLogo ? (
                             <div className="w-9 h-9 flex items-center justify-center overflow-hidden">
                                 <Image src={storeLogo} alt={storeName} width={36} height={36} className="object-contain rounded-xl" />
@@ -294,7 +298,7 @@ export default function HomeView({
                     <div className="flex items-center gap-2">
                         {/* Language Switcher */}
                         <div className="relative group">
-                            <button className="flex items-center justify-center gap-1 w-10 h-10 rounded-xl hover:bg-slate-50 transition-colors text-sm font-bold text-slate-700 uppercase">
+                            <button className="flex items-center justify-center gap-1 w-10 h-10 rounded-xl hover:bg-slate-50 transition-colors text-sm font-bold text-black uppercase">
                                 {language}
                             </button>
                             <div className={`absolute top-full ${dir === 'ltr' ? 'right-0' : 'left-0'} mt-1 w-32 bg-white rounded-xl shadow-lg border border-slate-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all`}>
@@ -302,7 +306,7 @@ export default function HomeView({
                                     <button
                                         key={lang}
                                         onClick={() => setLanguage(lang)}
-                                        className={`w-full ${dir === 'ltr' ? 'text-left' : 'text-right'} px-4 py-2 text-sm hover:bg-slate-50 ${language === lang ? 'font-bold text-[var(--theme-primary)]' : 'text-slate-600'}`}
+                                        className={`w-full ${dir === 'ltr' ? 'text-left' : 'text-right'} px-4 py-2 text-sm hover:bg-slate-50 ${language === lang ? 'font-bold text-[var(--theme-primary)]' : 'text-black'}`}
                                     >
                                         {lang === 'ar' ? 'العربية' : lang === 'en' ? 'English' : 'کوردی'}
                                     </button>
@@ -312,7 +316,7 @@ export default function HomeView({
 
                         {/* Cart */}
                         <button onClick={onCartOpen} className="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-50 transition-colors">
-                            <svg className="w-6 h-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <svg className="w-6 h-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                             </svg>
                             {totalItems > 0 && (
@@ -333,10 +337,10 @@ export default function HomeView({
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder={t('store.searchPlaceholder')}
-                        className={`w-full h-12 ${dir === 'ltr' ? 'pl-10 pr-4' : 'pr-10 pl-4'} bg-white rounded-xl border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition-all`}
+                        className={`w-full h-12 ${dir === 'ltr' ? 'pl-10 pr-4' : 'pr-10 pl-4'} bg-white rounded-xl border border-slate-200 text-sm text-black placeholder:text-black focus:outline-none focus:ring-1 transition-all`}
                         style={{ '--tw-ring-color': 'var(--theme-primary)' } as any}
                     />
-                    <div className={`absolute ${dir === 'ltr' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 text-slate-400`}>
+                    <div className={`absolute ${dir === 'ltr' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 text-black`}>
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
@@ -353,7 +357,13 @@ export default function HomeView({
                                     <div className="w-full h-full flex overflow-x-auto snap-x snap-mandatory no-scrollbar" dir="ltr">
                                         {storefrontConfig.banner.images.map((img: string, idx: number) => (
                                             <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
-                                                <Image src={img} alt={`Banner ${idx + 1}`} fill className="object-cover" />
+                                                <Image 
+                                                    src={img} 
+                                                    alt={`Banner ${idx + 1}`} 
+                                                    fill 
+                                                    className="object-cover" 
+                                                    priority={idx === 0}
+                                                />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
                                             </div>
                                         ))}
@@ -404,7 +414,7 @@ export default function HomeView({
                 {
                     !isSearching && (isLoading || sections.length > 0) && (
                         <div ref={sectionsRef} className="py-5">
-                            <h2 className="text-lg font-bold text-slate-800 text-center mb-4">{t('store.categories') || 'الأقسام'}</h2>
+                            <h2 className="text-lg font-bold text-black text-center mb-4">{t('store.categories') || 'الأقسام'}</h2>
                             <div className="flex justify-center gap-4 px-4 overflow-x-auto no-scrollbar pb-2">
                                 {isLoading ? (
                                     [1, 2, 3, 4].map((i) => (
@@ -423,11 +433,11 @@ export default function HomeView({
                                         >
                                             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${!selectedSection ? 'ring-2 shadow-sm' : 'bg-slate-100'
                                                 }`} style={!selectedSection ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)', '--tw-ring-color': 'var(--theme-primary)' } as any : {}}>
-                                                <svg className={`w-6 h-6 ${!selectedSection ? '' : 'text-slate-400'}`} style={!selectedSection ? { color: 'var(--theme-primary)' } : {}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                                <svg className={`w-6 h-6 ${!selectedSection ? '' : 'text-black'}`} style={!selectedSection ? { color: 'var(--theme-primary)' } : {}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zm0 9.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zm0 9.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
                                                 </svg>
                                             </div>
-                                            <span className="text-xs font-medium text-slate-600">{t('store.all') || 'الكل'}</span>
+                                            <span className="text-xs font-medium text-black">{t('store.all') || 'الكل'}</span>
                                         </button>
 
                                         {sections.map((section) => {
@@ -446,13 +456,13 @@ export default function HomeView({
                                                         {section.image_url ? (
                                                             <img src={section.image_url} alt={sectionName} className="w-full h-full object-cover" />
                                                         ) : (
-                                                            <svg className={`w-6 h-6 ${selectedSection === section.id ? '' : 'text-slate-400'}`} style={selectedSection === section.id ? { color: 'var(--theme-primary)' } : {}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                                            <svg className={`w-6 h-6 ${selectedSection === section.id ? '' : 'text-black'}`} style={selectedSection === section.id ? { color: 'var(--theme-primary)' } : {}} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
                                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                                                             </svg>
                                                         )}
                                                     </div>
-                                                    <span className={`text-xs font-medium line-clamp-1 ${selectedSection === section.id ? 'font-bold' : 'text-slate-600'}`} style={selectedSection === section.id ? { color: 'var(--theme-primary)' } : {}}>{sectionName}</span>
+                                                    <span className={`text-xs font-medium line-clamp-1 ${selectedSection === section.id ? 'font-bold' : 'text-black'}`} style={selectedSection === section.id ? { color: 'var(--theme-primary)' } : {}}>{sectionName}</span>
                                                 </button>
                                             )
                                         })}
@@ -486,7 +496,7 @@ export default function HomeView({
                                             >
                                                 {t('store.viewAll') || 'عرض الكل'}
                                             </button>
-                                            <h3 className="text-base font-bold text-slate-800">{sectionName}</h3>
+                                            <h3 className="text-base font-bold text-black">{sectionName}</h3>
                                         </div>
 
                                         {/* Horizontal Scroll */}
@@ -519,7 +529,7 @@ export default function HomeView({
                                         >
                                             {t('store.viewAll') || 'عرض الكل'}
                                         </button>
-                                        <h3 className="text-base font-bold text-slate-800">{t('store.otherProducts') || 'منتجات أخرى'}</h3>
+                                        <h3 className="text-base font-bold text-black">{t('store.otherProducts') || 'منتجات أخرى'}</h3>
                                     </div>
                                     <div className="flex gap-3 px-4 overflow-x-auto no-scrollbar pb-2" dir={dir}>
                                         {productsBySection['__OTHER__'].slice(0, 8).map(product => (
@@ -547,7 +557,7 @@ export default function HomeView({
                                     >
                                         ← {t('store.back') || 'عودة'}
                                     </button>
-                                    <h2 className="text-lg font-bold text-slate-800">
+                                    <h2 className="text-lg font-bold text-black">
                                         {selectedSection === '__OTHER__' ? (t('store.otherProducts') || 'منتجات أخرى') : (
                                             (() => {
                                                 const s = sections.find(s => s.id === selectedSection);
@@ -558,7 +568,7 @@ export default function HomeView({
                                 </div>
                             )}
                             {isSearching && (
-                                <p className="text-sm text-slate-500 text-right mb-3">
+                                <p className="text-sm text-black text-right mb-3">
                                     {products.length} {t('store.all')}
                                 </p>
                             )}
@@ -572,9 +582,9 @@ export default function HomeView({
                             {products.length === 0 && (
                                 <div className="text-center py-16">
                                     <div className="w-20 h-20 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                                        <svg className="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                        <svg className="w-10 h-10 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                                     </div>
-                                    <p className="text-slate-500 font-medium">{t('store.empty') || 'لا توجد منتجات'}</p>
+                                    <p className="text-black font-medium">{t('store.empty') || 'لا توجد منتجات'}</p>
                                 </div>
                             )}
                         </div>

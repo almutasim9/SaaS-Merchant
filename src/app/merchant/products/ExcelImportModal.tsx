@@ -208,8 +208,8 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
                             </svg>
                         </div>
                         <div>
-                            <h2 className="text-base font-bold text-slate-800">استيراد منتجات من Excel</h2>
-                            <p className="text-xs text-slate-400 mt-0.5">
+                            <h2 className="text-base font-bold text-black">استيراد منتجات من Excel</h2>
+                            <p className="text-xs text-black mt-0.5">
                                 {step === 'upload' && 'ارفع ملف Excel يحتوي على بيانات المنتجات'}
                                 {step === 'preview' && `${parsedProducts.length} منتج في الملف — ${validCount} صالح`}
                                 {step === 'importing' && 'جاري الاستيراد...'}
@@ -217,7 +217,7 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
                             </p>
                         </div>
                     </div>
-                    <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors text-slate-400">
+                    <button onClick={handleClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors text-black">
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -260,8 +260,8 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                                     </svg>
                                 </div>
-                                <p className="text-sm font-bold text-slate-700">اسحب ملف Excel هنا أو اضغط للاختيار</p>
-                                <p className="text-xs text-slate-400 mt-1">ملفات .xlsx فقط</p>
+                                <p className="text-sm font-bold text-black">اسحب ملف Excel هنا أو اضغط للاختيار</p>
+                                <p className="text-xs text-black mt-1">ملفات .xlsx فقط</p>
                                 <input
                                     ref={fileInputRef}
                                     type="file"
@@ -273,7 +273,7 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
 
                             {/* Column guide */}
                             <div className="bg-slate-50 rounded-2xl p-4 space-y-2">
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">أعمدة القالب</p>
+                                <p className="text-xs font-bold text-black uppercase tracking-wider mb-3">أعمدة القالب</p>
                                 {[
                                     { col: 'A', label: 'اسم المنتج', required: true },
                                     { col: 'B', label: 'السعر (د.ع)', required: true },
@@ -281,11 +281,11 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
                                     { col: 'D', label: 'الوصف', required: false },
                                 ].map(c => (
                                     <div key={c.col} className="flex items-center gap-3">
-                                        <span className="w-7 h-7 bg-white border border-slate-200 rounded-lg text-xs font-black text-slate-500 flex items-center justify-center">{c.col}</span>
-                                        <span className="text-sm font-medium text-slate-700">{c.label}</span>
+                                        <span className="w-7 h-7 bg-white border border-slate-200 rounded-lg text-xs font-black text-black flex items-center justify-center">{c.col}</span>
+                                        <span className="text-sm font-medium text-black">{c.label}</span>
                                         {c.required
                                             ? <span className="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full">مطلوب</span>
-                                            : <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">اختياري</span>
+                                            : <span className="text-[10px] font-bold text-black bg-slate-100 px-2 py-0.5 rounded-full">اختياري</span>
                                         }
                                     </div>
                                 ))}
@@ -299,16 +299,16 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
                             {/* Summary */}
                             <div className="grid grid-cols-3 gap-3">
                                 <div className="bg-slate-50 rounded-2xl p-4 text-center">
-                                    <div className="text-2xl font-black text-slate-800">{parsedProducts.length}</div>
-                                    <div className="text-xs text-slate-400 font-medium mt-0.5">إجمالي الصفوف</div>
+                                    <div className="text-2xl font-black text-black">{parsedProducts.length}</div>
+                                    <div className="text-xs text-black font-medium mt-0.5">إجمالي الصفوف</div>
                                 </div>
                                 <div className="bg-emerald-50 rounded-2xl p-4 text-center">
                                     <div className="text-2xl font-black text-emerald-600">{validCount}</div>
                                     <div className="text-xs text-emerald-500 font-medium mt-0.5">جاهز للاستيراد</div>
                                 </div>
                                 <div className={`rounded-2xl p-4 text-center ${invalidCount > 0 ? 'bg-rose-50' : 'bg-slate-50'}`}>
-                                    <div className={`text-2xl font-black ${invalidCount > 0 ? 'text-rose-500' : 'text-slate-300'}`}>{invalidCount}</div>
-                                    <div className={`text-xs font-medium mt-0.5 ${invalidCount > 0 ? 'text-rose-400' : 'text-slate-400'}`}>يحتوي أخطاء</div>
+                                    <div className={`text-2xl font-black ${invalidCount > 0 ? 'text-rose-500' : 'text-slate-900'}`}>{invalidCount}</div>
+                                    <div className={`text-xs font-medium mt-0.5 ${invalidCount > 0 ? 'text-rose-400' : 'text-black'}`}>يحتوي أخطاء</div>
                                 </div>
                             </div>
 
@@ -323,9 +323,9 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
                                             }
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-bold text-slate-800 truncate">{p.name || `صف ${i + 2}`}</p>
+                                            <p className="text-sm font-bold text-black truncate">{p.name || `صف ${i + 2}`}</p>
                                             {p.valid
-                                                ? <p className="text-xs text-slate-400">{p.price.toLocaleString()} د.ع · {p.sectionName}</p>
+                                                ? <p className="text-xs text-black">{p.price.toLocaleString()} د.ع · {p.sectionName}</p>
                                                 : <p className="text-xs text-rose-500">{p.errors.join(' · ')}</p>
                                             }
                                         </div>
@@ -341,7 +341,7 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
 
                             <button
                                 onClick={() => { setStep('upload'); setParsedProducts([]); }}
-                                className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+                                className="text-xs text-black hover:text-black transition-colors"
                             >
                                 ← رفع ملف مختلف
                             </button>
@@ -353,8 +353,8 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
                         <div className="text-center py-10 space-y-6">
                             <div className="w-16 h-16 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin mx-auto" />
                             <div>
-                                <p className="text-base font-bold text-slate-800">جارٍ استيراد المنتجات...</p>
-                                <p className="text-sm text-slate-400 mt-1">{importProgress}% مكتمل</p>
+                                <p className="text-base font-bold text-black">جارٍ استيراد المنتجات...</p>
+                                <p className="text-sm text-black mt-1">{importProgress}% مكتمل</p>
                             </div>
                             <div className="w-full bg-slate-100 rounded-full h-2 mx-auto max-w-sm">
                                 <div
@@ -374,10 +374,10 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-lg font-black text-slate-800">
+                                <p className="text-lg font-black text-black">
                                     {importErrors.length === 0 ? 'تم الاستيراد بنجاح! 🎉' : 'اكتمل الاستيراد مع بعض الأخطاء'}
                                 </p>
-                                <p className="text-sm text-slate-400 mt-1">
+                                <p className="text-sm text-black mt-1">
                                     تمت إضافة {validCount - importErrors.length} منتج بنجاح
                                 </p>
                             </div>
@@ -393,13 +393,13 @@ export default function ExcelImportModal({ isOpen, onClose, onSuccess, storeId, 
                 {/* Footer Buttons */}
                 <div className="px-6 pb-6 pt-3 border-t border-slate-50 flex gap-3">
                     {step === 'upload' && (
-                        <button onClick={handleClose} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors">
+                        <button onClick={handleClose} className="flex-1 py-3 bg-slate-100 text-black rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors">
                             إلغاء
                         </button>
                     )}
                     {step === 'preview' && (
                         <>
-                            <button onClick={handleClose} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors">
+                            <button onClick={handleClose} className="flex-1 py-3 bg-slate-100 text-black rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors">
                                 إلغاء
                             </button>
                             <button

@@ -88,7 +88,7 @@ export default function AdminPlansPage() {
 
     const tabColors: Record<string, { bg: string; border: string; text: string; ring: string; badge: string }> = {
         'free': { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', ring: 'ring-emerald-500', badge: 'bg-emerald-500' },
-        'silver': { bg: 'bg-slate-50', border: 'border-slate-300', text: 'text-slate-700', ring: 'ring-slate-500', badge: 'bg-slate-500' },
+        'silver': { bg: 'bg-slate-50', border: 'border-slate-300', text: 'text-black', ring: 'ring-slate-500', badge: 'bg-slate-500' },
         'gold': { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', ring: 'ring-amber-500', badge: 'bg-amber-500' },
     };
 
@@ -96,7 +96,7 @@ export default function AdminPlansPage() {
 
     const toggleFeatures: { key: keyof SubscriptionPlan; label: string; icon: string; activeColor: string; checkColor: string }[] = [
         { key: 'custom_theme', label: 'تخصيص كامل للواجهة', icon: 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01', activeColor: 'bg-emerald-100 text-emerald-600', checkColor: 'peer-checked:bg-emerald-500' },
-        { key: 'remove_branding', label: 'إزالة حقوق المنصة', icon: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16', activeColor: 'bg-indigo-100 text-indigo-600', checkColor: 'peer-checked:bg-indigo-500' },
+        { key: 'remove_branding', label: 'إزالة حقوق المنصة', icon: 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16', activeColor: 'bg-indigo-100 text-black', checkColor: 'peer-checked:bg-indigo-500' },
         { key: 'advanced_reports', label: 'تقارير مبيعات متقدمة', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', activeColor: 'bg-amber-100 text-amber-600', checkColor: 'peer-checked:bg-amber-500' },
         { key: 'free_delivery_all_zones', label: 'توصيل مجاني لكل المناطق', icon: 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4', activeColor: 'bg-sky-100 text-sky-600', checkColor: 'peer-checked:bg-sky-500' },
         { key: 'allow_custom_slug', label: 'تغيير رابط المتجر (Slug)', icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101', activeColor: 'bg-orange-100 text-orange-600', checkColor: 'peer-checked:bg-orange-500' },
@@ -116,8 +116,8 @@ export default function AdminPlansPage() {
             <div className="max-w-4xl mx-auto space-y-6">
                 {/* Header */}
                 <div>
-                    <h1 className="text-2xl lg:text-3xl font-black text-slate-800 tracking-tight">إدارة الباقات والاشتراكات</h1>
-                    <p className="text-slate-500 mt-1 font-medium text-sm">تحكم في القيود والميزات المتاحة لكل باقة في المنصة</p>
+                    <h1 className="text-2xl lg:text-3xl font-black text-black tracking-tight">إدارة الباقات والاشتراكات</h1>
+                    <p className="text-black mt-1 font-medium text-sm">تحكم في القيود والميزات المتاحة لكل باقة في المنصة</p>
                 </div>
 
                 {/* Plan Tabs */}
@@ -131,7 +131,7 @@ export default function AdminPlansPage() {
                                 onClick={() => { setActiveTab(i); setActiveSection('limits'); }}
                                 className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all ${isActive
                                     ? `bg-white shadow-md ${c.text}`
-                                    : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+                                    : 'text-black hover:text-black hover:bg-white/50'
                                     }`}
                             >
                                 <span className="block text-lg">{p.name_ar}</span>
@@ -154,8 +154,8 @@ export default function AdminPlansPage() {
                                 key={tab.id}
                                 onClick={() => setActiveSection(tab.id)}
                                 className={`flex-1 py-4 px-4 text-sm font-bold flex items-center justify-center gap-2 transition-all border-b-2 ${activeSection === tab.id
-                                    ? 'border-indigo-600 text-indigo-600 bg-indigo-50/30'
-                                    : 'border-transparent text-slate-400 hover:text-slate-600'
+                                    ? 'border-indigo-600 text-black bg-indigo-50/30'
+                                    : 'border-transparent text-black hover:text-black'
                                     }`}
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} /></svg>
@@ -179,7 +179,7 @@ export default function AdminPlansPage() {
                                     { field: 'yearly_discount_percent' as const, label: 'نسبة الخصم السنوي (%)', hint: 'للواجهة فقط' },
                                 ].map(item => (
                                     <div key={item.field} className="space-y-2">
-                                        <label className="text-xs font-bold text-slate-600">{item.label}</label>
+                                        <label className="text-xs font-bold text-black">{item.label}</label>
                                         <div className="flex items-center gap-2">
                                             <input
                                                 type="number"
@@ -189,7 +189,7 @@ export default function AdminPlansPage() {
                                                 dir="ltr"
                                             />
                                             {item.hint && (
-                                                <span className="text-[10px] text-slate-400 w-20 text-center font-medium">{item.hint}</span>
+                                                <span className="text-[10px] text-black w-20 text-center font-medium">{item.hint}</span>
                                             )}
                                         </div>
                                     </div>
@@ -203,10 +203,10 @@ export default function AdminPlansPage() {
                                 {toggleFeatures.map(feat => (
                                     <label key={feat.key} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition-all group">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${(plan as any)[feat.key] ? feat.activeColor : 'bg-slate-100 text-slate-400'}`}>
+                                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${(plan as any)[feat.key] ? feat.activeColor : 'bg-slate-100 text-black'}`}>
                                                 <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={feat.icon} /></svg>
                                             </div>
-                                            <span className="text-sm font-bold text-slate-700">{feat.label}</span>
+                                            <span className="text-sm font-bold text-black">{feat.label}</span>
                                         </div>
                                         <div className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors">
                                             <input type="checkbox" className="sr-only peer" checked={(plan as any)[feat.key] ?? false} onChange={(e) => handleUpdateChange(plan.id, feat.key, e.target.checked)} />
@@ -222,18 +222,18 @@ export default function AdminPlansPage() {
                             <div className="space-y-6">
                                 {/* Descriptions */}
                                 <div>
-                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">شرح الباقة</h4>
+                                    <h4 className="text-xs font-bold text-black uppercase tracking-widest mb-4">شرح الباقة</h4>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-slate-600">عربي</label>
+                                            <label className="text-xs font-bold text-black">عربي</label>
                                             <input type="text" value={plan.description_ar || ''} onChange={(e) => handleUpdateChange(plan.id, 'description_ar', e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-black focus:ring-2 focus:ring-indigo-500 transition-all" placeholder="شرح مختصر..." />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-slate-600">English</label>
+                                            <label className="text-xs font-bold text-black">English</label>
                                             <input type="text" value={plan.description_en || ''} onChange={(e) => handleUpdateChange(plan.id, 'description_en', e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-black text-left focus:ring-2 focus:ring-indigo-500 transition-all" dir="ltr" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-slate-600">کوردی</label>
+                                            <label className="text-xs font-bold text-black">کوردی</label>
                                             <input type="text" value={plan.description_ku || ''} onChange={(e) => handleUpdateChange(plan.id, 'description_ku', e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-black focus:ring-2 focus:ring-indigo-500 transition-all" />
                                         </div>
                                     </div>
@@ -243,19 +243,19 @@ export default function AdminPlansPage() {
 
                                 {/* Features Lists */}
                                 <div>
-                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">ميزات الباقة المكتوبة</h4>
-                                    <p className="text-[10px] text-slate-400 font-medium mb-4">اكتب كل ميزة في سطر جديد لكي تظهر في صفحة الباقات.</p>
+                                    <h4 className="text-xs font-bold text-black uppercase tracking-widest mb-1">ميزات الباقة المكتوبة</h4>
+                                    <p className="text-[10px] text-black font-medium mb-4">اكتب كل ميزة في سطر جديد لكي تظهر في صفحة الباقات.</p>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-slate-600">ميزات (عربي)</label>
+                                            <label className="text-xs font-bold text-black">ميزات (عربي)</label>
                                             <textarea rows={5} value={(plan.features_ar || []).join('\n')} onChange={(e) => handleFeaturesChange(plan.id, 'ar', e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-black resize-none focus:ring-2 focus:ring-indigo-500 transition-all" placeholder={"ميزة 1\nميزة 2"} />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-slate-600">Features (English)</label>
+                                            <label className="text-xs font-bold text-black">Features (English)</label>
                                             <textarea rows={5} value={(plan.features_en || []).join('\n')} onChange={(e) => handleFeaturesChange(plan.id, 'en', e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-black resize-none text-left focus:ring-2 focus:ring-indigo-500 transition-all" dir="ltr" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs font-bold text-slate-600">تایبەتمەندییەکان (کوردی)</label>
+                                            <label className="text-xs font-bold text-black">تایبەتمەندییەکان (کوردی)</label>
                                             <textarea rows={5} value={(plan.features_ku || []).join('\n')} onChange={(e) => handleFeaturesChange(plan.id, 'ku', e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-black resize-none focus:ring-2 focus:ring-indigo-500 transition-all" />
                                         </div>
                                     </div>
@@ -266,7 +266,7 @@ export default function AdminPlansPage() {
 
                     {/* Save Button */}
                     <div className="p-5 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                        <span className="text-xs text-slate-400 font-medium">تعديل: {plan.name_ar} ({plan.name_en})</span>
+                        <span className="text-xs text-black font-medium">تعديل: {plan.name_ar} ({plan.name_en})</span>
                         <button
                             onClick={() => handleSavePlan(plan)}
                             disabled={savingId === plan.id}

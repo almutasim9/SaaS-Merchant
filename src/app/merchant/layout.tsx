@@ -11,6 +11,7 @@ import PushNotificationManager from '@/components/merchant/PushNotificationManag
 import { I18nProvider, useI18n } from '@/components/providers/I18nProvider';
 import NotificationBell from './notifications/NotificationBell';
 import LanguageSwitcher from './components/LanguageSwitcher';
+import { useStore } from './hooks/useStore';
 
 interface Store {
     id: string;
@@ -44,9 +45,7 @@ export default function MerchantLayout({ children }: { children: React.ReactNode
 
 function MerchantLayoutContent({ children }: { children: React.ReactNode }) {
     const { t, language, dir } = useI18n();
-    const [store, setStore] = useState<Store | null>(null);
     const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
-    const [loading, setLoading] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isSectionsModalOpen, setIsSectionsModalOpen] = useState(false);
     const [queryClient] = useState(() => new QueryClient({
@@ -60,32 +59,47 @@ function MerchantLayoutContent({ children }: { children: React.ReactNode }) {
     const router = useRouter();
     const pathname = usePathname();
 
+    const { data: store, isLoading: storeLoading } = useStore();
+
     useEffect(() => {
-        let cleanup: (() => void) | undefined;
-
-        const init = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) { router.push('/login'); return; }
-            cleanup = await fetchStore(user.id);
-        };
-
-        init();
-
-        return () => { cleanup?.(); };
-    }, []);
+        if (!storeLoading && !store) {
+            // Check if authenticated
+            const checkAuth = async () => {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) router.push('/login');
+            };
+            checkAuth();
+        }
+    }, [store, storeLoading, router]);
 
     useEffect(() => {
         setIsMobileMenuOpen(false);
     }, [pathname]);
 
     useEffect(() => {
-        const handleStatusUpdate = () => {
-            if (store?.id) {
-                fetchOrdersCount(store.id);
-            }
-        };
-        window.addEventListener('orderStatusUpdated', handleStatusUpdate);
-        return () => window.removeEventListener('orderStatusUpdated', handleStatusUpdate);
+        if (store?.id) {
+            fetchOrdersCount(store.id);
+            
+            const channel = supabase
+                .channel('sidebar-orders-count')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'orders',
+                    filter: `store_id=eq.${store.id}`
+                }, () => {
+                    fetchOrdersCount(store.id);
+                })
+                .subscribe();
+
+            const handleStatusUpdate = () => fetchOrdersCount(store.id);
+            window.addEventListener('orderStatusUpdated', handleStatusUpdate);
+
+            return () => {
+                supabase.removeChannel(channel);
+                window.removeEventListener('orderStatusUpdated', handleStatusUpdate);
+            };
+        }
     }, [store?.id]);
 
     const fetchOrdersCount = async (storeId: string) => {
@@ -98,45 +112,12 @@ function MerchantLayoutContent({ children }: { children: React.ReactNode }) {
         setPendingOrdersCount(count || 0);
     };
 
-    const fetchStore = async (userId: string) => {
-        try {
-            const { data } = await supabase
-                .from('stores')
-                .select('id, name, slug, logo_url, merchant_id')
-                .eq('merchant_id', userId)
-                .single();
-
-            if (data) {
-                setStore(data);
-                fetchOrdersCount(data.id);
-
-                const channel = supabase
-                    .channel('sidebar-orders-count')
-                    .on('postgres_changes', {
-                        event: '*',
-                        schema: 'public',
-                        table: 'orders',
-                        filter: `store_id=eq.${data.id}`
-                    }, () => {
-                        fetchOrdersCount(data.id);
-                    })
-                    .subscribe();
-
-                return () => supabase.removeChannel(channel);
-            }
-        } catch (error) {
-            console.error('Error fetching store:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleLogout = async () => {
         await supabase.auth.signOut();
         router.push('/login');
     };
 
-    if (loading) {
+    if (storeLoading) {
         return (
             <div className={`min-h-screen bg-slate-50 flex items-center justify-center ${language === 'en' ? 'font-sans' : 'font-cairo'}`} dir={dir}>
                 <div className="w-12 h-12 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -162,6 +143,7 @@ function MerchantLayoutContent({ children }: { children: React.ReactNode }) {
         {
             group: t('nav.sales'),
             items: [
+                { id: 'pos', label: t('nav.pos'), icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', href: '/merchant/pos' },
                 { id: 'analytics', label: t('nav.analytics'), icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', href: '/merchant/analytics' },
                 { id: 'orders', label: t('nav.orders'), icon: 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z', href: '/merchant/orders', badge: pendingOrdersCount > 0 ? pendingOrdersCount : null },
                 { id: 'sales-history', label: t('nav.salesHistory'), icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4', href: '/merchant/sales-history' },
@@ -176,11 +158,13 @@ function MerchantLayoutContent({ children }: { children: React.ReactNode }) {
         }
     ];
 
+    const isFullScreenPage = pathname === '/merchant/pos' || pathname.split('/').slice(-1)[0] === 'edit';
+
     return (
         <QueryClientProvider client={queryClient}>
             <div className={`min-h-screen bg-[#F8F9FB] flex font-sans ${language === 'en' ? 'font-sans' : 'font-cairo'}`} dir={dir}>
                 {/* Mobile Overlay */}
-                {isMobileMenuOpen && (
+                {isMobileMenuOpen && !isFullScreenPage && (
                     <div
                         className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60] lg:hidden"
                         onClick={() => setIsMobileMenuOpen(false)}
@@ -188,133 +172,137 @@ function MerchantLayoutContent({ children }: { children: React.ReactNode }) {
                 )}
 
                 {/* Sidebar */}
-                <aside className={`
-                fixed lg:sticky top-0 ${dir === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'} h-screen bg-white border-slate-100 flex flex-col p-8 z-[70] transition-transform duration-500
-                w-[280px] lg:w-[300px]
-                ${isMobileMenuOpen ? 'translate-x-0' : (dir === 'rtl' ? 'translate-x-full' : '-translate-x-full') + ' lg:translate-x-0'}
-            `}>
-                    <div className="flex items-center justify-between mb-16 px-2 lg:block">
-                        <div className="flex items-center gap-4">
-                            {store?.logo_url ? (
-                                <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-100 shadow-lg shadow-black/5 flex-shrink-0 bg-white p-1">
-                                    <img src={store.logo_url} alt={store.name} className="w-full h-full object-contain rounded-lg" />
+                {!isFullScreenPage && (
+                    <aside className={`
+                        fixed lg:sticky top-0 ${dir === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'} h-screen bg-white border-slate-100 flex flex-col p-8 z-[70] transition-transform duration-500
+                        w-[280px] lg:w-[300px]
+                        ${isMobileMenuOpen ? 'translate-x-0' : (dir === 'rtl' ? 'translate-x-full' : '-translate-x-full') + ' lg:translate-x-0'}
+                    `}>
+                        <div className="flex items-center justify-between mb-16 px-2 lg:block">
+                            <div className="flex items-center gap-4">
+                                {store?.logo_url ? (
+                                    <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-100 shadow-lg shadow-black/5 flex-shrink-0 bg-white p-1">
+                                        <img src={store.logo_url} alt={store.name} className="w-full h-full object-contain rounded-lg" />
+                                    </div>
+                                ) : (
+                                    <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20 flex-shrink-0">
+                                        <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 3L4 9V21H20V9L12 3ZM12 11C10.9 11 10 10.1 10 9C10 7.9 10.9 7 12 7C13.1 7 14 7.9 14 9C14 10.1 13.1 11 12 11Z" />
+                                        </svg>
+                                    </div>
+                                )}
+                                <div>
+                                    <h2 className="text-xl font-bold text-black leading-tight">{store?.name || 'متجر النخبة'}</h2>
+                                    <span className="text-[10px] font-bold text-black uppercase tracking-widest leading-none">حساب التاجر الموثق</span>
                                 </div>
-                            ) : (
-                                <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20 flex-shrink-0">
-                                    <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 3L4 9V21H20V9L12 3ZM12 11C10.9 11 10 10.1 10 9C10 7.9 10.9 7 12 7C13.1 7 14 7.9 14 9C14 10.1 13.1 11 12 11Z" />
-                                    </svg>
-                                </div>
-                            )}
-                            <div>
-                                <h2 className="text-xl font-bold text-slate-800 leading-tight">{store?.name || 'متجر النخبة'}</h2>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">حساب التاجر الموثق</span>
                             </div>
+                            {/* Close button for mobile */}
+                            <button
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="lg:hidden w-10 h-10 flex items-center justify-center text-black hover:text-black"
+                            >
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </div>
-                        {/* Close button for mobile */}
-                        <button
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className="lg:hidden w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-800"
-                        >
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
 
-                    <nav className="space-y-6 flex-1 overflow-y-auto custom-scrollbar pr-2">
-                        {navigation.map((group) => (
-                            <div key={group.group} className="space-y-2">
-                                <h3 className="px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">{group.group}</h3>
-                                <div className="space-y-1">
-                                    {group.items.map((item) => {
-                                        const isActive = (pathname.startsWith(item.href) && item.href !== '/merchant/dashboard') || (pathname === '/merchant/dashboard' && item.id === 'dashboard');
+                        <nav className="space-y-6 flex-1 overflow-y-auto custom-scrollbar pr-2">
+                            {navigation.map((group) => (
+                                <div key={group.group} className="space-y-2">
+                                    <h3 className="px-6 text-[10px] font-black text-black uppercase tracking-widest">{group.group}</h3>
+                                    <div className="space-y-1">
+                                        {group.items.map((item) => {
+                                            const isActive = (pathname.startsWith(item.href) && item.href !== '/merchant/dashboard') || (pathname === '/merchant/dashboard' && item.id === 'dashboard');
 
-                                        const content = (
-                                            <div className={`flex items-center justify-between px-6 py-3.5 rounded-2xl transition-all group cursor-pointer ${isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-slate-400 hover:bg-slate-50 hover:text-indigo-600'}`}>
-                                                <div className="flex items-center gap-4">
-                                                    <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={item.icon} />
-                                                    </svg>
-                                                    <span className="text-sm font-bold">{item.label}</span>
-                                                </div>
-                                                {item.badge && (
-                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-white/20 text-white' : 'bg-rose-500 text-white shadow-lg shadow-rose-500/20'}`}>
-                                                        {item.badge}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        );
-
-                                        if (item.onClick) {
-                                            return (
-                                                <div key={item.id} onClick={item.onClick}>
-                                                    {content}
+                                            const content = (
+                                                <div className={`flex items-center justify-between px-6 py-3.5 rounded-2xl transition-all group cursor-pointer ${isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-black hover:bg-slate-50 hover:text-black'}`}>
+                                                    <div className="flex items-center gap-4">
+                                                        <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={item.icon} />
+                                                        </svg>
+                                                        <span className="text-sm font-bold">{item.label}</span>
+                                                    </div>
+                                                    {item.badge && (
+                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-white/20 text-white' : 'bg-rose-500 text-white shadow-lg shadow-rose-500/20'}`}>
+                                                            {item.badge}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             );
-                                        }
 
-                                        return (
-                                            <Link key={item.id} href={item.href}>
-                                                {content}
-                                            </Link>
-                                        );
-                                    })}
+                                            if (item.onClick) {
+                                                return (
+                                                    <div key={item.id} onClick={item.onClick}>
+                                                        {content}
+                                                    </div>
+                                                );
+                                            }
+
+                                            return (
+                                                <Link key={item.id} href={item.href}>
+                                                    {content}
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </nav>
+                            ))}
+                        </nav>
 
-                    <div className="pt-8 border-t border-slate-100 px-2">
-                        <button
-                            onClick={handleLogout}
-                            className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-rose-500 hover:bg-rose-50 transition-all group font-bold text-sm"
-                        >
-                            <svg className={`w-5 h-5 transition-transform ${dir === 'rtl' ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                            {t('nav.logout')}
-                        </button>
-                    </div>
-                </aside>
+                        <div className="pt-8 border-t border-slate-100 px-2">
+                            <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-rose-500 hover:bg-rose-50 transition-all group font-bold text-sm"
+                            >
+                                <svg className={`w-5 h-5 transition-transform ${dir === 'rtl' ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                                {t('nav.logout')}
+                            </button>
+                        </div>
+                    </aside>
+                )}
 
                 {/* Content Header Wrapper */}
                 <div className="flex-1 min-h-screen flex flex-col overflow-x-hidden">
                     {/* Global Header */}
-                    <header className="h-20 lg:h-24 flex items-center justify-between px-6 lg:px-10 sticky top-0 bg-[#F8F9FB]/80 backdrop-blur-md z-40">
-                        <div className="flex items-center gap-4">
-                            {/* Hamburger Button */}
-                            <button
-                                onClick={() => setIsMobileMenuOpen(true)}
-                                className="lg:hidden w-11 h-11 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-800 shadow-sm"
-                            >
-                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-                                </svg>
-                            </button>
-
-                            <div className="hidden md:flex items-center gap-4 w-[300px] lg:w-[450px]">
-                                <div className="relative w-full">
-                                    <input
-                                        type="text"
-                                        placeholder={t('header.search')}
-                                        className={`w-full bg-white border border-slate-100 rounded-2xl px-6 py-3 ${dir === 'rtl' ? 'pr-12' : 'pl-12'} text-sm focus:outline-none focus:ring-4 focus:ring-indigo-100/50 transition-all font-bold shadow-sm`}
-                                    />
-                                    <svg className={`w-5 h-5 text-slate-300 absolute ${dir === 'rtl' ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    {!isFullScreenPage && (
+                        <header className="h-20 lg:h-24 flex items-center justify-between px-6 lg:px-10 sticky top-0 bg-[#F8F9FB]/80 backdrop-blur-md z-40">
+                            <div className="flex items-center gap-4">
+                                {/* Hamburger Button */}
+                                <button
+                                    onClick={() => setIsMobileMenuOpen(true)}
+                                    className="lg:hidden w-11 h-11 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-black shadow-sm"
+                                >
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
                                     </svg>
+                                </button>
+
+                                <div className="hidden md:flex items-center gap-4 w-[300px] lg:w-[450px]">
+                                    <div className="relative w-full">
+                                        <input
+                                            type="text"
+                                            placeholder={t('header.search')}
+                                            className={`w-full bg-white border border-slate-100 rounded-2xl px-6 py-3 ${dir === 'rtl' ? 'pr-12' : 'pl-12'} text-sm focus:outline-none focus:ring-4 focus:ring-indigo-100/50 transition-all font-bold shadow-sm`}
+                                        />
+                                        <svg className={`w-5 h-5 text-slate-900 absolute ${dir === 'rtl' ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="flex items-center gap-2 lg:gap-4">
-                            {store?.id && <NotificationBell storeId={store.id} />}
-                            <LanguageSwitcher />
-                        </div>
-                    </header>
+                            <div className="flex items-center gap-2 lg:gap-4">
+                                {store?.id && <NotificationBell storeId={store.id} />}
+                                <LanguageSwitcher />
+                            </div>
+                        </header>
+                    )}
 
                     {/* Page Content */}
-                    <main className="flex-1 px-4 lg:px-0 pb-24 lg:pb-0">
+                    <main className={`flex-1 ${!isFullScreenPage ? 'px-4 lg:px-0 pb-24 lg:pb-0' : ''}`}>
                         {children}
                     </main>
 
@@ -347,35 +335,37 @@ function MerchantLayoutContent({ children }: { children: React.ReactNode }) {
             `}</style>
 
                 {/* Mobile Bottom Navigation Bar */}
-                <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-100 shadow-lg shadow-slate-900/5" dir={dir}>
-                    <div className="flex items-center justify-around px-2 py-2 safe-area-bottom">
-                        {[
-                            { href: '/merchant/dashboard', label: t('nav.home'), badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> },
-                            { href: '/merchant/products', label: t('nav.products'), badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg> },
-                            { href: '/merchant/orders', label: t('nav.orders'), badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg> },
-                            { href: '/merchant/analytics', label: t('nav.analytics'), badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
-                            { href: '/merchant/sales-history', label: t('nav.salesHistory'), badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg> },
-                            { href: '/merchant/settings', label: t('nav.settings'), badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
-                        ].map((tab) => {
-                            const isActive = (pathname.startsWith(tab.href) && tab.href !== '/merchant/dashboard') || (pathname === '/merchant/dashboard' && tab.href === '/merchant/dashboard');
-                            return (
-                                <a key={tab.href} href={tab.href} className="relative flex flex-col items-center gap-0.5 min-w-[56px] py-1">
-                                    <span className={`relative flex items-center justify-center w-10 h-8 rounded-xl transition-all duration-200 ${isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-400'
-                                        }`}>
-                                        {tab.icon}
-                                        {tab.badge && (
-                                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
-                                                {tab.badge > 9 ? '9+' : tab.badge}
-                                            </span>
-                                        )}
-                                    </span>
-                                    <span className={`text-[10px] font-bold transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-400'
-                                        }`}>{tab.label}</span>
-                                </a>
-                            );
-                        })}
-                    </div>
-                </nav>
+                {!isFullScreenPage && (
+                    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-slate-100 shadow-lg shadow-slate-900/5" dir={dir}>
+                        <div className="flex items-center justify-around px-2 py-2 safe-area-bottom">
+                            {[
+                                { href: '/merchant/dashboard', label: t('nav.home'), badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> },
+                                { href: '/merchant/products', label: t('nav.products'), badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg> },
+                                { href: '/merchant/orders', label: t('nav.orders'), badge: pendingOrdersCount > 0 ? pendingOrdersCount : null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg> },
+                                { href: '/merchant/analytics', label: t('nav.analytics'), badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
+                                { href: '/merchant/sales-history', label: t('nav.salesHistory'), badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg> },
+                                { href: '/merchant/settings', label: t('nav.settings'), badge: null, icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> },
+                            ].map((tab) => {
+                                const isActive = (pathname.startsWith(tab.href) && tab.href !== '/merchant/dashboard') || (pathname === '/merchant/dashboard' && tab.href === '/merchant/dashboard');
+                                return (
+                                    <a key={tab.href} href={tab.href} className="relative flex flex-col items-center gap-0.5 min-w-[56px] py-1">
+                                        <span className={`relative flex items-center justify-center w-10 h-8 rounded-xl transition-all duration-200 ${isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30' : 'text-black'
+                                            }`}>
+                                            {tab.icon}
+                                            {tab.badge && (
+                                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
+                                                    {tab.badge > 9 ? '9+' : tab.badge}
+                                                </span>
+                                            )}
+                                        </span>
+                                        <span className={`text-[10px] font-bold transition-colors ${isActive ? 'text-black' : 'text-black'
+                                            }`}>{tab.label}</span>
+                                    </a>
+                                );
+                            })}
+                        </div>
+                    </nav>
+                )}
 
                 <ReactQueryDevtools initialIsOpen={false} />
             </div>

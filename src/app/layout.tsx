@@ -15,6 +15,8 @@ export const metadata: Metadata = {
   description: "Advanced multi-tenant SaaS for merchants",
 };
 
+import QueryProvider from "@/components/providers/QueryProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -24,7 +26,9 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className={`${cairo.variable} antialiased font-sans flex flex-col min-h-screen`} suppressHydrationWarning>
         <NumeralNormalizer />
-        {children}
+        <QueryProvider>
+          {children}
+        </QueryProvider>
         <Toaster position="top-center" richColors />
       </body>
     </html>

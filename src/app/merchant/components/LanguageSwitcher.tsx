@@ -33,8 +33,8 @@ export default function LanguageSwitcher() {
                 className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-100 rounded-xl hover:bg-slate-50 transition-all shadow-sm"
             >
                 <span className="text-lg">{currentLang.flag}</span>
-                <span className="text-xs font-bold text-slate-700 hidden sm:block">{currentLang.label}</span>
-                <svg className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <span className="text-xs font-bold text-black hidden sm:block">{currentLang.label}</span>
+                <svg className={`w-4 h-4 text-black transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
@@ -49,7 +49,7 @@ export default function LanguageSwitcher() {
                                     setLanguage(lang.code);
                                     setIsOpen(false);
                                 }}
-                                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold transition-all hover:bg-slate-50 ${language === lang.code ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'
+                                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold transition-all hover:bg-slate-50 ${language === lang.code ? 'text-black bg-indigo-50/50' : 'text-black'
                                     }`}
                             >
                                 <span className="text-base">{lang.flag}</span>

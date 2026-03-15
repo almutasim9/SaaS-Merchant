@@ -125,8 +125,8 @@ export default function RegisterMerchantModal({ isOpen, onClose }: RegisterMerch
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <h2 className="text-3xl font-black text-slate-800 tracking-tight">مبروك! متجرك جاهز 🚀</h2>
-                            <p className="text-slate-500 font-medium text-lg">جاري تجهيز لوحة التحكم الخاصة بك...</p>
+                            <h2 className="text-3xl font-black text-black tracking-tight">مبروك! متجرك جاهز 🚀</h2>
+                            <p className="text-black font-medium text-lg">جاري تجهيز لوحة التحكم الخاصة بك...</p>
                             <div className="w-full max-w-xs mx-auto h-2 bg-slate-100 rounded-full overflow-hidden">
                                 <div className="h-full bg-emerald-500 animate-progress origin-right w-full" />
                             </div>
@@ -134,10 +134,10 @@ export default function RegisterMerchantModal({ isOpen, onClose }: RegisterMerch
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-8">
                             <div className="text-center space-y-2">
-                                <h2 className="text-3xl font-black text-slate-800 tracking-tight">
+                                <h2 className="text-3xl font-black text-black tracking-tight">
                                     {step === 1 ? 'إنشاء حساب جديد 👤' : 'إعداد متجرك 🏪'}
                                 </h2>
-                                <p className="text-slate-400 font-bold text-sm tracking-wide uppercase">
+                                <p className="text-black font-bold text-sm tracking-wide uppercase">
                                     خطوة {step} من 2
                                 </p>
                             </div>
@@ -147,57 +147,57 @@ export default function RegisterMerchantModal({ isOpen, onClose }: RegisterMerch
                                 <>
                                     <div className="space-y-6 animate-in slide-in-from-right-8 fade-in duration-300">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">البريد الإلكتروني</label>
+                                            <label className="text-xs font-black text-black uppercase tracking-wider px-1">البريد الإلكتروني</label>
                                             <input
                                                 type="email"
                                                 name="email"
                                                 value={formData.email}
                                                 onChange={handleInputChange}
                                                 placeholder="your@email.com"
-                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
+                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-black font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
                                                 autoFocus
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">كلمة المرور</label>
+                                            <label className="text-xs font-black text-black uppercase tracking-wider px-1">كلمة المرور</label>
                                             <input
                                                 type="password"
                                                 name="password"
                                                 value={formData.password}
                                                 onChange={handleInputChange}
                                                 placeholder="••••••••"
-                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
+                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-black font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">رقم الهاتف</label>
+                                            <label className="text-xs font-black text-black uppercase tracking-wider px-1">رقم الهاتف</label>
                                             <input
                                                 type="tel"
                                                 name="phone"
                                                 value={formData.phone}
                                                 onChange={handleInputChange}
                                                 placeholder="07xxxxxxxxx"
-                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
+                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-black font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">اسمك الكامل</label>
+                                            <label className="text-xs font-black text-black uppercase tracking-wider px-1">اسمك الكامل</label>
                                             <input
                                                 type="text"
                                                 name="ownerName"
                                                 value={formData.ownerName}
                                                 onChange={handleInputChange}
                                                 placeholder="الاسم الثلاثي"
-                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
+                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-black font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
                                             />
                                         </div>
                                     </div>
 
                                     {/* Login Link */}
                                     <div className="text-center pt-2">
-                                        <p className="text-sm text-slate-400">
+                                        <p className="text-sm text-black">
                                             لديك حساب بالفعل؟{' '}
-                                            <a href="/login" className="text-indigo-600 font-bold hover:underline">تسجيل الدخول</a>
+                                            <a href="/login" className="text-black font-bold hover:underline">تسجيل الدخول</a>
                                         </p>
                                     </div>
                                 </>
@@ -207,40 +207,40 @@ export default function RegisterMerchantModal({ isOpen, onClose }: RegisterMerch
                             {step === 2 && (
                                 <div className="space-y-6 animate-in slide-in-from-right-8 fade-in duration-300">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">اسم المتجر</label>
+                                        <label className="text-xs font-black text-black uppercase tracking-wider px-1">اسم المتجر</label>
                                         <input
                                             type="text"
                                             name="storeName"
                                             value={formData.storeName}
                                             onChange={handleInputChange}
                                             placeholder="مثال: متجر السعادة"
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none text-lg placeholder:font-normal placeholder:text-slate-300"
+                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-black font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none text-lg placeholder:font-normal placeholder:text-slate-900"
                                             autoFocus
                                         />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">رابط المتجر (Slug)</label>
+                                        <label className="text-xs font-black text-black uppercase tracking-wider px-1">رابط المتجر (Slug)</label>
                                         <div className="relative" dir="ltr">
-                                            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">saasplus.com/</span>
+                                            <span className="absolute left-5 top-1/2 -translate-y-1/2 text-black font-medium text-sm">saasplus.com/</span>
                                             <input
                                                 type="text"
                                                 name="slug"
                                                 value={formData.slug}
                                                 onChange={handleInputChange}
-                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl pl-32 pr-5 py-4 text-indigo-600 font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
+                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl pl-32 pr-5 py-4 text-black font-bold focus:border-indigo-500 focus:ring-0 transition-all outline-none"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">التصنيف</label>
+                                            <label className="text-xs font-black text-black uppercase tracking-wider px-1">التصنيف</label>
                                             <select
                                                 name="category"
                                                 value={formData.category}
                                                 onChange={handleInputChange}
-                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-4 text-slate-800 font-bold focus:border-indigo-500 outline-none appearance-none"
+                                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-4 text-black font-bold focus:border-indigo-500 outline-none appearance-none"
                                             >
                                                 <option value="Restaurants">مطاعم وكافيهات</option>
                                                 <option value="Clothing">ملابس وأزياء</option>
@@ -249,20 +249,20 @@ export default function RegisterMerchantModal({ isOpen, onClose }: RegisterMerch
                                             </select>
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-xs font-black text-slate-500 uppercase tracking-wider px-1">الباقة</label>
+                                            <label className="text-xs font-black text-black uppercase tracking-wider px-1">الباقة</label>
                                             <div className="relative">
                                                 <select
                                                     name="subscriptionType"
                                                     value={formData.subscriptionType}
                                                     onChange={handleInputChange}
-                                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-4 text-slate-800 font-bold focus:border-indigo-500 outline-none appearance-none"
+                                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-4 text-black font-bold focus:border-indigo-500 outline-none appearance-none"
                                                 >
                                                     <option value="Free">مجانية (Starter)</option>
                                                     <option value="Silver">احترافية (Silver)</option>
                                                     <option value="Gold">أعمال (Gold)</option>
                                                 </select>
                                                 <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                                                    <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                                    <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                                 </div>
                                             </div>
                                         </div>
@@ -282,7 +282,7 @@ export default function RegisterMerchantModal({ isOpen, onClose }: RegisterMerch
                                     <button
                                         type="button"
                                         onClick={() => setStep(1)}
-                                        className="px-6 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold hover:bg-slate-200 transition-colors"
+                                        className="px-6 py-4 bg-slate-100 text-black rounded-2xl font-bold hover:bg-slate-200 transition-colors"
                                     >
                                         رجوع
                                     </button>

@@ -84,8 +84,8 @@ export default function MerchantSectionsPage() {
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-0">
                 <div>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tighter">إدارة الأقسام</h1>
-                    <p className="text-slate-400 font-medium mt-1 uppercase text-[10px] tracking-widest">تحكم في أقسام متجرك، قم بتعديلها أو حذفها بسهولة من خلال هذا المعرض.</p>
+                    <h1 className="text-2xl lg:text-3xl font-bold text-black tracking-tighter">إدارة الأقسام</h1>
+                    <p className="text-black font-medium mt-1 uppercase text-[10px] tracking-widest">تحكم في أقسام متجرك، قم بتعديلها أو حذفها بسهولة من خلال هذا المعرض.</p>
                 </div>
                 <button
                     onClick={() => {
@@ -108,7 +108,7 @@ export default function MerchantSectionsPage() {
             <div className="space-y-4">
                 <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
                     <div className="p-6 lg:p-8 border-b border-slate-50 bg-slate-50/20 flex items-center justify-between">
-                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">الأقسام الحالية ({sections.length}/{maxSections === 99999 ? '∞' : maxSections})</h3>
+                        <h3 className="text-sm font-black text-black uppercase tracking-wider">الأقسام الحالية ({sections.length}/{maxSections === 99999 ? '∞' : maxSections})</h3>
                         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                     </div>
                     <div className="divide-y divide-slate-50">
@@ -124,14 +124,14 @@ export default function MerchantSectionsPage() {
                                             )}
                                         </div>
                                         <div>
-                                            <h4 className="font-black text-slate-800 text-lg lg:text-xl leading-none">{section.name}</h4>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase mt-2.5 tracking-widest">معرف القسم المميز: {section.id.slice(0, 12)}</p>
+                                            <h4 className="font-black text-black text-lg lg:text-xl leading-none">{section.name}</h4>
+                                            <p className="text-[10px] text-black font-bold uppercase mt-2.5 tracking-widest">معرف القسم المميز: {section.id.slice(0, 12)}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <button
                                             onClick={() => openEditModal(section)}
-                                            className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm active:scale-95"
+                                            className="w-12 h-12 bg-indigo-50 text-black rounded-2xl flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm active:scale-95"
                                         >
                                             <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -156,8 +156,8 @@ export default function MerchantSectionsPage() {
                                     </svg>
                                 </div>
                                 <div className="space-y-2">
-                                    <p className="text-slate-500 font-black text-lg lg:text-xl">لا توجد أقسام حالياً هُنا.</p>
-                                    <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">ابدأ بإضافة أول قسم لمتجرك لترتيب منتجاتك بشكل احترافي.</p>
+                                    <p className="text-black font-black text-lg lg:text-xl">لا توجد أقسام حالياً هُنا.</p>
+                                    <p className="text-black font-bold text-xs uppercase tracking-widest">ابدأ بإضافة أول قسم لمتجرك لترتيب منتجاتك بشكل احترافي.</p>
                                 </div>
                                 <button
                                     onClick={openAddModal}

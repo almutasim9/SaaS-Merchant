@@ -2,6 +2,7 @@
 
 import { createClient as createServerClient } from '@/lib/supabase-server';
 import { ORDER_STATUSES, type OrderStatus } from '@/lib/order-statuses';
+import { adjustProductStock } from '@/lib/inventory-utils';
 
 /** Valid state transitions — key = current status, value = allowed next statuses */
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
@@ -63,6 +64,59 @@ export async function updateOrderStatusAction(orderId: string, newStatus: string
 
     if (updateError) {
         return { success: false, error: 'فشل تحديث الحالة.' };
+    }
+
+    // 5. Restore stock if cancelled or returned
+    if (newStatus === 'cancelled' || newStatus === 'returned') {
+        const { data: fullOrder } = await supabase.from('orders').select('items').eq('id', orderId).single();
+        if (fullOrder && Array.isArray(fullOrder.items)) {
+            for (const item of (fullOrder.items as any[])) {
+                await adjustProductStock(supabase, item.id, item.quantity, item.selections);
+            }
+        }
+    }
+
+    return { success: true };
+}
+
+export async function updateOrderDetailsAction(
+    orderId: string, 
+    details: {
+        customer_info: any;
+        items: any[];
+        total_price: number;
+        delivery_fee: number;
+    }
+) {
+    const supabase = await createServerClient();
+
+    // 1. Auth + Store Check
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return { success: false, error: 'غير مصرح.' };
+
+    const { data: storeData } = await supabase
+        .from('stores')
+        .select('id')
+        .eq('merchant_id', user.id)
+        .single();
+
+    if (!storeData) return { success: false, error: 'لم يتم العثور على متجرك.' };
+
+    // 2. Update Order
+    const { error: updateError } = await supabase
+        .from('orders')
+        .update({
+            customer_info: details.customer_info,
+            items: details.items,
+            total_price: details.total_price,
+            delivery_fee: details.delivery_fee
+        })
+        .eq('id', orderId)
+        .eq('store_id', storeData.id);
+
+    if (updateError) {
+        console.error('Update Order Error:', updateError);
+        return { success: false, error: 'فشل تحديث بيانات الطلب.' };
     }
 
     return { success: true };

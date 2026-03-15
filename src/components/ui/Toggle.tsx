@@ -40,9 +40,9 @@ export function Toggle({
                             {badge}
                         </span>
                     )}
-                    {label && <h4 className="font-bold text-slate-800">{label}</h4>}
+                    {label && <h4 className="font-bold text-black">{label}</h4>}
                 </div>
-                {description && <p className="text-xs text-slate-500 font-medium">{description}</p>}
+                {description && <p className="text-xs text-black font-medium">{description}</p>}
             </div>
             <button
                 type="button"

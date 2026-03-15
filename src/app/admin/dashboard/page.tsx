@@ -43,8 +43,8 @@ export default async function AdminDashboardPage() {
         <div className="p-8 pb-32 lg:pb-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
             {/* Page Header */}
             <div>
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight">ملخص المنصة</h1>
-                <p className="text-slate-500 mt-2 font-medium">نظرة عامة على نشاط المنصة وأدائها العام.</p>
+                <h1 className="text-3xl font-black text-black tracking-tight">ملخص المنصة</h1>
+                <p className="text-black mt-2 font-medium">نظرة عامة على نشاط المنصة وأدائها العام.</p>
             </div>
 
             {/* Stats Grid */}
@@ -84,11 +84,11 @@ export default async function AdminDashboardPage() {
             {/* Recent Stores Table */}
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-slate-800">أحدث المتاجر المنضمة</h2>
+                    <h2 className="text-xl font-bold text-black">أحدث المتاجر المنضمة</h2>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-right bg-white">
-                        <thead className="bg-[#FBFBFF] text-slate-500 text-sm font-bold border-b border-slate-100">
+                        <thead className="bg-[#FBFBFF] text-black text-sm font-bold border-b border-slate-100">
                             <tr>
                                 <th className="px-6 py-4 rounded-tr-2xl">اسم المتجر</th>
                                 <th className="px-6 py-4">التاجر (المالك)</th>
@@ -100,23 +100,23 @@ export default async function AdminDashboardPage() {
                             {recentStores?.map((store: any) => (
                                 <tr key={store.id} className="hover:bg-slate-50/50 transition-colors">
                                     <td className="px-6 py-4">
-                                        <div className="font-bold text-slate-900">{store.name}</div>
-                                        <div className="text-xs text-slate-400 font-medium mt-0.5 font-mono">ID: {store.id.slice(0, 8)}...</div>
+                                        <div className="font-bold text-black">{store.name}</div>
+                                        <div className="text-xs text-black font-medium mt-0.5 font-mono">ID: {store.id.slice(0, 8)}...</div>
                                     </td>
-                                    <td className="px-6 py-4 font-bold text-slate-700">
+                                    <td className="px-6 py-4 font-bold text-black">
                                         {store.profiles?.full_name || 'غير محدد'}
                                     </td>
-                                    <td className="px-6 py-4 font-bold text-slate-600" dir="ltr">
+                                    <td className="px-6 py-4 font-bold text-black" dir="ltr">
                                         {store.profiles?.phone_number || store.phone || 'لا يوجد'}
                                     </td>
-                                    <td className="px-6 py-4 text-sm font-medium text-slate-500">
+                                    <td className="px-6 py-4 text-sm font-medium text-black">
                                         {new Date(store.created_at).toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' })}
                                     </td>
                                 </tr>
                             ))}
                             {(!recentStores || recentStores.length === 0) && (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-12 text-center text-slate-400 font-medium">لا يوجد متاجر مسجلة حالياً</td>
+                                    <td colSpan={4} className="px-6 py-12 text-center text-black font-medium">لا يوجد متاجر مسجلة حالياً</td>
                                 </tr>
                             )}
                         </tbody>
@@ -135,9 +135,9 @@ function StatCard({ title, value, icon, trend }: { title: string, value: string,
                 {icon}
             </div>
             <div>
-                <h3 className="text-sm font-bold text-slate-400 mb-1">{title}</h3>
-                <p className="text-2xl font-black text-slate-800 tracking-tight">{value}</p>
-                <div className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-md">
+                <h3 className="text-sm font-bold text-black mb-1">{title}</h3>
+                <p className="text-2xl font-black text-black tracking-tight">{value}</p>
+                <div className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-black bg-slate-50 px-2 py-1 rounded-md">
                     {trend}
                 </div>
             </div>

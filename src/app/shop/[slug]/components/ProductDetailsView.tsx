@@ -15,6 +15,7 @@ interface VariantCombination {
     options: Record<string, string>;
     price: string;
     isUnavailable?: boolean;
+    stock_quantity?: string;
 }
 
 interface Product {
@@ -38,7 +39,9 @@ interface Product {
         variantOptions?: VariantOption[];
         variantCombinations?: VariantCombination[];
         images?: string[];
+        out_of_stock_since?: string;
     };
+    stock_quantity?: number;
     hasVariants?: boolean;
     isAvailable?: boolean;
     variantOptions?: VariantOption[];
@@ -109,8 +112,9 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
         return product.price;
     }, [selectedCombination, hasVariants, variantCombinations, product.price]);
 
-    const comboIsUnavailable = hasVariants && selectedCombination?.isUnavailable === true;
-    const finalIsAvailable = isAvailable && !comboIsUnavailable;
+    const isOutOfStock = product.stock_quantity === 0;
+    const comboIsUnavailable = hasVariants && (selectedCombination?.isUnavailable === true || (selectedCombination && (parseInt(selectedCombination.stock_quantity || '0') <= 0)));
+    const finalIsAvailable = isAvailable && !comboIsUnavailable && !isOutOfStock;
 
     const handleAddToCart = () => {
         if (!finalIsAvailable) return;
@@ -195,7 +199,7 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                         key={currentImageIndex}
                     />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-300">
+                    <div className="w-full h-full flex items-center justify-center text-slate-900">
                         <svg className="w-20 h-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                     </div>
                 )}
@@ -206,8 +210,8 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                         <button
                             onClick={handleShare}
                             disabled={isSharing}
-                            className={`w-10 h-10 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm transition-all active:scale-95 ${isSharing ? 'opacity-50 cursor-not-allowed text-slate-400' : ''
-                                } ${showFeedback ? 'bg-green-500 text-white' : 'bg-white/80 text-slate-600 hover:bg-white'}`}
+                            className={`w-10 h-10 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm transition-all active:scale-95 ${isSharing ? 'opacity-50 cursor-not-allowed text-black' : ''
+                                } ${showFeedback ? 'bg-green-500 text-white' : 'bg-white/80 text-black hover:bg-white'}`}
                         >
                             {showFeedback ? (
                                 <svg className="w-5 h-5 animate-in zoom-in duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -224,7 +228,7 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                         onClick={onBack}
                         className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm hover:bg-white transition-all"
                     >
-                        <svg className={`w-5 h-5 text-slate-600 ${dir === 'ltr' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className={`w-5 h-5 text-black ${dir === 'ltr' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
@@ -250,8 +254,8 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                 {/* Rating + Name */}
                 <div className="flex items-start justify-between mb-1">
                     <div className="flex-1">
-                        <h1 className="text-xl font-bold text-slate-800 leading-tight">{productName}</h1>
-                        <p className="text-sm text-slate-400 mt-0.5">{product.category}</p>
+                        <h1 className="text-xl font-bold text-black leading-tight">{productName}</h1>
+                        <p className="text-sm text-black mt-0.5">{product.category}</p>
                     </div>
                     {product.rating && (
                         <div className="flex items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-lg">
@@ -265,9 +269,9 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
 
                 {/* Price */}
                 <div className="flex items-center gap-2 mt-3 mb-5">
-                    <div dir="ltr"><span className="text-3xl font-black text-slate-800">{formatCurrency(displayPrice, storeCurrency)}</span></div>
+                    <div dir="ltr"><span className="text-3xl font-black text-black">{formatCurrency(displayPrice, storeCurrency)}</span></div>
                     {product.discount_price && product.discount_price < product.price && displayPrice === product.price && (
-                        <div dir="ltr"><span className="text-sm text-slate-400 line-through mr-2">{formatCurrency(product.discount_price, storeCurrency)}</span></div>
+                        <div dir="ltr"><span className="text-sm text-black line-through mr-2">{formatCurrency(product.discount_price, storeCurrency)}</span></div>
                     )}
                 </div>
 
@@ -276,8 +280,8 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                     <div className="space-y-5 mb-6">
                         {variantOptions.map((opt) => (
                             <div key={opt.id}>
-                                <h3 className="text-sm font-bold text-slate-700 mb-3">
-                                    {t('product.choose') || 'اختر'} {opt.name} <span className="text-slate-400 font-normal">({opt.name})</span>
+                                <h3 className="text-sm font-bold text-black mb-3">
+                                    {t('product.choose') || 'اختر'} {opt.name} <span className="text-black font-normal">({opt.name})</span>
                                 </h3>
                                 <div className="flex flex-wrap gap-2.5" dir={dir}>
                                     {opt.values.map((val) => {
@@ -305,7 +309,7 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                                                 onClick={() => setSelectedOptions(prev => ({ ...prev, [opt.id]: val }))}
                                                 className={`min-w-[48px] px-4 h-11 rounded-xl border-2 font-bold text-sm transition-all ${isSelected
                                                     ? ''
-                                                    : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                                                    : 'border-slate-200 text-black hover:border-slate-300'
                                                     }`}
                                                 style={isSelected ? { borderColor: 'var(--theme-primary)', backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)', color: 'var(--theme-primary)' } : undefined}
                                             >
@@ -321,8 +325,8 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
 
                 {/* Description */}
                 <div className="border-t border-slate-100 pt-5">
-                    <h3 className="text-base font-bold text-slate-800 mb-3">{t('product.details')}</h3>
-                    <p className="text-sm text-slate-500 leading-7 whitespace-pre-line">
+                    <h3 className="text-base font-bold text-black mb-3">{t('product.details')}</h3>
+                    <p className="text-sm text-black leading-7 whitespace-pre-line">
                         {productDescription || t('product.noDescription') || 'هذا المنتج مصنوع من أجود الخامات العالمية لضمان الراحة والأداء المثالي للاستخدام اليومي.'}
                     </p>
                 </div>
@@ -330,7 +334,9 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                 {/* Unavailable Badge */}
                 {!finalIsAvailable && (
                     <div className="mt-5 bg-rose-50 border border-rose-100 rounded-xl p-4 text-center">
-                        <p className="text-sm font-bold text-rose-500">{comboIsUnavailable ? (t('product.variantUnavailable') || 'هذا الخيار (اللون/المقاس) غير متوفر حالياً') : t('product.unavailable')}</p>
+                        <p className="text-sm font-bold text-rose-500">
+                            {isOutOfStock ? t('product.soldOut') : comboIsUnavailable ? (t('product.variantUnavailable') || 'هذا الخيار (اللون/المقاس) غير متوفر حالياً') : t('product.unavailable')}
+                        </p>
                     </div>
                 )}
             </div>
@@ -343,14 +349,14 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                         <div className="flex items-center bg-slate-100 rounded-xl overflow-hidden">
                             <button
                                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                className="w-10 h-12 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors text-lg font-bold"
+                                className="w-10 h-12 flex items-center justify-center text-black hover:bg-slate-200 transition-colors text-lg font-bold"
                             >
                                 −
                             </button>
-                            <span className="w-8 text-center text-sm font-bold text-slate-800">{quantity}</span>
+                            <span className="w-8 text-center text-sm font-bold text-black">{quantity}</span>
                             <button
                                 onClick={() => setQuantity(quantity + 1)}
-                                className="w-10 h-12 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors text-lg font-bold"
+                                className="w-10 h-12 flex items-center justify-center text-black hover:bg-slate-200 transition-colors text-lg font-bold"
                             >
                                 +
                             </button>
@@ -361,7 +367,7 @@ export default function ProductDetailsView({ product, onBack, onAddToCart, store
                             onClick={handleAddToCart}
                             disabled={!finalIsAvailable}
                             className={`flex-1 h-12 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg ${!finalIsAvailable
-                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
+                                ? 'bg-slate-100 text-black cursor-not-allowed shadow-none'
                                 : 'text-white hover:brightness-95 active:scale-[0.98]'
                                 }`}
                             style={finalIsAvailable ? (isAdded ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 85%, black)' } : { backgroundColor: 'var(--theme-primary)' }) : undefined}

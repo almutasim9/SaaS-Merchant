@@ -40,16 +40,16 @@ export function StoreURLSection({
         >
             <div className="space-y-3">
                 <div className="flex items-center gap-2" dir="ltr">
-                    <span className="text-xs text-slate-400 font-medium whitespace-nowrap">saasplus.com/shop/</span>
-                    <span className="text-base font-bold text-indigo-600">{store?.slug}</span>
+                    <span className="text-xs text-black font-medium whitespace-nowrap">saasplus.com/shop/</span>
+                    <span className="text-base font-bold text-black">{store?.slug}</span>
                 </div>
 
                 {store?.slug_changed ? (
                     <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                        <svg className="w-5 h-5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5 text-black flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
-                        <p className="text-xs font-bold text-slate-400">تم تغيير الرابط مسبقاً. لا يمكن تغييره مرة أخرى.</p>
+                        <p className="text-xs font-bold text-black">تم تغيير الرابط مسبقاً. لا يمكن تغييره مرة أخرى.</p>
                     </div>
                 ) : store?.subscription_plans && !store.subscription_plans.allow_custom_slug ? (
                     <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
@@ -61,12 +61,12 @@ export function StoreURLSection({
                 ) : slugEditing ? (
                     <div className="space-y-3">
                         <div className="relative" dir="ltr">
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-xs lg:text-sm">saasplus.com/shop/</span>
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-black font-medium text-xs lg:text-sm">saasplus.com/shop/</span>
                             <input
                                 type="text"
                                 value={newSlug}
                                 onChange={(e) => setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                                className="w-full bg-[#FBFBFF] border-2 border-amber-200 rounded-xl pl-4 pr-40 py-2.5 lg:py-3 text-indigo-600 font-bold focus:outline-none focus:ring-4 focus:ring-amber-100 transition-all text-left text-sm"
+                                className="w-full bg-[#FBFBFF] border-2 border-amber-200 rounded-xl pl-4 pr-40 py-2.5 lg:py-3 text-black font-bold focus:outline-none focus:ring-4 focus:ring-amber-100 transition-all text-left text-sm"
                                 placeholder="my-store"
                                 autoFocus
                             />

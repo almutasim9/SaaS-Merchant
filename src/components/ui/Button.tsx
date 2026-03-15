@@ -24,9 +24,9 @@ export function Button({
 }: ButtonProps) {
     const variants = {
         primary: 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-600/20',
-        secondary: 'bg-slate-100 text-slate-600 hover:bg-slate-200 shadow-slate-200/20',
+        secondary: 'bg-slate-100 text-black hover:bg-slate-200 shadow-slate-200/20',
         danger: 'bg-rose-500 text-white hover:bg-rose-600 shadow-rose-500/20',
-        ghost: 'bg-transparent text-slate-500 hover:bg-slate-50',
+        ghost: 'bg-transparent text-black hover:bg-slate-50',
         amber: 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-500/20',
         emerald: 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-600/20',
         cyan: 'bg-cyan-600 text-white hover:bg-cyan-700 shadow-cyan-600/20',

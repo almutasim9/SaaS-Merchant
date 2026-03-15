@@ -35,7 +35,7 @@ function calcExpiry(startDate: string, months: number): string {
 }
 
 function ExpiryBadge({ expiresAt }: { expiresAt: string | null }) {
-    if (!expiresAt) return <span className="text-xs text-slate-400">—</span>;
+    if (!expiresAt) return <span className="text-xs text-black">—</span>;
     const date = new Date(expiresAt);
     const now = new Date();
     const diff = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -156,8 +156,8 @@ export default function AdminMerchantsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">إدارة التجار والمتاجر</h1>
-                    <p className="text-slate-500 mt-2 font-medium">قائمة بجميع المشتركين مع تحكم بصلاحيات متاجرهم.</p>
+                    <h1 className="text-3xl font-black text-black tracking-tight">إدارة التجار والمتاجر</h1>
+                    <p className="text-black mt-2 font-medium">قائمة بجميع المشتركين مع تحكم بصلاحيات متاجرهم.</p>
                 </div>
                 <Link
                     href="/admin/add-merchant"
@@ -174,7 +174,7 @@ export default function AdminMerchantsPage() {
             <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-right bg-white min-w-[800px]">
-                        <thead className="bg-[#FBFBFF] text-slate-500 text-sm font-bold border-b border-slate-100">
+                        <thead className="bg-[#FBFBFF] text-black text-sm font-bold border-b border-slate-100">
                             <tr>
                                 <th className="px-6 py-4 rounded-tr-2xl">المتجر والرابط</th>
                                 <th className="px-6 py-4">المالك</th>
@@ -195,11 +195,11 @@ export default function AdminMerchantsPage() {
                                 <tr key={store.id} className="hover:bg-slate-50/50 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center font-black border border-indigo-100">
+                                            <div className="w-10 h-10 bg-indigo-50 text-black rounded-xl flex items-center justify-center font-black border border-indigo-100">
                                                 {store.name.charAt(0)}
                                             </div>
                                             <div>
-                                                <div className="font-bold text-slate-900">{store.name}</div>
+                                                <div className="font-bold text-black">{store.name}</div>
                                                 <a href={`/shop/${store.slug}`} target="_blank" rel="noreferrer" className="text-xs text-indigo-400 font-mono hover:underline">
                                                     /shop/{store.slug}
                                                 </a>
@@ -207,18 +207,18 @@ export default function AdminMerchantsPage() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="font-bold text-slate-700">{store.profiles.full_name}</div>
-                                        <div className="text-xs text-slate-400 font-mono">#{store.merchant_id.substring(0, 8)}</div>
+                                        <div className="font-bold text-black">{store.profiles.full_name}</div>
+                                        <div className="text-xs text-black font-mono">#{store.merchant_id.substring(0, 8)}</div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="font-medium text-slate-600 font-mono text-sm" dir="ltr">
+                                        <div className="font-medium text-black font-mono text-sm" dir="ltr">
                                             {store.profiles.phone || '—'}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <span className={`px-3 py-1.5 text-xs font-bold rounded-full border ${store.subscription_type === 'Gold' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                                             store.subscription_type === 'Silver' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
-                                                'bg-slate-100 text-slate-600 border-slate-200'
+                                                'bg-slate-100 text-black border-slate-200'
                                             }`}>
                                             {store.subscription_type || 'Free'}
                                         </span>
@@ -236,7 +236,7 @@ export default function AdminMerchantsPage() {
                                             </button>
                                             <button
                                                 onClick={() => openPlanModal(store, 'change')}
-                                                className="px-3 py-2 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-xl hover:bg-indigo-100 transition-all border border-indigo-100 active:scale-95"
+                                                className="px-3 py-2 bg-indigo-50 text-black text-xs font-bold rounded-xl hover:bg-indigo-100 transition-all border border-indigo-100 active:scale-95"
                                             >
                                                 ✏️ تغيير
                                             </button>
@@ -246,7 +246,7 @@ export default function AdminMerchantsPage() {
                             ))}
                             {!loading && stores.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-medium">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-black font-medium">
                                         لا توجد متاجر في المنصة حتى الآن
                                     </td>
                                 </tr>
@@ -262,11 +262,11 @@ export default function AdminMerchantsPage() {
                     <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setPlanModal(null)} />
                     <div className="relative w-full max-w-md bg-white rounded-[2rem] shadow-2xl">
                         <div className="p-6 border-b border-slate-50">
-                            <h3 className="text-lg font-bold text-slate-800">
+                            <h3 className="text-lg font-bold text-black">
                                 {modalMode === 'renew' ? '🔄 تجديد الاشتراك' : '✏️ تغيير الباقة'}
                             </h3>
-                            <p className="text-xs text-slate-400 mt-1">
-                                متجر: <span className="font-bold text-slate-600">{planModal.name}</span>
+                            <p className="text-xs text-black mt-1">
+                                متجر: <span className="font-bold text-black">{planModal.name}</span>
                             </p>
                         </div>
 
@@ -274,12 +274,12 @@ export default function AdminMerchantsPage() {
                             {/* Current expiry info */}
                             {planModal.plan_expires_at && (
                                 <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                                    <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="w-4 h-4 text-black flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                     <div>
-                                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">الاشتراك الحالي ينتهي</div>
-                                        <div className="text-xs font-bold text-slate-700 mt-0.5">
+                                        <div className="text-[10px] text-black font-bold uppercase tracking-wider">الاشتراك الحالي ينتهي</div>
+                                        <div className="text-xs font-bold text-black mt-0.5">
                                             {new Date(planModal.plan_expires_at).toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' })}
                                         </div>
                                     </div>
@@ -289,13 +289,13 @@ export default function AdminMerchantsPage() {
                             {/* Sub type — only shown when changing plan */}
                             {modalMode === 'change' && (
                                 <div>
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">الباقة الجديدة</label>
+                                    <label className="text-[10px] font-bold text-black uppercase tracking-widest block mb-2">الباقة الجديدة</label>
                                     <div className="grid grid-cols-3 gap-2">
                                         {SUB_TYPES.map(t => (
                                             <button key={t} type="button" onClick={() => setNewSubType(t)}
                                                 className={`py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${newSubType === t
                                                     ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                                                    : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-indigo-200'
+                                                    : 'border-slate-200 bg-slate-50 text-black hover:border-indigo-200'
                                                     }`}
                                             >
                                                 {t === 'Free' ? 'مجانية' : t === 'Silver' ? 'فضية' : 'ذهبية'}
@@ -309,13 +309,13 @@ export default function AdminMerchantsPage() {
                             {modalMode === 'renew' && (
                                 <>
                                     <div>
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">مدة التجديد</label>
+                                        <label className="text-[10px] font-bold text-black uppercase tracking-widest block mb-2">مدة التجديد</label>
                                         <div className="grid grid-cols-3 gap-2">
                                             {DURATION_OPTIONS.map(opt => (
                                                 <button key={opt.value} type="button" onClick={() => setNewDuration(opt.value)}
                                                     className={`py-2.5 rounded-xl text-xs font-bold border-2 transition-all ${newDuration === opt.value
                                                         ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                                                        : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-emerald-200'
+                                                        : 'border-slate-200 bg-slate-50 text-black hover:border-emerald-200'
                                                         }`}
                                                 >
                                                     {opt.label}
@@ -326,15 +326,15 @@ export default function AdminMerchantsPage() {
 
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">يبدأ من</label>
+                                            <label className="text-[10px] font-bold text-black uppercase tracking-widest block mb-2">يبدأ من</label>
                                             <input
                                                 type="date" value={newStartDate}
                                                 onChange={e => setNewStartDate(e.target.value)}
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all"
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-medium text-black focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all"
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">ينتهي في</label>
+                                            <label className="text-[10px] font-bold text-black uppercase tracking-widest block mb-2">ينتهي في</label>
                                             <div className="w-full bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5 flex items-center gap-1.5">
                                                 <svg className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -352,7 +352,7 @@ export default function AdminMerchantsPage() {
                                     <svg className="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <p className="text-xs font-bold text-indigo-600">
+                                    <p className="text-xs font-bold text-black">
                                         سيتم الحفاظ على تاريخ الانتهاء الحالي: {new Date(planModal.plan_expires_at).toLocaleDateString('ar-IQ', { year: 'numeric', month: 'long', day: 'numeric' })}
                                     </p>
                                 </div>
@@ -362,7 +362,7 @@ export default function AdminMerchantsPage() {
                         <div className="p-4 border-t border-slate-50 flex gap-3">
                             <button
                                 onClick={() => setPlanModal(null)}
-                                className="flex-1 py-3 bg-slate-50 text-slate-500 font-bold rounded-xl text-sm hover:bg-slate-100 transition-all"
+                                className="flex-1 py-3 bg-slate-50 text-black font-bold rounded-xl text-sm hover:bg-slate-100 transition-all"
                             >
                                 إلغاء
                             </button>

@@ -59,15 +59,15 @@ export function AboutUsSection({
                             <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-1">
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                             </div>
-                            <h4 className="font-bold text-slate-800 text-lg">ميزة احترافية</h4>
-                            <p className="text-xs text-slate-500 font-medium">تخصيص صفحة "من نحن" متاح حصرياً للباقة الذهبية للمتاجر المتميزة.</p>
+                            <h4 className="font-bold text-black text-lg">ميزة احترافية</h4>
+                            <p className="text-xs text-black font-medium">تخصيص صفحة "من نحن" متاح حصرياً للباقة الذهبية للمتاجر المتميزة.</p>
                         </div>
                     </div>
                 )}
 
                 <div className={!allowAboutPage ? 'pointer-events-none' : 'space-y-4'}>
                     <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-3">
-                        <h4 className="text-[10px] font-bold text-slate-800">القسم العلوي (البانر)</h4>
+                        <h4 className="text-[10px] font-bold text-black">القسم العلوي (البانر)</h4>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                             <Input
                                 compact
@@ -94,7 +94,7 @@ export function AboutUsSection({
                     />
 
                     <div className="space-y-3">
-                        <h4 className="text-[10px] font-bold text-slate-800 flex items-center gap-2">
+                        <h4 className="text-[10px] font-bold text-black flex items-center gap-2">
                             <span className="w-1 h-3 bg-cyan-500 rounded-full"></span>
                             قيم ومميزات المتجر
                         </h4>

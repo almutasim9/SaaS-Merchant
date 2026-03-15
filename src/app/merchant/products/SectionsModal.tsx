@@ -119,7 +119,7 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
                 {/* Header */}
                 <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between bg-white">
                     <div className="flex items-center gap-3 lg:gap-4">
-                        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-600/10 rounded-xl lg:rounded-2xl flex items-center justify-center text-indigo-600">
+                        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-600/10 rounded-xl lg:rounded-2xl flex items-center justify-center text-black">
                             <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 {initialData ? (
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -129,15 +129,15 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
                             </svg>
                         </div>
                         <div>
-                            <h2 className="text-xl lg:text-2xl font-black text-slate-800 tracking-tight leading-none">
+                            <h2 className="text-xl lg:text-2xl font-black text-black tracking-tight leading-none">
                                 {initialData ? 'تعديل القسم' : 'إضافة قسم جديد'}
                             </h2>
-                            <p className="text-[8px] lg:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1.5 lg:mt-2">
+                            <p className="text-[8px] lg:text-[10px] text-black font-bold uppercase tracking-widest mt-1.5 lg:mt-2">
                                 {initialData ? 'قم بتعديل بيانات القسم المحدد أدناه.' : 'أدخل بيانات القسم الجديد أدناه ليتم عرضه في متجرك.'}
                             </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-rose-50 hover:text-white transition-all active:scale-95 shadow-sm">
+                    <button onClick={onClose} className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl bg-slate-50 text-black flex items-center justify-center hover:bg-rose-50 hover:text-white transition-all active:scale-95 shadow-sm">
                         <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -148,7 +148,7 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
                     <form onSubmit={handleSubmit} className="space-y-8">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">الاسم بالعربي</label>
+                                <label className="text-[10px] font-black text-black uppercase tracking-widest px-1">الاسم بالعربي</label>
                                 <input
                                     type="text"
                                     value={newName}
@@ -158,7 +158,7 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
                                 />
                             </div>
                             <div className="space-y-3" dir="ltr">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Name (English)</label>
+                                <label className="text-[10px] font-black text-black uppercase tracking-widest px-1">Name (English)</label>
                                 <input
                                     type="text"
                                     value={newNameEn}
@@ -168,7 +168,7 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
                                 />
                             </div>
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">ناوى بەش (کوردی)</label>
+                                <label className="text-[10px] font-black text-black uppercase tracking-widest px-1">ناوى بەش (کوردی)</label>
                                 <input
                                     type="text"
                                     value={newNameKu}
@@ -180,7 +180,7 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
                         </div>
 
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">ترتيب العرض (اختياري)</label>
+                            <label className="text-[10px] font-black text-black uppercase tracking-widest px-1">ترتيب العرض (اختياري)</label>
                             <input
                                 type="number"
                                 value={displayOrder}
@@ -188,12 +188,12 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
                                 placeholder="مثال: 1"
                                 className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 text-sm font-black shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
                             />
-                            <p className="text-[10px] text-slate-400 font-medium px-1">الرقم الأصغر يظهر أولاً.</p>
+                            <p className="text-[10px] text-black font-medium px-1">الرقم الأصغر يظهر أولاً.</p>
                         </div>
 
                         <div className={`space-y-4 ${!plan.allow_category_images ? 'opacity-50 grayscale select-none' : ''}`}>
                             <div className="flex items-center justify-between">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">صورة القسم (اختياري)</label>
+                                <label className="text-[10px] font-black text-black uppercase tracking-widest px-1">صورة القسم (اختياري)</label>
                                 {!plan.allow_category_images && (
                                     <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md">ميزة حصرية للذهبي</span>
                                 )}
@@ -204,7 +204,7 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
                                         {imageUrl ? (
                                             <img src={imageUrl} className="w-full h-full object-cover" alt="Preview" />
                                         ) : (
-                                            <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg className="w-8 h-8 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 24M12 12h.01M4 24h16a2 2 0 002-2V8a2 2 0 00-2-2H4a2 2 0 00-2-2v14a2 2 0 002 2z" />
                                             </svg>
                                         )}
@@ -226,8 +226,8 @@ export default function SectionsModal({ isOpen, onClose, onSuccess, storeId, ini
                                     )}
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-sm font-black text-slate-700">{initialData ? 'تغيير صورة القسم' : 'رفع صورة القسم'}</p>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">JPG, PNG بنسبة 1:1</p>
+                                    <p className="text-sm font-black text-black">{initialData ? 'تغيير صورة القسم' : 'رفع صورة القسم'}</p>
+                                    <p className="text-[10px] text-black font-bold uppercase tracking-tight">JPG, PNG بنسبة 1:1</p>
                                 </div>
                             </div>
                         </div>

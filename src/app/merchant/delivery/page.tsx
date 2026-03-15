@@ -217,8 +217,8 @@ export default function MerchantDeliveryPage() {
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-0">
                 <div>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">إدارة التوصيل والمناطق</h1>
-                    <p className="text-slate-400 font-medium mt-1 text-sm">أنشئ مناطق توصيل (كروبات)، حدد سعر المنطقة، وضم إليها المحافظات بسهولة.</p>
+                    <h1 className="text-2xl lg:text-3xl font-bold text-black">إدارة التوصيل والمناطق</h1>
+                    <p className="text-black font-medium mt-1 text-sm">أنشئ مناطق توصيل (كروبات)، حدد سعر المنطقة، وضم إليها المحافظات بسهولة.</p>
                 </div>
                 <button
                     onClick={() => handleSave(zones)}
@@ -249,14 +249,14 @@ export default function MerchantDeliveryPage() {
                     </div>
                 )}
                 <div className="flex items-center gap-4 relative z-0">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${isFreeDelivery ? 'bg-emerald-500 text-white shadow-emerald-500/30' : 'bg-slate-50 text-slate-400'}`}>
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${isFreeDelivery ? 'bg-emerald-500 text-white shadow-emerald-500/30' : 'bg-slate-50 text-black'}`}>
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
                     <div>
-                        <h3 className={`text-lg font-bold ${isFreeDelivery ? 'text-emerald-900' : 'text-slate-800'}`}>تفعيل الشحن المجاني</h3>
-                        <p className={`text-xs font-medium mt-1 ${isFreeDelivery ? 'text-emerald-700' : 'text-slate-400'}`}>
+                        <h3 className={`text-lg font-bold ${isFreeDelivery ? 'text-emerald-900' : 'text-black'}`}>تفعيل الشحن المجاني</h3>
+                        <p className={`text-xs font-medium mt-1 ${isFreeDelivery ? 'text-emerald-700' : 'text-black'}`}>
                             عند التفعيل، سيتم تصفير أجور التوصيل لجميع المحافظات المشمولة في الكروبات. (يستخدم للعروض الخاصة) {!store?.subscription_plans?.free_delivery_all_zones && <span className="text-amber-600 block mt-1">(يتطلب الترقية)</span>}
                         </p>
                     </div>
@@ -295,28 +295,28 @@ export default function MerchantDeliveryPage() {
                         </button>
 
                         <div className="flex items-center gap-4 border-b border-slate-50 pb-5 mb-5">
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${zone.enabled ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-400'}`}>
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${zone.enabled ? 'bg-indigo-50 text-black' : 'bg-slate-50 text-black'}`}>
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                             </div>
                             <div>
-                                <h3 className={`text-xl font-bold ${zone.enabled ? 'text-slate-800' : 'text-slate-400'} line-clamp-1`}>{zone.name}</h3>
+                                <h3 className={`text-xl font-bold ${zone.enabled ? 'text-black' : 'text-black'} line-clamp-1`}>{zone.name}</h3>
                                 <div className="flex items-center gap-2 mt-1">
                                     <span className="text-sm font-bold text-emerald-600" dir="ltr">{formatCurrency(zone.fee, store?.currency_preference)}</span>
                                     <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                                    <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">{zone.cities.length} محافظات</span>
+                                    <span className="text-[10px] font-black tracking-widest text-black uppercase">{zone.cities.length} محافظات</span>
                                 </div>
                             </div>
                         </div>
 
                         <div className="flex-1">
-                            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">المحافظات المشمولة</h4>
+                            <h4 className="text-[10px] font-bold text-black uppercase tracking-widest mb-3">المحافظات المشمولة</h4>
                             <div className="flex flex-wrap gap-2 max-h-[140px] overflow-y-auto custom-scrollbar pr-2 pb-2">
                                 {zone.cities.length === 0 && <span className="text-xs text-rose-500 font-bold bg-rose-50 px-2 py-1 rounded-md">لم يتم إضافة محافظات</span>}
                                 {zone.cities.map(city => (
-                                    <span key={city} className={`text-xs font-bold px-3 py-1.5 rounded-lg border ${zone.enabled ? 'bg-white border-slate-200 text-slate-600' : 'bg-slate-50 border-transparent text-slate-400'}`}>
+                                    <span key={city} className={`text-xs font-bold px-3 py-1.5 rounded-lg border ${zone.enabled ? 'bg-white border-slate-200 text-black' : 'bg-slate-50 border-transparent text-black'}`}>
                                         {city}
                                     </span>
                                 ))}
@@ -324,7 +324,7 @@ export default function MerchantDeliveryPage() {
                         </div>
 
                         <div className="mt-6 pt-5 border-t border-slate-50 flex items-center justify-between">
-                            <button onClick={() => openModal(zone)} className="text-sm font-bold text-indigo-600 hover:text-indigo-800 transition-colors">
+                            <button onClick={() => openModal(zone)} className="text-sm font-bold text-black hover:text-indigo-800 transition-colors">
                                 تعديل المنطقة
                             </button>
                             <label className="relative inline-flex items-center cursor-pointer">
@@ -337,13 +337,13 @@ export default function MerchantDeliveryPage() {
 
                 {/* Add New Zone Card */}
                 <button onClick={() => openModal()} className="bg-[#F8F9FB] border-2 border-dashed border-slate-200 rounded-[2rem] p-6 lg:p-8 flex flex-col items-center justify-center min-h-[300px] hover:border-indigo-400 hover:bg-indigo-50/50 transition-all group">
-                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-indigo-600 shadow-sm border border-slate-100 mb-4 transition-colors">
+                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-black group-hover:text-black shadow-sm border border-slate-100 mb-4 transition-colors">
                         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
                     </div>
-                    <h3 className="text-lg font-bold text-slate-600 group-hover:text-indigo-700 transition-colors">منطقة دفع جديدة</h3>
-                    <p className="text-xs font-medium text-slate-400 text-center mt-2 max-w-[200px]">انشئ كروب جديد للمحافظات بأسعار مخصصة.</p>
+                    <h3 className="text-lg font-bold text-black group-hover:text-indigo-700 transition-colors">منطقة دفع جديدة</h3>
+                    <p className="text-xs font-medium text-black text-center mt-2 max-w-[200px]">انشئ كروب جديد للمحافظات بأسعار مخصصة.</p>
                 </button>
             </div>
 
@@ -353,8 +353,8 @@ export default function MerchantDeliveryPage() {
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
                     <div className="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
                         <div className="p-6 lg:p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                            <h2 className="text-xl font-bold text-slate-800">تعديل منطقة الطلب</h2>
-                            <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-400 shadow-sm border border-slate-100 hover:text-slate-800 transition-colors">
+                            <h2 className="text-xl font-bold text-black">تعديل منطقة الطلب</h2>
+                            <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-black shadow-sm border border-slate-100 hover:text-black transition-colors">
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
@@ -364,7 +364,7 @@ export default function MerchantDeliveryPage() {
                         <div className="p-6 lg:p-8 overflow-y-auto custom-scrollbar flex-1 space-y-8">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 block">اسم الكروب/المنطقة</label>
+                                    <label className="text-[10px] font-black text-black uppercase tracking-widest pl-1 block">اسم الكروب/المنطقة</label>
                                     <input
                                         type="text"
                                         value={editingZone.name}
@@ -374,7 +374,7 @@ export default function MerchantDeliveryPage() {
                                     />
                                 </div>
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 block">التكلفة الثابتة</label>
+                                    <label className="text-[10px] font-black text-black uppercase tracking-widest pl-1 block">التكلفة الثابتة</label>
                                     <div className="relative">
                                         <input
                                             type="number"
@@ -384,15 +384,15 @@ export default function MerchantDeliveryPage() {
                                             placeholder="8000"
                                             dir="ltr"
                                         />
-                                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">{store?.currency_preference === 'USD' ? '$' : 'د.ع'}</span>
+                                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-xs font-bold text-black">{store?.currency_preference === 'USD' ? '$' : 'د.ع'}</span>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">المحافظات المشمولة بهذا الكروب</label>
-                                    <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">{editingZone.cities.length} محددة</span>
+                                    <label className="text-[10px] font-black text-black uppercase tracking-widest block">المحافظات المشمولة بهذا الكروب</label>
+                                    <span className="text-xs font-bold text-black bg-indigo-50 px-3 py-1 rounded-full">{editingZone.cities.length} محددة</span>
                                 </div>
                                 <div className="p-5 bg-slate-50 border border-slate-100 rounded-2xl">
                                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -406,7 +406,7 @@ export default function MerchantDeliveryPage() {
                                                 <button
                                                     key={city}
                                                     onClick={() => handleCityToggleInModal(city)}
-                                                    className={`px-3 py-2.5 rounded-xl border flex flex-col items-center justify-center text-sm font-bold transition-all ${isSelected ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300'}`}
+                                                    className={`px-3 py-2.5 rounded-xl border flex flex-col items-center justify-center text-sm font-bold transition-all ${isSelected ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-600/20' : 'bg-white border-slate-200 text-black hover:border-indigo-300'}`}
                                                 >
                                                     <span>{city}</span>
                                                     {inOtherZone && !isSelected && (
@@ -418,13 +418,13 @@ export default function MerchantDeliveryPage() {
                                             );
                                         })}
                                     </div>
-                                    <p className="text-[10px] font-medium text-slate-400 mt-4 text-center">ملاحظة: اختيار محافظة موجودة في كروب آخر سيؤدي إلى سحبها منه لتجنب التكرار.</p>
+                                    <p className="text-[10px] font-medium text-black mt-4 text-center">ملاحظة: اختيار محافظة موجودة في كروب آخر سيؤدي إلى سحبها منه لتجنب التكرار.</p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="p-6 border-t border-slate-100 bg-white flex justify-end gap-3">
-                            <button onClick={() => setIsModalOpen(false)} className="px-6 py-3 font-bold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors">غلق</button>
+                            <button onClick={() => setIsModalOpen(false)} className="px-6 py-3 font-bold text-black hover:bg-slate-50 rounded-xl transition-colors">غلق</button>
                             <button onClick={saveZoneModal} className="px-8 py-3 font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-600/20 transition-all">موافق</button>
                         </div>
                     </div>

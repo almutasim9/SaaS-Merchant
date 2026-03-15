@@ -49,15 +49,15 @@ export function BannerSection({
                             <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-1">
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                             </div>
-                            <h4 className="font-bold text-slate-800 text-lg">ميزة احترافية</h4>
-                            <p className="text-xs text-slate-500 font-medium">سلايدر الصور وتغيير البانر متاح حصرياً للباقة الذهبية. يرجى الترقية لتفعيل هذه الميزة.</p>
+                            <h4 className="font-bold text-black text-lg">ميزة احترافية</h4>
+                            <p className="text-xs text-black font-medium">سلايدر الصور وتغيير البانر متاح حصرياً للباقة الذهبية. يرجى الترقية لتفعيل هذه الميزة.</p>
                         </div>
                     </div>
                 )}
 
                 <div className={!allowBanner ? 'pointer-events-none' : 'space-y-3'}>
                     <div className="space-y-1">
-                        <label className="text-[9px] lg:text-[10px] font-bold text-slate-500 uppercase tracking-widest pr-1">صور البانر (سلايدر)</label>
+                        <label className="text-[9px] lg:text-[10px] font-bold text-black uppercase tracking-widest pr-1">صور البانر (سلايدر)</label>
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                             {(store?.storefront_config?.banner?.images || []).map((img: any, i: number) => (
                                 <div key={i} className="relative group aspect-[16/9] rounded-xl overflow-hidden border border-slate-100">
@@ -78,22 +78,22 @@ export function BannerSection({
                                 <input type="file" accept="image/*" onChange={onUpload} className="hidden" />
                             </label>
                         </div>
-                        <p className="text-[9px] text-slate-400">يفضل أبعاد 16:9.</p>
+                        <p className="text-[9px] text-black">يفضل أبعاد 16:9.</p>
                     </div>
 
                     <div className="border-t border-slate-50 pt-3">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
                             <div className="space-y-1.5">
-                                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">الشارة</label>
-                                <input type="text" value={store?.storefront_config?.banner?.badge || ''} onChange={(e) => setStore((prev: any) => prev ? { ...prev, storefront_config: { ...prev.storefront_config, banner: { ...prev.storefront_config?.banner, badge: e.target.value } } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl px-4 py-2 text-xs font-bold text-slate-800 focus:ring-4 focus:ring-emerald-100 transition-all" placeholder="جديد" />
+                                <label className="text-[9px] font-bold text-black uppercase tracking-widest">الشارة</label>
+                                <input type="text" value={store?.storefront_config?.banner?.badge || ''} onChange={(e) => setStore((prev: any) => prev ? { ...prev, storefront_config: { ...prev.storefront_config, banner: { ...prev.storefront_config?.banner, badge: e.target.value } } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl px-4 py-2 text-xs font-bold text-black focus:ring-4 focus:ring-emerald-100 transition-all" placeholder="جديد" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">العنوان</label>
-                                <input type="text" value={store?.storefront_config?.banner?.title || ''} onChange={(e) => setStore((prev: any) => prev ? { ...prev, storefront_config: { ...prev.storefront_config, banner: { ...prev.storefront_config?.banner, title: e.target.value } } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl px-4 py-2 text-xs font-bold text-slate-800 focus:ring-4 focus:ring-emerald-100 transition-all" placeholder="العنوان هنا" />
+                                <label className="text-[9px] font-bold text-black uppercase tracking-widest">العنوان</label>
+                                <input type="text" value={store?.storefront_config?.banner?.title || ''} onChange={(e) => setStore((prev: any) => prev ? { ...prev, storefront_config: { ...prev.storefront_config, banner: { ...prev.storefront_config?.banner, title: e.target.value } } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl px-4 py-2 text-xs font-bold text-black focus:ring-4 focus:ring-emerald-100 transition-all" placeholder="العنوان هنا" />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">النص الفرعي</label>
-                                <input type="text" value={store?.storefront_config?.banner?.subtitle || ''} onChange={(e) => setStore((prev: any) => prev ? { ...prev, storefront_config: { ...prev.storefront_config, banner: { ...prev.storefront_config?.banner, subtitle: e.target.value } } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl px-4 py-2 text-xs font-bold text-slate-800 focus:ring-4 focus:ring-emerald-100 transition-all" placeholder="الأسفل هنا" />
+                                <label className="text-[9px] font-bold text-black uppercase tracking-widest">النص الفرعي</label>
+                                <input type="text" value={store?.storefront_config?.banner?.subtitle || ''} onChange={(e) => setStore((prev: any) => prev ? { ...prev, storefront_config: { ...prev.storefront_config, banner: { ...prev.storefront_config?.banner, subtitle: e.target.value } } } : null)} className="w-full bg-[#FBFBFF] border border-slate-100 rounded-xl px-4 py-2 text-xs font-bold text-black focus:ring-4 focus:ring-emerald-100 transition-all" placeholder="الأسفل هنا" />
                             </div>
                         </div>
                     </div>

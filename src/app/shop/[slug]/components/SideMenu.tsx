@@ -85,7 +85,7 @@ export default function SideMenu({ isOpen, onClose, onNavigate, storeName, store
                         onClick={onClose}
                         className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 transition-colors"
                     >
-                        <svg className="w-6 h-6 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="w-6 h-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
@@ -93,8 +93,8 @@ export default function SideMenu({ isOpen, onClose, onNavigate, storeName, store
 
                 {/* Welcome */}
                 <div className={`px-5 pt-2 pb-6 ${dir === 'ltr' ? 'text-left' : 'text-right'}`}>
-                    <p className="text-sm text-slate-400">{t('store.welcomeMenu') || 'أهلاً بك في متجرنا'}</p>
-                    <h2 className="text-xl font-bold text-slate-800">{t('store.happyShopping') || 'تسوق ممتع'}</h2>
+                    <p className="text-sm text-black">{t('store.welcomeMenu') || 'أهلاً بك في متجرنا'}</p>
+                    <h2 className="text-xl font-bold text-black">{t('store.happyShopping') || 'تسوق ممتع'}</h2>
                 </div>
 
                 {/* Navigation */}
@@ -108,7 +108,7 @@ export default function SideMenu({ isOpen, onClose, onNavigate, storeName, store
                             }}
                             className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl mb-1 transition-all ${dir === 'ltr' ? 'text-left' : 'text-right'} ${activeView === item.id
                                 ? 'font-bold'
-                                : 'text-slate-600 hover:bg-slate-50 font-medium'
+                                : 'text-black hover:bg-slate-50 font-medium'
                                 }`}
                             style={activeView === item.id ? { backgroundColor: 'color-mix(in srgb, var(--theme-primary) 15%, transparent)', color: 'var(--theme-primary)' } : undefined}
                         >
@@ -122,7 +122,7 @@ export default function SideMenu({ isOpen, onClose, onNavigate, storeName, store
 
                 {/* Footer */}
                 <div className="p-5 border-t border-slate-100 text-center">
-                    <p className="text-xs text-slate-400">Version 1.0.0</p>
+                    <p className="text-xs text-black">Version 1.0.0</p>
                 </div>
             </div>
         </>

@@ -21,25 +21,21 @@ interface Order {
     created_at: string;
 }
 
+import { useOrdersHistory } from './hooks/useOrdersHistory';
+
 export default function MerchantOrdersPage() {
-    const [orders, setOrders] = useState<Order[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [statusFilter, setStatusFilter] = useState('all');
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
     const [timeRangeFilter, setTimeRangeFilter] = useState('1_month');
     const [storePreference, setStorePreference] = useState<CurrencyPreference | undefined>(undefined);
     const [storeId, setStoreId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
 
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
     const router = useRouter();
 
     useEffect(() => {
-        let cleanup: (() => void) | undefined;
-
         const init = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
@@ -56,93 +52,27 @@ export default function MerchantOrdersPage() {
             if (storeData) {
                 setStoreId(storeData.id);
                 setStorePreference(storeData.currency_preference);
-                fetchOrders(storeData.id, '1_month');
-                cleanup = subscribeToOrders(storeData.id);
-            } else {
-                setLoading(false);
             }
         };
 
         init();
+    }, [router]);
 
-        return () => { cleanup?.(); };
-    }, []);
-
-    const fetchOrders = async (sId: string, range: string = '1_month', pageNum: number = 1, append: boolean = false) => {
-        if (!append) setLoading(true);
-        let fromDate = new Date();
-        if (range === '1_week') fromDate.setDate(fromDate.getDate() - 7);
-        else if (range === '1_month') fromDate.setMonth(fromDate.getMonth() - 1);
-        else if (range === '2_months') fromDate.setMonth(fromDate.getMonth() - 2);
-        else if (range === '3_months') fromDate.setMonth(fromDate.getMonth() - 3);
-
-        const limit = 20;
-        const from = (pageNum - 1) * limit;
-        const to = from + limit - 1;
-
-        const { data, error } = await supabase
-            .from('orders')
-            .select('id, store_id, customer_info, items, total_price, delivery_fee, status, created_at')
-            .eq('store_id', sId)
-            .in('status', ['completed', 'delivered', 'cancelled'])
-            .gte('created_at', fromDate.toISOString())
-            .order('created_at', { ascending: false })
-            .range(from, to);
-
-        if (!error && data) {
-            if (append) {
-                setOrders(prev => [...prev, ...data]);
-            } else {
-                setOrders(data);
-            }
-            setHasMore(data.length === limit);
-        }
-        if (!append) setLoading(false);
-    };
-
-    const subscribeToOrders = (storeId: string) => {
-        const subscription = supabase
-            .channel('orders-history-realtime')
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'orders',
-                filter: `store_id=eq.${storeId}`
-            }, (payload) => {
-                if (payload.eventType === 'INSERT') {
-                    toast.success('طلب جديد!', { description: 'لقد استلمت طلباً جديداً للتو من متجرك.' });
-                }
-                // Refetching with default 1_month since getting latest state in callback is tricky without refs
-                setPage(1);
-                fetchOrders(storeId, '1_month', 1, false);
-            })
-            .subscribe();
-
-        return () => supabase.removeChannel(subscription);
-    };
-
-    const updateStatus = async (orderId: string, newStatus: string) => {
-        const { error } = await supabase
-            .from('orders')
-            .update({ status: newStatus })
-            .eq('id', orderId);
-
-        if (error) {
-            alert('خطأ في تحديث الحالة');
-        }
-    };
+    const { orders, isLoading } = useOrdersHistory(storeId, timeRangeFilter);
 
     const StatusBadge = ({ status }: { status: string }) => {
         const styles: any = {
             pending: 'bg-amber-50 text-amber-600',
-            processing: 'bg-indigo-50 text-indigo-600',
+            processing: 'bg-indigo-50 text-black',
             completed: 'bg-emerald-50 text-emerald-600',
+            delivered: 'bg-emerald-50 text-emerald-600',
             cancelled: 'bg-rose-50 text-rose-600'
         };
         const labels: any = {
             pending: 'معلق',
             processing: 'قيد التجهيز',
             completed: 'مكتمل',
+            delivered: 'مكتمل',
             cancelled: 'ملغي'
         };
         return (
@@ -152,7 +82,7 @@ export default function MerchantOrdersPage() {
         );
     };
 
-    if (loading) {
+    if (isLoading && orders.length === 0) {
         return (
             <div className="p-10 flex items-center justify-center">
                 <div className="w-12 h-12 border-4 border-indigo-600/20 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -191,8 +121,8 @@ export default function MerchantOrdersPage() {
             {/* Header */}
             <div className="flex flex-col gap-4">
                 <div>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">سجل المبيعات</h1>
-                    <p className="text-slate-400 font-medium mt-1 text-sm">استعرض جميع الطلبات المكتملة والملغية وتتبع مبيعاتك السابقة.</p>
+                    <h1 className="text-2xl lg:text-3xl font-bold text-black">سجل المبيعات</h1>
+                    <p className="text-black font-medium mt-1 text-sm">استعرض جميع الطلبات المكتملة والملغية وتتبع مبيعاتك السابقة.</p>
                 </div>
                 {/* Search + Date */}
                 <div className="flex items-center gap-3">
@@ -202,20 +132,20 @@ export default function MerchantOrdersPage() {
                             placeholder="ابحث برقم الهاتف أو الطلب..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-4 pr-10 py-3 bg-white border border-slate-100 rounded-2xl text-slate-600 font-medium text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
+                            className="w-full pl-4 pr-10 py-3 bg-white border border-slate-100 rounded-2xl text-black font-medium text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all"
                         />
-                        <svg className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-4 h-4 text-black absolute right-4 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
-                    <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-3 py-1 text-slate-600 shadow-sm focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+                    <div className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-3 py-1 text-black shadow-sm focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
                         <input
                             type="date"
                             value={dateRange.start}
                             onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
                             className="bg-transparent font-medium text-[11px] lg:text-xs focus:outline-none cursor-pointer py-2 max-w-[110px]"
                         />
-                        <span className="text-slate-300 text-xs">إلى</span>
+                        <span className="text-slate-900 text-xs">إلى</span>
                         <input
                             type="date"
                             value={dateRange.end}
@@ -223,19 +153,15 @@ export default function MerchantOrdersPage() {
                             className="bg-transparent font-medium text-[11px] lg:text-xs focus:outline-none cursor-pointer py-2 max-w-[110px]"
                         />
                         {(dateRange.start || dateRange.end) && (
-                            <button onClick={() => setDateRange({ start: '', end: '' })} className="text-slate-300 hover:text-rose-500 mr-1 transition-colors">
+                            <button onClick={() => setDateRange({ start: '', end: '' })} className="text-slate-900 hover:text-rose-500 mr-1 transition-colors">
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         )}
                     </div>
                     <select
                         value={timeRangeFilter}
-                        onChange={(e) => {
-                            setTimeRangeFilter(e.target.value);
-                            setPage(1);
-                            if (storeId) fetchOrders(storeId, e.target.value, 1, false);
-                        }}
-                        className="px-3 py-3 bg-white border border-slate-100 rounded-2xl text-slate-600 font-bold text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer"
+                        onChange={(e) => setTimeRangeFilter(e.target.value)}
+                        className="px-3 py-3 bg-white border border-slate-100 rounded-2xl text-black font-bold text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer"
                     >
                         <option value="1_week">آخر أسبوع</option>
                         <option value="1_month">آخر شهر</option>
@@ -255,7 +181,7 @@ export default function MerchantOrdersPage() {
                             onClick={() => setStatusFilter(opt.value)}
                             className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ${statusFilter === opt.value
                                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
-                                : 'bg-white border border-slate-100 text-slate-500'
+                                : 'bg-white border border-slate-100 text-black'
                                 }`}
                         >
                             {opt.label} ({opt.value === 'all' ? orders.length : orders.filter(o => o.status === opt.value).length})
@@ -271,34 +197,34 @@ export default function MerchantOrdersPage() {
                         <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
                             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
                         </div>
-                        <h3 className="font-black text-slate-800">لا توجد طلبات</h3>
-                        <p className="text-xs text-slate-400">ستظهر الطلبات المكتملة والملغية هنا</p>
+                        <h3 className="font-black text-black">لا توجد طلبات</h3>
+                        <p className="text-xs text-black">ستظهر الطلبات المكتملة والملغية هنا</p>
                     </div>
                 ) : filteredOrders.map(order => (
                     <div key={order.id} className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                         <div className="flex items-center justify-between px-4 pt-4 pb-3">
                             <div className="flex items-center gap-2">
-                                <span className="text-xs font-black text-slate-400 uppercase">#{order.id.slice(0, 6).toUpperCase()}</span>
+                                <span className="text-xs font-black text-black uppercase">#{order.id.slice(0, 6).toUpperCase()}</span>
                                 <StatusBadge status={order.status} />
                             </div>
-                            <span className="text-xs text-slate-400">{new Date(order.created_at).toLocaleDateString('ar-IQ', { day: 'numeric', month: 'short' })}</span>
+                            <span className="text-xs text-black">{new Date(order.created_at).toLocaleDateString('ar-IQ', { day: 'numeric', month: 'short' })}</span>
                         </div>
                         <div className="px-4 pb-3 border-b border-slate-50">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="font-bold text-slate-800 text-sm">{order.customer_info.name}</p>
-                                    <a href={`tel:${order.customer_info.phone}`} className="text-xs text-indigo-600 font-bold">{order.customer_info.phone}</a>
+                                    <p className="font-bold text-black text-sm">{order.customer_info.name}</p>
+                                    <a href={`tel:${order.customer_info.phone}`} className="text-xs text-black font-bold">{order.customer_info.phone}</a>
                                 </div>
                                 <div className="text-left">
-                                    <p className="text-lg font-black text-indigo-600">{formatCurrency(order.total_price - (order.delivery_fee || 0), storePreference)}</p>
-                                    <p className="text-[10px] text-slate-400 text-left">عدد المنتجات: {order.items.reduce((acc, item) => acc + (item.quantity || 1), 0)}</p>
+                                    <p className="text-lg font-black text-black">{formatCurrency(order.total_price - (order.delivery_fee || 0), storePreference)}</p>
+                                    <p className="text-[10px] text-black text-left">عدد المنتجات: {order.items.reduce((acc: number, item: any) => acc + (item.quantity || 1), 0)}</p>
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 px-4 py-3">
                             <button
                                 onClick={() => setSelectedOrder(order)}
-                                className="flex-1 h-9 bg-slate-50 text-slate-600 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-indigo-50 hover:text-indigo-600 transition-all"
+                                className="flex-1 h-9 bg-slate-50 text-black rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-indigo-50 hover:text-black transition-all"
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                 عرض التفاصيل
@@ -314,35 +240,35 @@ export default function MerchantOrdersPage() {
                     <table className="w-full text-right border-collapse min-w-[900px]">
                         <thead className="bg-[#FBFBFF] border-b border-slate-50">
                             <tr>
-                                <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">رقم الطلب</th>
-                                <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">العميل</th>
-                                <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">المنتجات</th>
-                                <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">المبلغ</th>
-                                <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">الحالة</th>
-                                <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">التاريخ</th>
-                                <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">الإجراءات</th>
+                                <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-black uppercase tracking-widest text-right">رقم الطلب</th>
+                                <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-black uppercase tracking-widest text-right">العميل</th>
+                                <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-black uppercase tracking-widest text-center">المنتجات</th>
+                                <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-black uppercase tracking-widest text-center">المبلغ</th>
+                                <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-black uppercase tracking-widest text-center">الحالة</th>
+                                <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-black uppercase tracking-widest text-center">التاريخ</th>
+                                <th className="px-6 lg:px-10 py-6 text-[10px] font-bold text-black uppercase tracking-widest text-center">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50">
-                            {filteredOrders.length > 0 ? filteredOrders.map((order, idx) => (
+                            {filteredOrders.length > 0 ? filteredOrders.map((order) => (
                                 <tr key={order.id} className="hover:bg-slate-50/50 transition-all group">
-                                    <td className="px-6 lg:px-10 py-6"><span className="text-sm font-bold text-slate-800 uppercase">#{order.id.slice(0, 6).toUpperCase()}</span></td>
+                                    <td className="px-6 lg:px-10 py-6"><span className="text-sm font-bold text-black uppercase">#{order.id.slice(0, 6).toUpperCase()}</span></td>
                                     <td className="px-6 lg:px-10 py-6 text-right">
-                                        <div className="font-bold text-slate-800 text-sm lg:text-base">{order.customer_info.name}</div>
-                                        <div className="text-[10px] text-slate-400 font-bold mt-0.5">{order.customer_info.phone}</div>
+                                        <div className="font-bold text-black text-sm lg:text-base">{order.customer_info.name}</div>
+                                        <div className="text-[10px] text-black font-bold mt-0.5">{order.customer_info.phone}</div>
                                     </td>
                                     <td className="px-6 lg:px-10 py-6 text-center">
-                                        <span className="text-sm font-bold text-slate-800">{order.items.reduce((acc, item) => acc + (item.quantity || 1), 0)} منتجات</span>
+                                        <span className="text-sm font-bold text-black">{order.items.reduce((acc: number, item: any) => acc + (item.quantity || 1), 0)} منتجات</span>
                                     </td>
                                     <td className="px-6 lg:px-10 py-6 text-center">
-                                        <div className="font-bold text-indigo-600 text-base lg:text-lg tracking-tight">{formatCurrency(order.total_price - (order.delivery_fee || 0), storePreference)}</div>
+                                        <div className="font-bold text-black text-base lg:text-lg tracking-tight">{formatCurrency(order.total_price - (order.delivery_fee || 0), storePreference)}</div>
                                     </td>
                                     <td className="px-6 lg:px-10 py-6 text-center"><StatusBadge status={order.status} /></td>
-                                    <td className="px-6 lg:px-10 py-6 text-center text-[11px] lg:text-sm font-medium text-slate-400">
+                                    <td className="px-6 lg:px-10 py-6 text-center text-[11px] lg:text-sm font-medium text-black">
                                         {new Date(order.created_at).toLocaleDateString('ar-IQ', { day: 'numeric', month: 'long' })}
                                     </td>
                                     <td className="px-6 lg:px-10 py-6 text-center">
-                                        <button onClick={() => setSelectedOrder(order)} className="px-4 py-2 bg-slate-50 text-slate-600 font-bold text-xs rounded-xl hover:bg-slate-100 hover:text-indigo-600 transition-all flex items-center gap-2 mx-auto">
+                                        <button onClick={() => setSelectedOrder(order)} className="px-4 py-2 bg-slate-50 text-black font-bold text-xs rounded-xl hover:bg-slate-100 hover:text-black transition-all flex items-center gap-2 mx-auto">
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                             التفاصيل
                                         </button>
@@ -355,8 +281,8 @@ export default function MerchantOrdersPage() {
                                             <div className="w-16 h-16 lg:w-20 lg:h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
                                                 <svg className="w-8 h-8 lg:w-10 lg:h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
                                             </div>
-                                            <h3 className="text-lg lg:text-xl font-bold text-slate-800">لا توجد طلبات حالياً</h3>
-                                            <p className="text-xs lg:text-sm font-medium text-slate-400">ستظهر هنا الطلبات الواردة فوراً عند قيام العملاء بالشراء.</p>
+                                            <h3 className="text-lg lg:text-xl font-bold text-black">لا توجد طلبات حالياً</h3>
+                                            <p className="text-xs lg:text-sm font-medium text-black">ستظهر هنا الطلبات الواردة فوراً عند قيام العملاء بالشراء.</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -366,23 +292,7 @@ export default function MerchantOrdersPage() {
                 </div>
             </div>
 
-            {/* Pagination Load More */}
-            {hasMore && orders.length > 0 && (
-                <div className="flex justify-center mt-6 lg:mt-8">
-                    <button
-                        onClick={() => {
-                            const nextPage = page + 1;
-                            setPage(nextPage);
-                            if (storeId) fetchOrders(storeId, timeRangeFilter, nextPage, true);
-                        }}
-                        disabled={loading}
-                        className="px-6 lg:px-8 py-3 bg-white border border-slate-200 text-indigo-600 rounded-2xl font-bold text-xs lg:text-sm shadow-sm hover:shadow-md hover:border-indigo-200 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                        {loading && <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>}
-                        {loading ? 'جاري التحميل...' : 'عرض المزيد'}
-                    </button>
-                </div>
-            )}
+            {/* Pagination removed as we now use optimized React Query cache for the selected period */}
 
             {/* Side Drawer (Order Details) */}
             {selectedOrder && (
@@ -391,11 +301,11 @@ export default function MerchantOrdersPage() {
                     <div className="relative w-full max-w-full lg:max-w-xl bg-white h-screen shadow-2xl animate-in slide-in-from-left lg:slide-in-from-right duration-500 overflow-y-auto">
                         <div className="p-6 lg:p-8 border-b border-slate-50 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-md z-10">
                             <div>
-                                <h3 className="text-xl lg:text-2xl font-bold text-slate-800">تفاصيل <span className="text-indigo-600">الطلب</span></h3>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">رقم الطلب: #{selectedOrder.id.slice(0, 6).toUpperCase()}</p>
+                                <h3 className="text-xl lg:text-2xl font-bold text-black">تفاصيل <span className="text-black">الطلب</span></h3>
+                                <p className="text-[10px] text-black font-bold uppercase tracking-widest mt-1">رقم الطلب: #{selectedOrder.id.slice(0, 6).toUpperCase()}</p>
                             </div>
                             <button onClick={() => setSelectedOrder(null)} className="w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center hover:bg-slate-50 rounded-xl lg:rounded-2xl transition-all">
-                                <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-6 h-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
@@ -404,38 +314,38 @@ export default function MerchantOrdersPage() {
                         <div className="p-6 lg:p-10 space-y-8 lg:space-y-12">
                             {/* Customer Section */}
                             <div className="space-y-4 lg:space-y-6">
-                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] pr-2">بيانات العميل</h4>
+                                <h4 className="text-[10px] font-bold text-black uppercase tracking-[0.2em] pr-2">بيانات العميل</h4>
                                 <div className="p-6 lg:p-8 bg-[#FBFBFF] border border-slate-50 rounded-[2rem] lg:rounded-[2.5rem] space-y-4 lg:space-y-6 shadow-inner">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 lg:w-14 lg:h-14 bg-indigo-600 rounded-xl lg:rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
                                             <span className="text-lg lg:text-xl font-bold">{selectedOrder.customer_info.name.charAt(0)}</span>
                                         </div>
                                         <div>
-                                            <div className="text-base lg:text-lg font-bold text-slate-800 leading-none">{selectedOrder.customer_info.name}</div>
-                                            <div className="text-xs lg:text-sm font-medium text-slate-400 mt-1">{selectedOrder.customer_info.phone}</div>
+                                            <div className="text-base lg:text-lg font-bold text-black leading-none">{selectedOrder.customer_info.name}</div>
+                                            <div className="text-xs lg:text-sm font-medium text-black mt-1">{selectedOrder.customer_info.phone}</div>
                                         </div>
                                     </div>
                                     <div className="pt-4 lg:pt-6 border-t border-slate-200/50">
-                                        <div className="text-[10px] font-bold text-slate-400 uppercase pr-1 mb-2">عنوان التوصيل</div>
-                                        <div className="text-sm font-medium text-slate-600 leading-relaxed">{selectedOrder.customer_info.address}</div>
+                                        <div className="text-[10px] font-bold text-black uppercase pr-1 mb-2">عنوان التوصيل</div>
+                                        <div className="text-sm font-medium text-black leading-relaxed">{selectedOrder.customer_info.address}</div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Items Section */}
                             <div className="space-y-4 lg:space-y-6">
-                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] pr-2">محتويات السلة ({selectedOrder.items.reduce((acc, item) => acc + (item.quantity || 1), 0)})</h4>
+                                <h4 className="text-[10px] font-black text-black uppercase tracking-[0.2em] pr-2">محتويات السلة ({selectedOrder.items.reduce((acc: number, item: any) => acc + (item.quantity || 1), 0)})</h4>
                                 <div className="space-y-3 lg:space-y-4">
-                                    {selectedOrder.items.map((item, idx) => (
+                                    {selectedOrder.items.map((item: any, idx: number) => (
                                         <div key={idx} className="flex items-center gap-4 lg:gap-6 p-3 lg:p-4 rounded-2xl lg:rounded-3xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
                                             <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-xl lg:rounded-2xl bg-white border border-slate-100 overflow-hidden shadow-sm flex-shrink-0">
                                                 <img src={item.image_url || 'https://via.placeholder.com/150'} alt="" className="w-full h-full object-cover" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="font-bold text-slate-800 text-sm lg:text-base truncate">{item.name}</div>
-                                                <div className="text-[10px] lg:text-xs font-medium text-slate-400 mt-0.5">{item.quantity} × {formatCurrency(item.price, storePreference)}</div>
+                                                <div className="font-bold text-black text-sm lg:text-base truncate">{item.name}</div>
+                                                <div className="text-[10px] lg:text-xs font-medium text-black mt-0.5">{item.quantity} × {formatCurrency(item.price, storePreference)}</div>
                                             </div>
-                                            <div className="text-sm lg:text-base font-bold text-slate-800 whitespace-nowrap">{formatCurrency(item.price * item.quantity, storePreference)}</div>
+                                            <div className="text-sm lg:text-base font-bold text-black whitespace-nowrap">{formatCurrency(item.price * item.quantity, storePreference)}</div>
                                         </div>
                                     ))}
                                 </div>
@@ -444,17 +354,17 @@ export default function MerchantOrdersPage() {
                             {/* Summary Section */}
                             <div className="pt-8 lg:pt-10 border-t border-slate-100">
                                 <div className="space-y-3 lg:space-y-4">
-                                    <div className="flex justify-between items-center text-xs lg:text-sm font-medium text-slate-400">
+                                    <div className="flex justify-between items-center text-xs lg:text-sm font-medium text-black">
                                         <span>سعر المنتجات</span>
                                         <span>{formatCurrency(selectedOrder.total_price - (selectedOrder.delivery_fee || 0), storePreference)}</span>
                                     </div>
-                                    <div className="flex justify-between items-center text-xs lg:text-sm font-medium text-slate-400">
+                                    <div className="flex justify-between items-center text-xs lg:text-sm font-medium text-black">
                                         <span>رسوم التوصيل</span>
                                         <span className="text-amber-600">{formatCurrency(selectedOrder.delivery_fee || 0, storePreference)}</span>
                                     </div>
                                     <div className="pt-4 lg:pt-6 flex justify-between items-center">
-                                        <span className="text-lg lg:text-xl font-bold text-slate-800">إجمالي المبيعات</span>
-                                        <span className="text-2xl lg:text-4xl font-black text-indigo-600 tracking-tighter">{formatCurrency(selectedOrder.total_price - (selectedOrder.delivery_fee || 0), storePreference)}</span>
+                                        <span className="text-lg lg:text-xl font-bold text-black">إجمالي المبيعات</span>
+                                        <span className="text-2xl lg:text-4xl font-black text-black tracking-tighter">{formatCurrency(selectedOrder.total_price - (selectedOrder.delivery_fee || 0), storePreference)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -463,7 +373,7 @@ export default function MerchantOrdersPage() {
                         <div className="p-6 lg:p-10 border-t border-slate-50 bg-[#FBFBFF] sticky bottom-0 z-10">
                             <button
                                 onClick={() => setSelectedOrder(null)}
-                                className="w-full py-3.5 lg:py-4 bg-white border border-slate-100 rounded-xl lg:rounded-2xl text-[11px] lg:text-sm text-slate-400 font-bold shadow-sm hover:bg-slate-50 hover:text-slate-600 transition-all"
+                                className="w-full py-3.5 lg:py-4 bg-white border border-slate-100 rounded-xl lg:rounded-2xl text-[11px] lg:text-sm text-black font-bold shadow-sm hover:bg-slate-50 hover:text-black transition-all"
                             >
                                 إغلاق
                             </button>

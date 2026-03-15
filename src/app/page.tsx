@@ -136,7 +136,7 @@ export default function LandingPage() {
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-700 ${theme === 'dark' ? 'bg-[#020617] text-white' : 'bg-slate-50 text-slate-900'} selection:bg-indigo-500/30 overflow-x-hidden font-sans`}
+      className={`min-h-screen transition-colors duration-700 ${theme === 'dark' ? 'bg-[#020617] text-white' : 'bg-slate-50 text-black'} selection:bg-indigo-500/30 overflow-x-hidden font-sans`}
       dir={t.dir}
     >
       {/* Dynamic Background */}
@@ -159,17 +159,17 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
           <div className="flex items-center gap-3 group cursor-pointer">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl md:rounded-2xl flex items-center justify-center text-white font-black text-xl md:text-2xl shadow-lg shadow-indigo-500/20 group-hover:rotate-6 transition-transform">S</div>
-            <span className={`text-xl md:text-2xl font-black tracking-tighter ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+            <span className={`text-xl md:text-2xl font-black tracking-tighter ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
               Tajir<span className="text-indigo-500 font-black">Zone</span>
             </span>
           </div>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8 lg:gap-10">
-            <Link href="#features" className={`text-sm font-bold transition-all ${theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-indigo-600'}`}>{t.nav.features}</Link>
-            <Link href="#pricing" className={`text-sm font-bold transition-all ${theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-indigo-600'}`}>{t.nav.pricing}</Link>
+            <Link href="#features" className={`text-sm font-bold transition-all ${theme === 'dark' ? 'text-black hover:text-white' : 'text-black hover:text-black'}`}>{t.nav.features}</Link>
+            <Link href="#pricing" className={`text-sm font-bold transition-all ${theme === 'dark' ? 'text-black hover:text-white' : 'text-black hover:text-black'}`}>{t.nav.pricing}</Link>
 
-            <Link href="/login" className={`text-sm font-bold transition-colors ${theme === 'dark' ? 'text-white hover:text-indigo-400 border-r border-white/10 pr-10' : 'text-slate-900 hover:text-indigo-600 border-r border-slate-200 pr-10'}`}>{t.nav.login}</Link>
+            <Link href="/login" className={`text-sm font-bold transition-colors ${theme === 'dark' ? 'text-white hover:text-indigo-400 border-r border-white/10 pr-10' : 'text-black hover:text-black border-r border-slate-200 pr-10'}`}>{t.nav.login}</Link>
 
             <a
               href={WHATSAPP_LINK}
@@ -185,7 +185,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-4 md:hidden">
             <button
               onClick={toggleTheme}
-              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${theme === 'dark' ? 'bg-white/5 text-yellow-400' : 'bg-slate-100 text-indigo-600 shadow-sm'}`}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${theme === 'dark' ? 'bg-white/5 text-yellow-400' : 'bg-slate-100 text-black shadow-sm'}`}
             >
               {theme === 'dark' ? (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 5a7 7 0 100 14 7 7 0 000-14z" /></svg>
@@ -195,7 +195,7 @@ export default function LandingPage() {
             </button>
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${theme === 'dark' ? 'bg-white/5 text-white' : 'bg-slate-100 text-slate-900 border border-slate-200'}`}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${theme === 'dark' ? 'bg-white/5 text-white' : 'bg-slate-100 text-black border border-slate-200'}`}
             >
               {isMobileMenuOpen ? (
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -209,11 +209,11 @@ export default function LandingPage() {
         {/* Mobile Menu Panel */}
         <div className={`md:hidden overflow-hidden transition-all duration-500 ease-in-out ${isMobileMenuOpen ? 'max-h-[500px] opacity-100 py-8 px-6 border-t border-white/5' : 'max-h-0 opacity-0 py-0 overflow-hidden'}`}>
           <div className="flex flex-col gap-6 text-center">
-            <Link href="#features" onClick={() => setIsMobileMenuOpen(false)} className={`text-lg font-black transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{t.nav.features}</Link>
-            <Link href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className={`text-lg font-black transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{t.nav.pricing}</Link>
+            <Link href="#features" onClick={() => setIsMobileMenuOpen(false)} className={`text-lg font-black transition-colors ${theme === 'dark' ? 'text-black' : 'text-black'}`}>{t.nav.features}</Link>
+            <Link href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className={`text-lg font-black transition-colors ${theme === 'dark' ? 'text-black' : 'text-black'}`}>{t.nav.pricing}</Link>
 
             <div className="flex flex-col gap-4 pt-4 border-t border-white/5">
-              <Link href="/login" className={`text-lg font-black transition-colors ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t.nav.login}</Link>
+              <Link href="/login" className={`text-lg font-black transition-colors ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{t.nav.login}</Link>
               <a
                 href={WHATSAPP_LINK}
                 target="_blank"
@@ -247,14 +247,14 @@ export default function LandingPage() {
             </div>
 
             <div className="space-y-6 max-w-4xl mx-auto text-center md:text-start">
-              <h1 className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[1.1] transition-colors ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+              <h1 className={`text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[1.1] transition-colors ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
                 {t.hero.title} <br />
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-violet-500 to-indigo-500 bg-[length:200%_auto] animate-gradient">
                   {t.hero.titleHighlight}
                 </span>
               </h1>
 
-              <p className={`text-lg md:text-xl font-medium leading-relaxed max-w-2xl mx-auto md:mx-0 transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+              <p className={`text-lg md:text-xl font-medium leading-relaxed max-w-2xl mx-auto md:mx-0 transition-colors ${theme === 'dark' ? 'text-black' : 'text-black'}`}>
                 {t.hero.subtitle}
               </p>
             </div>
@@ -272,16 +272,16 @@ export default function LandingPage() {
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </a>
-            <Link href="#features" className={`w-full sm:w-auto px-12 py-5 backdrop-blur-xl font-bold rounded-[2rem] border transition-all text-xl text-center group ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20' : 'bg-white/80 border-slate-200 text-slate-900 hover:bg-white shadow-sm hover:shadow-md'}`}>
+            <Link href="#features" className={`w-full sm:w-auto px-12 py-5 backdrop-blur-xl font-bold rounded-[2rem] border transition-all text-xl text-center group ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20' : 'bg-white/80 border-slate-200 text-black hover:bg-white shadow-sm hover:shadow-md'}`}>
               {t.hero.secondaryBtn}
             </Link>
           </div>
 
             <div className="pt-16 md:pt-20 space-y-8 text-center md:text-start">
-              <p className={`text-[10px] font-black uppercase tracking-[0.4em] ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>{t.hero.trusted}</p>
+              <p className={`text-[10px] font-black uppercase tracking-[0.4em] ${theme === 'dark' ? 'text-black' : 'text-black'}`}>{t.hero.trusted}</p>
               <div className={`flex flex-wrap justify-center md:justify-start gap-8 md:gap-12 transition-all duration-700 ${theme === 'dark' ? 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0' : 'opacity-60 hover:opacity-100 grayscale hover:grayscale-0'}`}>
                 {['شركة الموصل التقنية', 'أزياء بغداد', 'أربيل ديجيتال', 'بصرة لوجستكس'].map((brand) => (
-                  <span key={brand} className={`text-base md:text-lg font-black tracking-tighter ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{brand}</span>
+                  <span key={brand} className={`text-base md:text-lg font-black tracking-tighter ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{brand}</span>
                 ))}
               </div>
             </div>
@@ -313,8 +313,8 @@ export default function LandingPage() {
                       <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M5 13l4 4L19 7" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg>
                     </div>
                     <div className={t.dir === 'rtl' ? 'pr-2' : 'pl-2'}>
-                      <p className={`text-[10px] font-black leading-none ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>طلب جديد!</p>
-                      <p className="text-[8px] text-slate-400 font-bold mt-1 uppercase">TajirZone Engine</p>
+                      <p className={`text-[10px] font-black leading-none ${theme === 'dark' ? 'text-white' : 'text-black'}`}>طلب جديد!</p>
+                      <p className="text-[8px] text-black font-bold mt-1 uppercase">TajirZone Engine</p>
                     </div>
                   </div>
                 </div>
@@ -329,13 +329,13 @@ export default function LandingPage() {
       <section id="features" className="py-24 md:py-32 relative">
         <div className="max-w-7xl mx-auto px-6">
           <div className={`max-w-3xl mb-16 md:mb-24 space-y-6 mx-auto text-center`}>
-            <h2 className={`text-4xl sm:text-5xl md:text-6xl font-black transition-colors ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+            <h2 className={`text-4xl sm:text-5xl md:text-6xl font-black transition-colors ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
               {t.features.header} <br />
               <span className={`bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-violet-500`}>
                 {t.features.headerHighlight}
               </span>
             </h2>
-            <p className={`font-medium text-lg md:text-xl leading-relaxed transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+            <p className={`font-medium text-lg md:text-xl leading-relaxed transition-colors ${theme === 'dark' ? 'text-black' : 'text-black'}`}>
               {t.features.subheader}
             </p>
           </div>
@@ -370,10 +370,10 @@ export default function LandingPage() {
       <section id="pricing" className={`py-24 md:py-32 relative ${theme === 'dark' ? 'bg-[#020617]/50' : 'bg-slate-50/50'}`}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-12 md:mb-16 space-y-4">
-            <h2 className={`text-4xl md:text-5xl font-black transition-colors ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+            <h2 className={`text-4xl md:text-5xl font-black transition-colors ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
               اختر الباقة المناسبة لمتجرك
             </h2>
-            <p className={`font-medium text-lg leading-relaxed transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+            <p className={`font-medium text-lg leading-relaxed transition-colors ${theme === 'dark' ? 'text-black' : 'text-black'}`}>
               خطط مرنة تناسب طموحاتك وحجم مبيعاتك
             </p>
           </div>
@@ -382,13 +382,13 @@ export default function LandingPage() {
             <div className={`inline-flex items-center p-1.5 rounded-[2rem] backdrop-blur-md shadow-inner ${theme === 'dark' ? 'bg-white/5 border border-white/10' : 'bg-white/80 border border-slate-200'}`}>
               <button
                 onClick={() => setBillingCycle('monthly')}
-                className={`px-8 py-3.5 rounded-[1.5rem] font-bold text-sm transition-all duration-300 ${billingCycle === 'monthly' ? (theme === 'dark' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30') : (theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50')}`}
+                className={`px-8 py-3.5 rounded-[1.5rem] font-bold text-sm transition-all duration-300 ${billingCycle === 'monthly' ? (theme === 'dark' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30') : (theme === 'dark' ? 'text-black hover:text-white hover:bg-white/5' : 'text-black hover:text-black hover:bg-slate-50')}`}
               >
                 الدفع الشهري
               </button>
               <button
                 onClick={() => setBillingCycle('yearly')}
-                className={`px-8 py-3.5 rounded-[1.5rem] font-bold text-sm transition-all duration-300 flex items-center gap-2 ${billingCycle === 'yearly' ? (theme === 'dark' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30') : (theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50')}`}
+                className={`px-8 py-3.5 rounded-[1.5rem] font-bold text-sm transition-all duration-300 flex items-center gap-2 ${billingCycle === 'yearly' ? (theme === 'dark' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30') : (theme === 'dark' ? 'text-black hover:text-white hover:bg-white/5' : 'text-black hover:text-black hover:bg-slate-50')}`}
               >
                 الدفع السنوي
                 {(() => {
@@ -407,7 +407,7 @@ export default function LandingPage() {
             {isLoadingPlans ? (
               <div className="col-span-3 text-center py-20">
                 <div className="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mx-auto"></div>
-                <p className={`mt-6 font-bold tracking-widest ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>جاري تحميل الباقات...</p>
+                <p className={`mt-6 font-bold tracking-widest ${theme === 'dark' ? 'text-black' : 'text-black'}`}>جاري تحميل الباقات...</p>
               </div>
             ) : (
               plans.map((plan, index) => {
@@ -426,22 +426,22 @@ export default function LandingPage() {
                   titleClasses += theme === 'dark' ? 'text-amber-400' : 'text-amber-700';
                   priceClasses += theme === 'dark' ? 'text-amber-300' : 'text-amber-600';
                   iconColorClass = 'text-amber-500';
-                  buttonClasses += theme === 'dark' ? 'bg-amber-500 hover:bg-amber-400 text-slate-900 shadow-lg shadow-amber-500/20' : 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/30';
+                  buttonClasses += theme === 'dark' ? 'bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/20' : 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/30';
                   featuresClasses += theme === 'dark' ? 'text-amber-200/70' : 'text-amber-900/70';
                 } else if (isSilver) {
                   cardClasses = `relative rounded-[2.5rem] p-8 md:p-10 border-2 shadow-2xl scale-105 flex flex-col pt-12 transition-all duration-500 hover:-translate-y-2 backdrop-blur-2xl group overflow-hidden ${theme === 'dark' ? 'bg-indigo-900/30 border-indigo-500/50 shadow-indigo-500/20 hover:border-indigo-400' : 'bg-indigo-50/90 border-indigo-500/40 shadow-indigo-500/20 hover:border-indigo-500'}`;
                   titleClasses += theme === 'dark' ? 'text-white' : 'text-indigo-950';
                   priceClasses += theme === 'dark' ? 'text-white' : 'text-indigo-950';
-                  iconColorClass = theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600';
+                  iconColorClass = theme === 'dark' ? 'text-indigo-400' : 'text-black';
                   buttonClasses += 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-xl shadow-indigo-600/30';
                   featuresClasses += theme === 'dark' ? 'text-indigo-200/80' : 'text-indigo-900/80';
                 } else {
                   cardClasses += theme === 'dark' ? 'bg-white/5 border-white/10 hover:border-white/20 ' : 'bg-white/80 border-slate-200/50 hover:border-slate-300 shadow-xl shadow-slate-200/20 ';
-                  titleClasses += theme === 'dark' ? 'text-white' : 'text-slate-900';
-                  priceClasses += theme === 'dark' ? 'text-white' : 'text-slate-900';
+                  titleClasses += theme === 'dark' ? 'text-white' : 'text-black';
+                  priceClasses += theme === 'dark' ? 'text-white' : 'text-black';
                   iconColorClass = theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600';
-                  buttonClasses += theme === 'dark' ? 'bg-white/10 hover:bg-white/20 text-white border border-white/5' : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200/50';
-                  featuresClasses += theme === 'dark' ? 'text-slate-300/80' : 'text-slate-600';
+                  buttonClasses += theme === 'dark' ? 'bg-white/10 hover:bg-white/20 text-white border border-white/5' : 'bg-slate-100 hover:bg-slate-200 text-black border border-slate-200/50';
+                  featuresClasses += theme === 'dark' ? 'text-slate-900/80' : 'text-black';
                 }
 
                 const displayName = language === 'ar' ? plan.name_ar : language === 'en' ? plan.name_en : plan.name_ku || plan.name_ar;
@@ -461,14 +461,14 @@ export default function LandingPage() {
                     
                     <div className="relative z-10">
                       <h3 className={titleClasses}>{displayName}</h3>
-                      <p className={`mt-2 text-sm font-medium min-h-[48px] leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+                      <p className={`mt-2 text-sm font-medium min-h-[48px] leading-relaxed ${theme === 'dark' ? 'text-black' : 'text-black'}`}>
                         {language === 'ar' ? plan.description_ar : language === 'en' ? plan.description_en : plan.description_ku || plan.description_ar}
                       </p>
                       <div className="flex items-baseline gap-2 mb-8 mt-6">
                         <span className={priceClasses} dir="ltr">
                           {displayPrice > 0 ? `${displayPrice.toLocaleString()} د.ع` : 'مجانًا'}
                         </span>
-                        <span className={`text-sm font-bold ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
+                        <span className={`text-sm font-bold ${theme === 'dark' ? 'text-black' : 'text-black'}`}>
                           {displayPrice > 0 ? (billingCycle === 'yearly' ? '/ سنوياً' : '/ شهرياً') : ''}
                         </span>
                       </div>
@@ -514,7 +514,7 @@ export default function LandingPage() {
               href={WHATSAPP_LINK}
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-4 px-10 md:px-14 py-5 md:py-6 bg-white text-indigo-600 font-black rounded-[2rem] md:rounded-[2.5rem] text-xl md:text-2xl shadow-2xl hover:bg-slate-900 hover:text-white transition-all hover:scale-105 active:scale-95"
+              className="group inline-flex items-center gap-4 px-10 md:px-14 py-5 md:py-6 bg-white text-black font-black rounded-[2rem] md:rounded-[2.5rem] text-xl md:text-2xl shadow-2xl hover:bg-slate-900 hover:text-white transition-all hover:scale-105 active:scale-95"
             >
               {t.cta.btn}
               <svg
@@ -532,10 +532,10 @@ export default function LandingPage() {
       <section id="contact" className="py-24 md:py-32 relative">
         <div className="max-w-7xl mx-auto px-6">
           <div className="mb-16 md:mb-20 text-center space-y-6">
-            <h2 className={`text-4xl md:text-5xl font-black transition-colors ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+            <h2 className={`text-4xl md:text-5xl font-black transition-colors ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
               {t.contact.title}
             </h2>
-            <p className={`font-medium text-lg md:text-xl leading-relaxed transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+            <p className={`font-medium text-lg md:text-xl leading-relaxed transition-colors ${theme === 'dark' ? 'text-black' : 'text-black'}`}>
               {t.contact.subtitle}
             </p>
           </div>
@@ -584,9 +584,9 @@ export default function LandingPage() {
             <div className="space-y-6">
               <div className="flex items-center justify-center md:justify-start gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-indigo-500/30">T</div>
-                <span className={`text-3xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Tajir<span className="text-indigo-500">Zone</span></span>
+                <span className={`text-3xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Tajir<span className="text-indigo-500">Zone</span></span>
               </div>
-              <p className={`font-medium max-w-sm leading-relaxed text-sm md:text-base ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+              <p className={`font-medium max-w-sm leading-relaxed text-sm md:text-base ${theme === 'dark' ? 'text-black' : 'text-black'}`}>
                 {t.footer.desc}
               </p>
             </div>
@@ -598,7 +598,7 @@ export default function LandingPage() {
           </div>
 
           <div className="mt-20 pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
-            <p className={`text-[10px] font-black uppercase tracking-[0.4em] ${theme === 'dark' ? 'text-slate-500' : 'text-slate-500'}`}>{t.footer.rights}</p>
+            <p className={`text-[10px] font-black uppercase tracking-[0.4em] ${theme === 'dark' ? 'text-black' : 'text-black'}`}>{t.footer.rights}</p>
             <div className="flex items-center gap-2.5 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-500/50"></div>
               <span className={`text-[10px] font-black uppercase tracking-widest ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`}>TajirZone Infrastructure Active</span>
@@ -635,16 +635,16 @@ function LangThemeSwitcher({ language, changeLanguage, theme, toggleTheme, mode 
   return (
     <div className={`flex ${isHorizontal ? 'flex-row items-center gap-3 px-4 py-2 rounded-2xl' : 'flex-col items-center gap-2 p-2 rounded-[2rem]'} border shadow-xl backdrop-blur-xl ${theme === 'dark' ? 'bg-[#020617]/80 border-white/10' : 'bg-white/80 border-slate-200'}`}>
       <div className={`flex ${isHorizontal ? 'flex-row gap-2' : 'flex-col gap-2'}`}>
-        <button onClick={() => changeLanguage('ar')} className={`w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-black uppercase transition-all ${language === 'ar' ? (theme === 'dark' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30' : 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30') : (theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100')}`}>AR</button>
-        <button onClick={() => changeLanguage('ku')} className={`w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-black uppercase transition-all ${language === 'ku' ? (theme === 'dark' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30' : 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30') : (theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100')}`}>KU</button>
-        <button onClick={() => changeLanguage('en')} className={`w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-black uppercase transition-all ${language === 'en' ? (theme === 'dark' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30' : 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30') : (theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100')}`}>EN</button>
+        <button onClick={() => changeLanguage('ar')} className={`w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-black uppercase transition-all ${language === 'ar' ? (theme === 'dark' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30' : 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30') : (theme === 'dark' ? 'text-black hover:text-white hover:bg-white/5' : 'text-black hover:text-black hover:bg-slate-100')}`}>AR</button>
+        <button onClick={() => changeLanguage('ku')} className={`w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-black uppercase transition-all ${language === 'ku' ? (theme === 'dark' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30' : 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30') : (theme === 'dark' ? 'text-black hover:text-white hover:bg-white/5' : 'text-black hover:text-black hover:bg-slate-100')}`}>KU</button>
+        <button onClick={() => changeLanguage('en')} className={`w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-black uppercase transition-all ${language === 'en' ? (theme === 'dark' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30' : 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30') : (theme === 'dark' ? 'text-black hover:text-white hover:bg-white/5' : 'text-black hover:text-black hover:bg-slate-100')}`}>EN</button>
       </div>
       
       <div className={`${isHorizontal ? 'w-px h-6 mx-1' : 'w-6 h-px my-1'} ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-200'}`}></div>
 
       <button
         onClick={toggleTheme}
-        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${theme === 'dark' ? 'bg-white/5 text-yellow-400 justify-self-center hover:bg-white/10' : 'bg-slate-100 text-indigo-600 justify-self-center hover:bg-slate-200'}`}
+        className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${theme === 'dark' ? 'bg-white/5 text-yellow-400 justify-self-center hover:bg-white/10' : 'bg-slate-100 text-black justify-self-center hover:bg-slate-200'}`}
       >
         {theme === 'dark' ? (
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 5a7 7 0 100 14 7 7 0 000-14z" /></svg>
@@ -658,7 +658,7 @@ function LangThemeSwitcher({ language, changeLanguage, theme, toggleTheme, mode 
 
 function FeatureCard({ title, description, icon, color, theme }: any) {
   const colors: any = {
-    indigo: theme === 'dark' ? 'from-indigo-500/20 to-indigo-500/5 text-indigo-400 group-hover:border-indigo-500/50' : 'from-indigo-100 to-white text-indigo-600 group-hover:border-indigo-300',
+    indigo: theme === 'dark' ? 'from-indigo-500/20 to-indigo-500/5 text-indigo-400 group-hover:border-indigo-500/50' : 'from-indigo-100 to-white text-black group-hover:border-indigo-300',
     rose: theme === 'dark' ? 'from-rose-500/20 to-rose-500/5 text-rose-400 group-hover:border-rose-500/50' : 'from-rose-100 to-white text-rose-600 group-hover:border-rose-300',
     emerald: theme === 'dark' ? 'from-emerald-500/20 to-emerald-500/5 text-emerald-400 group-hover:border-emerald-500/50' : 'from-emerald-100 to-white text-emerald-600 group-hover:border-emerald-300',
   };
@@ -674,8 +674,8 @@ function FeatureCard({ title, description, icon, color, theme }: any) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d={icon} />
           </svg>
         </div>
-        <h3 className={`text-xl md:text-2xl font-bold mb-4 transition-colors ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
-        <p className={`font-medium leading-relaxed text-sm md:text-base transition-colors ${theme === 'dark' ? 'text-slate-400 group-hover:text-slate-300' : 'text-slate-500'}`}>{description}</p>
+        <h3 className={`text-xl md:text-2xl font-bold mb-4 transition-colors ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{title}</h3>
+        <p className={`font-medium leading-relaxed text-sm md:text-base transition-colors ${theme === 'dark' ? 'text-black group-hover:text-slate-900' : 'text-black'}`}>{description}</p>
       </div>
     </div>
   );
@@ -684,11 +684,11 @@ function FeatureCard({ title, description, icon, color, theme }: any) {
 function FooterGroup({ title, items, theme }: any) {
   return (
     <div className="space-y-4 md:space-y-6">
-      <h5 className={`text-[10px] font-black uppercase tracking-[0.4em] ${theme === 'dark' ? 'text-slate-600' : 'text-slate-400'}`}>{title}</h5>
+      <h5 className={`text-[10px] font-black uppercase tracking-[0.4em] ${theme === 'dark' ? 'text-black' : 'text-black'}`}>{title}</h5>
       <ul className="space-y-2 md:space-y-3">
         {items.map((item: any) => (
           <li key={item}>
-            <Link href="#" className={`text-sm font-black transition-colors ${theme === 'dark' ? 'text-slate-500 hover:text-indigo-400' : 'text-slate-500 hover:text-indigo-600'}`}>
+            <Link href="#" className={`text-sm font-black transition-colors ${theme === 'dark' ? 'text-black hover:text-indigo-400' : 'text-black hover:text-black'}`}>
               {item}
             </Link>
           </li>
@@ -704,11 +704,11 @@ function ContactCard({ icon, title, value, link, theme }: any) {
       {/* Decorative Glow inside card */}
       <div className={`absolute top-0 right-0 w-24 h-24 blur-[40px] rounded-full transition-opacity opacity-0 group-hover:opacity-100 ${theme === 'dark' ? 'bg-indigo-500/20' : 'bg-indigo-400/10'}`}></div>
 
-      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-sm ${theme === 'dark' ? 'bg-indigo-900/50 text-indigo-400 border border-indigo-500/30 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-indigo-50 text-indigo-600 border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white group-hover:shadow-indigo-500/30'}`}>
+      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-sm ${theme === 'dark' ? 'bg-indigo-900/50 text-indigo-400 border border-indigo-500/30 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-indigo-50 text-black border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white group-hover:shadow-indigo-500/30'}`}>
         {icon}
       </div>
-      <h3 className={`text-lg font-black mb-2 relative z-10 transition-colors ${theme === 'dark' ? 'text-white' : 'text-slate-900 group-hover:text-indigo-900'}`}>{title}</h3>
-      <p className={`font-bold text-sm md:text-base relative z-10 transition-colors ${theme === 'dark' ? 'text-slate-400 group-hover:text-indigo-200' : 'text-slate-500 group-hover:text-indigo-700'}`} dir="ltr">{value}</p>
+      <h3 className={`text-lg font-black mb-2 relative z-10 transition-colors ${theme === 'dark' ? 'text-white' : 'text-black group-hover:text-indigo-900'}`}>{title}</h3>
+      <p className={`font-bold text-sm md:text-base relative z-10 transition-colors ${theme === 'dark' ? 'text-black group-hover:text-indigo-200' : 'text-black group-hover:text-indigo-700'}`} dir="ltr">{value}</p>
     </a>
   );
 }

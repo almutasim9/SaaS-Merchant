@@ -16,8 +16,8 @@ export default function MerchantError({
                     </svg>
                 </div>
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800 mb-2">حدث خطأ غير متوقع</h2>
-                    <p className="text-sm text-slate-400 font-medium">نعتذر عن هذا الخطأ. يرجى المحاولة مرة أخرى أو التواصل مع الدعم إذا استمرت المشكلة.</p>
+                    <h2 className="text-2xl font-bold text-black mb-2">حدث خطأ غير متوقع</h2>
+                    <p className="text-sm text-black font-medium">نعتذر عن هذا الخطأ. يرجى المحاولة مرة أخرى أو التواصل مع الدعم إذا استمرت المشكلة.</p>
                 </div>
                 <button
                     onClick={reset}
